@@ -84,7 +84,7 @@ export default function LoginPage() {
           <div className="max-w-lg w-full space-y-10">
             <div className="relative">
               <img
-                src="/schoobus-amico.png"
+                src="/bus-login.png"
                 alt={t('pages.auth.login.illustrationAlt', 'School bus illustration')}
                 width={800}
                 height={600}

@@ -158,7 +158,7 @@ function Clouds() {
 // Road with animated lane divider
 function Road() {
   return (
-    <div className="absolute bottom-0 left-0 right-0 h-40 md:h-48 z-[6]">
+    <div className="fixed bottom-0 left-0 right-0 h-40 md:h-48 z-[6]">
       {/* asphalt */}
       <div className="absolute inset-0 bg-gradient-to-b from-slate-800 to-slate-900" />
       {/* shoulders */}
@@ -220,13 +220,13 @@ export default function WelcomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black relative overflow-x-hidden">
       {/* Particle Burst Effect */}
       <ParticleBurst />
       <Clouds />
 
       {/* 3D Background */}
-      <div className="absolute inset-0 opacity-60">
+      <div className="fixed inset-0 opacity-60">
         <Canvas camera={{ position: [0, 0, 15] }}>
           <ambientLight intensity={0.4} />
           <pointLight position={[10, 10, 10]} intensity={1} />
@@ -241,21 +241,20 @@ export default function WelcomePage() {
       {/* Road scene with moving bus */}
       <Road />
       <motion.div
-        className="absolute bottom-6 md:bottom-8 left-[-30%] z-[7]"
+        className="fixed bottom-6 md:bottom-8 left-[-30%] z-[7]"
         initial={{ x: '-30vw', y: 0, rotateZ: 0 }}
         animate={{ x: '130vw', y: [0, -2, 0], rotateZ: [0, 0.3, 0] }}
-        transition={{ duration: 8, ease: 'linear', repeat: 0 }}
-        onAnimationComplete={() => router.push('/auth/login')}
+        transition={{ duration: 8, ease: 'linear', repeat: Infinity, repeatType: 'loop' }}
       >
         <img
-          src="/cityus-rafiki.png"
+          src="/bus-hero.png"
           alt="El Renad Bus"
           className="w-[420px] h-[200px] object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.45)]"
         />
       </motion.div>
 
       {/* Main Content */}
-      <div ref={containerRef} className="relative z-10 min-h-screen flex flex-col items-center justify-start pt-4 md:pt-6 px-4">
+      <div ref={containerRef} className="relative z-10 min-h-screen flex flex-col items-center justify-start pt-4 md:pt-6 px-4 pb-72 md:pb-80">
         
         {/* 3D Logo Section */}
         <motion.div
@@ -320,9 +319,42 @@ export default function WelcomePage() {
             <span className="px-3 py-1 rounded-full bg-yellow-500/10 text-yellow-300 border border-yellow-500/30 text-sm">إشعارات فورية</span>
             <span className="px-3 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-300 border border-fuchsia-500/30 text-sm">لوحات تحكم للأدوار</span>
           </div>
+
+          <motion.button
+            type="button"
+            onClick={() => router.push('/auth/login')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            className="mt-8 inline-flex items-center gap-2 rounded-full px-8 py-3 text-base font-semibold text-white bg-gradient-to-r from-yellow-500 to-yellow-600 shadow-lg shadow-yellow-500/25 hover:from-yellow-400 hover:to-yellow-500 transition-colors"
+          >
+            تسجيل الدخول
+          </motion.button>
         </motion.div>
 
-        
+        {/* Fleet gallery */}
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          animate={isLoaded ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 1.4, duration: 0.9 }}
+          className="mt-16 w-full max-w-4xl"
+        >
+          <h2 className="text-center text-xl md:text-2xl font-bold text-white mb-6">أسطول الريناد</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {['/gallery/bus-1.png', '/gallery/bus-2.png', '/gallery/bus-3.png', '/gallery/bus-4.png'].map((src, i) => (
+              <div
+                key={src}
+                className="rounded-2xl bg-white/5 border border-white/10 p-3 backdrop-blur-sm"
+              >
+                <img
+                  src={src}
+                  alt={`حافلة الريناد ${i + 1}`}
+                  loading="lazy"
+                  className="w-full h-32 md:h-40 object-contain"
+                />
+              </div>
+            ))}
+          </div>
+        </motion.section>
 
       </div>
     </div>

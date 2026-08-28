@@ -18,9 +18,9 @@ export const metadata: Metadata = {
   title: 'الريناد - نظام إدارة النقل الذكي',
   description: 'نظام شامل لإدارة النقل والحافلات المدرسية',
   icons: {
-    icon: '/bus_two.png',
-    shortcut: '/bus_two.png',
-    apple: '/bus_two.png',
+    icon: '/logo.jpg',
+    shortcut: '/logo.jpg',
+    apple: '/logo.jpg',
   },
 };
 

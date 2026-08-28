@@ -27,7 +27,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ErrorState } from '@/components/ui/PageState';
 import { getApiErrorMessage } from '@/lib/apiError';
 import Image from 'next/image';
-import busTwo from '@/../public/bus_two.png';
+import busCard from '@/../public/bus-card.png';
 
 export default function BusesPage() {
   const { t } = useI18n();
@@ -608,7 +608,7 @@ export default function BusesPage() {
               {filteredBuses.map((bus) => (
                 <div key={bus.id} className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden bg-white">
                   <div className="relative h-36 w-full">
-                    <Image src={busTwo} alt="Bus image" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" style={{objectFit:'cover'}} priority />
+                    <Image src={busCard} alt="Bus image" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" style={{objectFit:'cover'}} priority />
                   </div>
                   <div className="p-4 space-y-3">
                     <div className="flex items-center justify-between">

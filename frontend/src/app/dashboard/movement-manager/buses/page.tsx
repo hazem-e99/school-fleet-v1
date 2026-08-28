@@ -10,7 +10,7 @@ import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
 import Image from 'next/image';
-import busTwo from '@/../public/bus_two.png';
+import busCard from '@/../public/bus-card.png';
 import { 
   Bus, 
   Search, 
@@ -363,7 +363,7 @@ export default function MovementManagerBusesPage() {
               {filteredBuses.map((bus, index) => (
                 <div key={getUniqueKey(bus, index)} className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden bg-white">
                   <div className="relative h-36 w-full">
-                    <Image src={busTwo} alt="Bus image" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" style={{objectFit:'cover'}} />
+                    <Image src={busCard} alt="Bus image" fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" style={{objectFit:'cover'}} />
                   </div>
                   <div className="p-4 space-y-3">
                     <div className="flex items-center justify-between">
