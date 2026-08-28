@@ -1,4 +1,4 @@
-export const APP_NAME = 'School';
+export const APP_NAME = 'El Renad';
 
 /**
  * Merges a fetched, runtime (admin-managed) options list with a stray current
@@ -64,7 +64,7 @@ export const DEFAULT_MAP_CENTER = {
 } as const;
 
 export const CHART_COLORS = [
-  '#F6B900', '#2E7D32', '#FFD452', '#66BB6A', '#B98A00', '#1B5E20', '#FFE485', '#A5D6A7',
+  '#4F46E5', '#0EA5E9', '#818CF8', '#38BDF8', '#4338CA', '#0284C7', '#A5B4FC', '#7DD3FC',
 ] as const;
 
 // API Configuration Constants

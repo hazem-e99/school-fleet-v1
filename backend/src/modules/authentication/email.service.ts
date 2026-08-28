@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
-const APP_NAME = 'School';
+const APP_NAME = 'El Renad';
 
 /**
  * Sends transactional auth emails (verification code, password reset code)

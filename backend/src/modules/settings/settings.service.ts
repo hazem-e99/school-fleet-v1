@@ -11,10 +11,10 @@ export class SettingsService {
     let settings = await this.settingModel.findOne().exec();
     if (!settings) {
       settings = await this.settingModel.create({
-        systemName: 'School',
+        systemName: 'El Renad',
         logo: '/logo2.png',
-        primaryColor: '#F6B900',
-        secondaryColor: '#2E7D32',
+        primaryColor: '#4F46E5',
+        secondaryColor: '#0EA5E9',
         maintenanceMode: false,
       });
     }

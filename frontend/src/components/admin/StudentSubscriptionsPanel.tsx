@@ -396,7 +396,7 @@ export default function StudentSubscriptionsPanel() {
         rows: studentSubscriptions,
         lang,
         labels: {
-          reportTitle: t('pages.admin.studentSubscriptions.excel.reportTitle', 'School — Subscription Payments'),
+          reportTitle: t('pages.admin.studentSubscriptions.excel.reportTitle', 'El Renad — Subscription Payments'),
           generatedAt: t('pages.admin.studentSubscriptions.excel.generatedAt', 'Generated at'),
           sheetName: t('pages.admin.studentSubscriptions.excel.sheetName', 'Payments'),
           fileNamePrefix: 'subscription-payments',

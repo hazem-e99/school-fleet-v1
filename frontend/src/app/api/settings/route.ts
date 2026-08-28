@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
     // Return system settings if they exist, otherwise return default settings
     const systemSettings = db.systemSettings || {
       id: 'system-settings',
-      systemName: 'School',
+      systemName: 'Bus Management System',
       logo: '/logo.png',
-      primaryColor: '#F6B900',
-      secondaryColor: '#2E7D32',
+      primaryColor: '#4F46E5',
+      secondaryColor: '#0EA5E9',
       maintenanceMode: false,
       notificationsEnabled: true,
       updatedAt: new Date().toISOString()
@@ -44,7 +44,7 @@ export async function PATCH(request: NextRequest) {
       ...current,
       ...body,
       // ensure secondaryColor exists when updating
-      secondaryColor: body.secondaryColor || current.secondaryColor || '#2E7D32',
+      secondaryColor: body.secondaryColor || current.secondaryColor || '#0EA5E9',
       updatedAt: new Date().toISOString(),
     };
 

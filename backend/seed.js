@@ -132,7 +132,7 @@ async function getSeedData() {
       {
         firstName: 'System',
         lastName: 'Admin',
-        email: 'admin@school.local',
+        email: 'admin@elrenad.com',
         password: adminPass,
         role: 'Admin',
         phoneNumber: '01000000001',
@@ -145,7 +145,7 @@ async function getSeedData() {
       {
         firstName: 'Ahmed',
         lastName: 'Hassan',
-        email: 'driver@school.local',
+        email: 'driver@elrenad.com',
         password: driverPass,
         role: 'Driver',
         phoneNumber: '01000000002',
@@ -160,7 +160,7 @@ async function getSeedData() {
       {
         firstName: 'Mohamed',
         lastName: 'Ali',
-        email: 'conductor@school.local',
+        email: 'conductor@elrenad.com',
         password: conductorPass,
         role: 'Conductor',
         phoneNumber: '01000000003',
@@ -173,7 +173,7 @@ async function getSeedData() {
       {
         firstName: 'Sara',
         lastName: 'Ibrahim',
-        email: 'manager@school.local',
+        email: 'manager@elrenad.com',
         password: managerPass,
         role: 'MovementManager',
         phoneNumber: '01000000004',
@@ -186,7 +186,7 @@ async function getSeedData() {
       {
         firstName: 'Omar',
         lastName: 'Khaled',
-        email: 'student@school.local',
+        email: 'student@elrenad.com',
         password: studentPass,
         role: 'Student',
         phoneNumber: '01000000005',
@@ -202,7 +202,7 @@ async function getSeedData() {
       {
         firstName: 'Fatma',
         lastName: 'Mahmoud',
-        email: 'student2@school.local',
+        email: 'student2@elrenad.com',
         password: studentPass,
         role: 'Student',
         phoneNumber: '01000000006',
@@ -218,7 +218,7 @@ async function getSeedData() {
       {
         firstName: 'Youssef',
         lastName: 'Samir',
-        email: 'driver2@school.local',
+        email: 'driver2@elrenad.com',
         password: driverPass,
         role: 'Driver',
         phoneNumber: '01000000007',
@@ -233,7 +233,7 @@ async function getSeedData() {
       {
         firstName: 'Khalid',
         lastName: 'Nasser',
-        email: 'conductor2@school.local',
+        email: 'conductor2@elrenad.com',
         password: conductorPass,
         role: 'Conductor',
         phoneNumber: '01000000008',
@@ -371,10 +371,10 @@ async function getSeedData() {
 
     settings: [
       {
-        systemName: 'School',
+        systemName: 'El Renad',
         logo: '/logo2.png',
-        primaryColor: '#F6B900',
-        secondaryColor: '#2E7D32',
+        primaryColor: '#4F46E5',
+        secondaryColor: '#0EA5E9',
         maintenanceMode: false,
         maintenanceMessage: '',
         createdAt: now,
@@ -396,7 +396,7 @@ async function getSeedData() {
 
 async function main() {
   console.log('===========================================');
-  console.log('  School - Database Initialization');
+  console.log('  Bus System - Database Initialization');
   console.log('===========================================\n');
   console.log(`Connecting to MongoDB: ${MONGODB_URI}`);
   const client = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
@@ -603,8 +603,8 @@ async function main() {
       for (const user of allUsers) {
         notifications.push({
           userId: getNumericId(user),
-          title: 'Welcome to School',
-          message: `Hello ${user.firstName}! Welcome to the school bus management system. Your account is now active.`,
+          title: 'Welcome to El Renad Bus System',
+          message: `Hello ${user.firstName}! Welcome to the bus management system. Your account is now active.`,
           type: 'System',
           sentAt: new Date(),
           isRead: false,
@@ -634,12 +634,12 @@ async function main() {
     }
 
     console.log('\n--- Default Login Credentials ---\n');
-    console.log('  Admin:              admin@school.local      / Admin@123');
-    console.log('  Driver:             driver@school.local     / Driver@123');
-    console.log('  Conductor:          conductor@school.local  / Conductor@123');
-    console.log('  Movement Manager:   manager@school.local    / Manager@123');
-    console.log('  Student:            student@school.local    / Student@123');
-    console.log('  Student 2:          student2@school.local   / Student@123');
+    console.log('  Admin:              admin@elrenad.com      / Admin@123');
+    console.log('  Driver:             driver@elrenad.com     / Driver@123');
+    console.log('  Conductor:          conductor@elrenad.com  / Conductor@123');
+    console.log('  Movement Manager:   manager@elrenad.com    / Manager@123');
+    console.log('  Student:            student@elrenad.com    / Student@123');
+    console.log('  Student 2:          student2@elrenad.com   / Student@123');
     console.log('');
   } catch (error) {
     console.error('\n❌ Error:', error.message);

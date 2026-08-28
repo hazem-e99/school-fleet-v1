@@ -249,7 +249,7 @@ export default function WelcomePage() {
       >
         <img
           src="/cityus-rafiki.png"
-          alt="School Bus"
+          alt="El Renad Bus"
           className="w-[420px] h-[200px] object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.45)]"
         />
       </motion.div>
@@ -271,7 +271,7 @@ export default function WelcomePage() {
           <div className="relative w-40 h-40 md:w-48 md:h-48">
             <img
               src="/logo.jpg"
-              alt="باص المدرسة Logo"
+              alt="الريناد Logo"
               className="w-full h-full object-contain drop-shadow-2xl"
             />
             {/* 3D Glow effect */}
@@ -299,7 +299,7 @@ export default function WelcomePage() {
           className="text-center text-3xl md:text-5xl font-extrabold tracking-tight text-white"
         >
           <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 bg-clip-text text-transparent">
-            منصة باص المدرسة لنقل الطلاب
+            منصة الريناد للنقل الجامعي
           </span>
         </motion.h1>
 
@@ -311,8 +311,8 @@ export default function WelcomePage() {
           className="mt-6 max-w-3xl text-center text-gray-300"
         >
           <p className="text-lg md:text-xl leading-8">
-            نظام متكامل لإدارة حافلات المدرسة ونقل الطلاب. حجز وتتبع الرحلات، إدارة اشتراكات
-            أولياء الأمور، إشعارات لحظية، ولوحة تحكم سهلة لكل الأدوار.
+            نظام متكامل لإدارة رحلات الأتوبيسات الجامعية. حجز وتتبع الرحلات، إدارة المشتركين،
+            إشعارات لحظية، ولوحة تحكم حديثة لكل الأدوار.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <span className="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-sm">حجز الرحلات</span>

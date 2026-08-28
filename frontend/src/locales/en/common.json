@@ -1,6 +1,6 @@
 {
   "brand": {
-    "name": "School"
+    "name": "Bus System"
   },
   "common": {
     "all": "All",
@@ -48,7 +48,7 @@
     "createFailed": "Unable to create the record. Please check the entered information and try again."
   },
   "topbar": {
-    "subtitle": "School Transportation",
+    "subtitle": "Transportation Management System",
     "notifications": "Notifications",
     "newMessages": "new messages",
     "unread": "Unread",
@@ -133,8 +133,8 @@
         "illustrationAlt": "School bus illustration",
         "developedBy": "Developed by:",
         "about": {
-          "title": "About School",
-          "description": "Book school bus trips, manage subscriptions, and track routes — fast and easy."
+          "title": "About the Bus System",
+          "description": "Book campus bus trips, manage subscriptions, and track routes — fast and easy."
         },
         "errors": {
           "invalidCredentials": "Invalid email or password",
@@ -203,7 +203,7 @@
       },
       "register": {
         "title": "Student Registration",
-        "subtitle": "Join School",
+        "subtitle": "Join the University Bus System",
         "cardTitle": "Create Student Account",
         "cardSubtitle": "Fill in your details to get started",
         "sections": {
@@ -937,7 +937,7 @@
           "empty": "No matching records."
         },
         "excel": {
-          "reportTitle": "School — Subscriptions Report",
+          "reportTitle": "El Renad — Subscriptions Report",
           "generatedAt": "Generated at",
           "summarySheet": "Summary",
           "detailsSheet": "Details"
@@ -997,7 +997,7 @@
           "unknown": "Unknown"
         },
         "excel": {
-          "reportTitle": "School — Students Overview",
+          "reportTitle": "El Renad — Students Overview",
           "generatedAt": "Generated at",
           "sheetName": "Students",
           "email": "Email"
@@ -1148,7 +1148,7 @@
         "exportSuccessMessage": "The Excel file has been downloaded.",
         "exportError": "Export failed",
         "excel": {
-          "reportTitle": "School — Subscription Payments",
+          "reportTitle": "El Renad — Subscription Payments",
           "generatedAt": "Generated at",
           "sheetName": "Payments",
           "email": "Email",

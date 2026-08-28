@@ -1,33 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  /* Modern Color Palette - SCHOOL BUS THEME (yellow + green) */
+  /* Modern Color Palette - EL RENAD THEME (indigo + sky) */
   --background: #FFFFFF;
   --foreground: #1F2937;
 
-  /* Primary Colors - School-bus yellow as the main branding color */
-  --primary: #F6B900;
-  --primary-hover: #D9A400;
-  --primary-light: #FFF8E1;
-  --primary-dark: #B98A00;
+  /* Primary Colors - Indigo as the main branding color */
+  --primary: #4F46E5;
+  --primary-hover: #4338CA;
+  --primary-light: #EEF2FF;
+  --primary-dark: #3730A3;
 
-  /* Secondary Colors - friendly green (also set at runtime by ThemeInitializer) */
-  --secondary: #2E7D32;
-  --secondary-hover: #1B5E20;
-  --secondary-light: #E8F5E9;
+  /* Secondary Colors - sky blue (also set at runtime by ThemeInitializer) */
+  --secondary: #0EA5E9;
+  --secondary-hover: #0284C7;
+  --secondary-light: #E0F2FE;
 
   /* Brand Gradient Variations (token family kept as --orange-* to avoid a
-     project-wide utility-class rename; values are the school-bus yellow scale) */
-  --orange-50: #FFFDF2;
-  --orange-100: #FFF8E1;
-  --orange-200: #FFEFB3;
-  --orange-300: #FFE485;
-  --orange-400: #FFD452;
-  --orange-500: #F6B900;
-  --orange-600: #D9A400;
-  --orange-700: #B98A00;
-  --orange-800: #946E00;
-  --orange-900: #6E5200;
+     project-wide utility-class rename; values are the indigo scale) */
+  --orange-50: #EEF2FF;
+  --orange-100: #E0E7FF;
+  --orange-200: #C7D2FE;
+  --orange-300: #A5B4FC;
+  --orange-400: #818CF8;
+  --orange-500: #4F46E5;
+  --orange-600: #4338CA;
+  --orange-700: #3730A3;
+  --orange-800: #312E81;
+  --orange-900: #1E1B4B;
 
   /* Semantic Colors - Used ONLY for status (not branding) */
   --success: #10B981;
@@ -50,7 +50,7 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --shadow-orange: 0 10px 25px -5px rgb(246 185 0 / 0.25);
+  --shadow-orange: 0 10px 25px -5px rgb(79 70 229 / 0.25);
 }
 
 @theme inline {

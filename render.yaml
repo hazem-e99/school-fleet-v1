@@ -1,11 +1,11 @@
-# Render Blueprint for "School" — backend (NestJS) + frontend (Next.js).
+# Render Blueprint for "El Renad" — backend (NestJS) + frontend (Next.js).
 # Deploy: Render Dashboard -> New -> Blueprint -> pick this repo.
 # After the first deploy, fill the `sync: false` env vars (see RENDER_DEPLOY.md).
 
 services:
   # ---------- Backend (NestJS API) ----------
   - type: web
-    name: school-backend
+    name: elrenad-backend
     runtime: node
     rootDir: backend
     plan: free
@@ -28,7 +28,7 @@ services:
       - key: JWT_EXPIRATION
         value: 7d
       - key: CORS_ORIGIN
-        sync: false              # https://school-frontend-XXXX.onrender.com
+        sync: false              # https://elrenad-frontend-XXXX.onrender.com
       - key: UPLOAD_DIR
         value: ./uploads
       - key: MAIL_USER
@@ -36,13 +36,13 @@ services:
       - key: MAIL_PASS
         sync: false
       - key: MAIL_FROM_NAME
-        value: School
+        value: El Renad
       - key: MAIL_REPLY_TO
         sync: false
 
   # ---------- Frontend (Next.js) ----------
   - type: web
-    name: school-frontend
+    name: elrenad-frontend
     runtime: node
     rootDir: frontend
     plan: free
@@ -54,11 +54,11 @@ services:
         value: production
       # NEXT_PUBLIC_* are inlined at build time — changing them needs a rebuild.
       - key: NEXT_PUBLIC_APP_URL
-        sync: false              # https://school-frontend-XXXX.onrender.com
+        sync: false              # https://elrenad-frontend-XXXX.onrender.com
       - key: NEXT_PUBLIC_API_BASE_URL
-        sync: false              # https://school-backend-XXXX.onrender.com/api
+        sync: false              # https://elrenad-backend-XXXX.onrender.com/api
       - key: NEXT_PUBLIC_BACKEND_ORIGIN
-        sync: false              # https://school-backend-XXXX.onrender.com
+        sync: false              # https://elrenad-backend-XXXX.onrender.com
       - key: NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
         sync: false
       - key: NEXT_PUBLIC_CURRENCY

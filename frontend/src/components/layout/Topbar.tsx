@@ -28,7 +28,7 @@ export const Topbar = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   // removed isLoadingNotifications state (not used in UI)
   const [systemLogo, setSystemLogo] = useState('/logo2.png');
-  const [systemName, setSystemName] = useState('School');
+  const [systemName, setSystemName] = useState('El Renad');
   const [userProfile, setUserProfile] = useState<unknown>(null);
   const [notifFilter, setNotifFilter] = useState<'all' | 'unread'>('all');
   const { t, isRTL } = useI18n();
@@ -43,12 +43,12 @@ export const Topbar = () => {
       try {
         const settings = await settingsAPI.get();
         setSystemLogo(settings?.logo || '/logo2.png');
-        setSystemName(settings?.systemName || 'School');
+        setSystemName(settings?.systemName || 'El Renad');
       } catch (error: unknown) {
         // Ignore 404s silently
         if ((error as Error)?.message?.includes('404')) {
           setSystemLogo('/logo2.png');
-          setSystemName('School');
+          setSystemName('El Renad');
           return;
         }
         console.error('Failed to fetch system settings:', error);

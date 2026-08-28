@@ -35,17 +35,17 @@ function req(method: string, path: string, body?: any, token?: string): Promise<
 
 describe('Bus System API - E2E Test Suite', () => {
   beforeAll(async () => {
-    const adminR = await req('POST', '/api/Authentication/login', { email: 'admin@school.local', password: 'Admin@123' });
+    const adminR = await req('POST', '/api/Authentication/login', { email: 'admin@elrenad.com', password: 'Admin@123' });
     ADMIN_TOKEN = adminR.body?.data?.token || '';
-    const stuR = await req('POST', '/api/Authentication/login', { email: 'student@school.local', password: 'Student@123' });
+    const stuR = await req('POST', '/api/Authentication/login', { email: 'student@elrenad.com', password: 'Student@123' });
     STUDENT_TOKEN = stuR.body?.data?.token || '';
-    const drvR = await req('POST', '/api/Authentication/login', { email: 'driver@school.local', password: 'Driver@123' });
+    const drvR = await req('POST', '/api/Authentication/login', { email: 'driver@elrenad.com', password: 'Driver@123' });
     DRIVER_TOKEN = drvR.body?.data?.token || '';
   }, 30000);
 
   describe('Authentication', () => {
     it('should login admin successfully', async () => {
-      const r = await req('POST', '/api/Authentication/login', { email: 'admin@school.local', password: 'Admin@123' });
+      const r = await req('POST', '/api/Authentication/login', { email: 'admin@elrenad.com', password: 'Admin@123' });
       expect(r.status).toBe(200);
       expect(r.body.success).toBe(true);
       expect(r.body.data.token).toBeDefined();
@@ -53,7 +53,7 @@ describe('Bus System API - E2E Test Suite', () => {
     });
 
     it('should reject invalid credentials', async () => {
-      const r = await req('POST', '/api/Authentication/login', { email: 'admin@school.local', password: 'wrong' });
+      const r = await req('POST', '/api/Authentication/login', { email: 'admin@elrenad.com', password: 'wrong' });
       expect(r.body.success).toBe(false);
     });
 
@@ -65,7 +65,7 @@ describe('Bus System API - E2E Test Suite', () => {
     it('should reject duplicate student registration', async () => {
       const r = await req('POST', '/api/Authentication/registration-student', {
         firstName: 'Test', lastName: 'User', nationalId: '12345678901238',
-        email: 'student@school.local', phoneNumber: '01000000005',
+        email: 'student@elrenad.com', phoneNumber: '01000000005',
         studentAcademicNumber: 'STU-DUP', department: 'CS', yearOfStudy: '1',
         password: 'Test@123', confirmPassword: 'Test@123',
       });
@@ -74,7 +74,7 @@ describe('Bus System API - E2E Test Suite', () => {
 
     it('should reject reset password with wrong token', async () => {
       const r = await req('POST', '/api/Authentication/reset-password', {
-        email: 'admin@school.local', resetToken: 'bad', newPassword: 'New@123', confirmPassword: 'New@123',
+        email: 'admin@elrenad.com', resetToken: 'bad', newPassword: 'New@123', confirmPassword: 'New@123',
       });
       expect(r.body.success).toBe(false);
     });
@@ -102,7 +102,7 @@ describe('Bus System API - E2E Test Suite', () => {
     it('should get profile', async () => {
       const r = await req('GET', '/api/Users/profile', null, ADMIN_TOKEN);
       expect(r.status).toBe(200);
-      expect(r.body.data.email).toBe('admin@school.local');
+      expect(r.body.data.email).toBe('admin@elrenad.com');
     });
 
     it('should update profile', async () => {
@@ -291,7 +291,7 @@ describe('Bus System API - E2E Test Suite', () => {
   describe('Student Dashboard', () => {
     let studentId: number;
     beforeAll(async () => {
-      const login = await req('POST', '/api/Authentication/login', { email: 'student@school.local', password: 'Student@123' });
+      const login = await req('POST', '/api/Authentication/login', { email: 'student@elrenad.com', password: 'Student@123' });
       studentId = login.body?.data?.id;
     });
 

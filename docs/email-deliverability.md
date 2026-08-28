@@ -24,7 +24,7 @@ external (DNS/provider) responsibility that cannot be fixed by code alone.
 
 - Sender was `"Bus System" <MAIL_USER>` — a generic, inconsistent display
   name unrelated to the actual product name, which looks less trustworthy to
-  spam filters and recipients. **Fixed**: sender is now `"School"
+  spam filters and recipients. **Fixed**: sender is now `"El Renad"
   <MAIL_USER>` (configurable via `MAIL_FROM_NAME`).
 - No `Reply-To` header was set. **Fixed**: `Reply-To` now defaults to
   `MAIL_USER`, overridable via `MAIL_REPLY_TO`.
@@ -58,7 +58,7 @@ the visible `From`. This works, but:
   mostly about the **sending account's own reputation and volume**, not
   missing DNS.
 - If `MAIL_USER` is a **Google Workspace** address on a custom domain (e.g.
-  `no-reply@yourschool.example`), that domain's own SPF/DKIM/DMARC records
+  `no-reply@el-renad.com`), that domain's own SPF/DKIM/DMARC records
   determine deliverability — see below.
 - Sending a high volume of near-identical OTP emails from a personal/shared
   Gmail mailbox (rather than a dedicated transactional-email
@@ -104,7 +104,7 @@ SMTP provider) rather than a plain `@gmail.com` address:
 | File | Change |
 |---|---|
 | `backend/src/modules/authentication/email.service.ts` | Rewritten: configurable sender name/reply-to, HTML **and** plain-text bodies, simplified transactional template, safer success/failure logging (message ID, no OTP). Provider (Gmail SMTP via nodemailer) and the two call sites (`sendVerificationCode`, `sendPasswordResetCode`) are unchanged. |
-| `backend/.env.example` | Documented `MAIL_FROM_NAME` (optional, defaults to "School") and `MAIL_REPLY_TO` (optional, defaults to `MAIL_USER`) alongside the existing `MAIL_USER`/`MAIL_PASS`. |
+| `backend/.env.example` | Documented `MAIL_FROM_NAME` (optional, defaults to "El Renad") and `MAIL_REPLY_TO` (optional, defaults to `MAIL_USER`) alongside the existing `MAIL_USER`/`MAIL_PASS`. |
 
 No OTP generation, expiration, or verification logic changed —
 `authentication.service.ts`'s code generation (`Math.floor(100000 +

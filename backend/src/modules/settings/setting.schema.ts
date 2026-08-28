@@ -5,16 +5,16 @@ export type SettingDocument = Setting & Document;
 
 @Schema({ timestamps: true, collection: 'settings' })
 export class Setting {
-  @Prop({ default: 'School' })
+  @Prop({ default: 'El Renad' })
   systemName: string;
 
   @Prop({ default: '/logo2.png' })
   logo: string;
 
-  @Prop({ default: '#F6B900' })
+  @Prop({ default: '#4F46E5' })
   primaryColor: string;
 
-  @Prop({ default: '#2E7D32' })
+  @Prop({ default: '#0EA5E9' })
   secondaryColor: string;
 
   @Prop({ default: false })

@@ -16,14 +16,6 @@ import { PaymentMethod, PaymentStatus, PaymentChannel, CreatePaymentDTO, Student
 import { CheckCircle, CreditCard, Crown, Shield, Bell, Smartphone, Wallet, XCircle, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// TODO(school): fill these in with the school's real payment details (ideally move
-// them to admin-managed settings later). Placeholders below are intentionally not
-// real accounts.
-const SCHOOL_BANK_ACCOUNT_NUMBER = '0000000000000000';
-const SCHOOL_BANK_ACCOUNT_NAME = 'School — Student Transport';
-const SCHOOL_INSTAPAY_NUMBER = '00000000000';
-const SCHOOL_VODAFONE_NUMBER = '00000000000';
-
 // Define proper types for the data
 interface StudentProfile {
   id: string;
@@ -1080,14 +1072,23 @@ export default function StudentSubscriptionPage() {
                 <div className="bg-white p-3 rounded border border-blue-200 space-y-2">
                   {onlineChannel === 'vodafone' ? (
                     <>
-                      {/* TODO(school): replace with the school's real Vodafone Cash transfer numbers */}
                       <div className={`text-sm text-gray-700 ${lang === 'ar' ? 'text-right' : 'text-left'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
                         {lang === 'ar' ? 'أرقام التحويل:' : 'Transfer numbers:'}
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="font-mono font-semibold text-blue-800 bg-blue-100 px-2 py-1 rounded text-sm">{SCHOOL_VODAFONE_NUMBER}</span>
+                        <span className="font-mono font-semibold text-blue-800 bg-blue-100 px-2 py-1 rounded text-sm">01030019746</span>
                         <button
-                          onClick={() => navigator.clipboard.writeText(SCHOOL_VODAFONE_NUMBER)}
+                          onClick={() => navigator.clipboard.writeText('01030019746')}
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                          title={t('pages.student.subscription.copy', 'Copy')}
+                        >
+                          📋
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-semibold text-blue-800 bg-blue-100 px-2 py-1 rounded text-sm">01050076357</span>
+                        <button
+                          onClick={() => navigator.clipboard.writeText('01050076357')}
                           className="text-blue-600 hover:text-blue-800 text-sm"
                           title={t('pages.student.subscription.copy', 'Copy')}
                         >
@@ -1097,15 +1098,14 @@ export default function StudentSubscriptionPage() {
                     </>
                   ) : (
                     <>
-                      {/* TODO(school): replace with the school's real bank account number and name */}
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-700">{t('pages.student.subscription.accountNumber', 'Account Number')}:</span>
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-semibold text-blue-800 bg-blue-100 px-2 py-1 rounded text-sm">
-                            {SCHOOL_BANK_ACCOUNT_NUMBER}
+                            3640001000011832
                           </span>
                           <button
-                            onClick={() => navigator.clipboard.writeText(SCHOOL_BANK_ACCOUNT_NUMBER)}
+                            onClick={() => navigator.clipboard.writeText('3640001000011832')}
                             className="text-blue-600 hover:text-blue-800 text-sm"
                             title={t('pages.student.subscription.copy', 'Copy')}
                           >
@@ -1116,7 +1116,7 @@ export default function StudentSubscriptionPage() {
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-700">{t('pages.student.subscription.accountName', 'Account Name')}:</span>
                         <span className="font-semibold text-blue-800 bg-blue-100 px-2 py-1 rounded text-sm">
-                          {SCHOOL_BANK_ACCOUNT_NAME}
+                          شركه الريناد للتوريدات والنقل
                         </span>
                       </div>
                     </>
@@ -1135,11 +1135,10 @@ export default function StudentSubscriptionPage() {
                       ? 'برجاء إرفاق صورة من التحويل إلى أحد الأرقام التالية:'
                       : 'Please attach a screenshot of the transfer to one of the following numbers:'}
                   </p>
-                  {/* TODO(school): replace with the school's real InstaPay/Vodafone number */}
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-mono font-semibold text-blue-800 bg-blue-100 px-2 py-1 rounded">{SCHOOL_INSTAPAY_NUMBER}</span>
+                    <span className="font-mono font-semibold text-blue-800 bg-blue-100 px-2 py-1 rounded">01030019746</span>
                     <button
-                      onClick={() => navigator.clipboard.writeText(SCHOOL_INSTAPAY_NUMBER)}
+                      onClick={() => navigator.clipboard.writeText('01030019746')}
                       className="text-blue-600 hover:text-blue-800"
                       title={t('pages.student.subscription.copy', 'Copy')}
                     >

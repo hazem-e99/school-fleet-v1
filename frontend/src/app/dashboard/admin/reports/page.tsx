@@ -91,7 +91,7 @@ export default function AdminReportsPage() {
         report,
         lang,
         labels: {
-          reportTitle: t('pages.admin.reports.excel.reportTitle', 'School — Subscriptions Report'),
+          reportTitle: t('pages.admin.reports.excel.reportTitle', 'El Renad — Subscriptions Report'),
           generatedAt: t('pages.admin.reports.excel.generatedAt', 'Generated at'),
           summarySheet: t('pages.admin.reports.excel.summarySheet', 'Summary'),
           detailsSheet: t('pages.admin.reports.excel.detailsSheet', 'Details'),

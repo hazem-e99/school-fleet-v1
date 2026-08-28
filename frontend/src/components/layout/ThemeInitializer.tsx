@@ -5,8 +5,8 @@ import { settingsAPI } from '@/lib/api';
 
 function applyThemeColors(primary: string, secondary: string) {
   const root = document.documentElement;
-  const safePrimary = primary || '#F6B900';
-  const safeSecondary = secondary || '#2E7D32';
+  const safePrimary = primary || '#4F46E5';
+  const safeSecondary = secondary || '#0EA5E9';
   root.style.setProperty('--primary', safePrimary);
   root.style.setProperty('--primary-hover', adjustBrightness(safePrimary, -20));
   root.style.setProperty('--primary-light', adjustBrightness(safePrimary, 90));
@@ -46,7 +46,7 @@ export default function ThemeInitializer() {
           try {
             const parsed = JSON.parse(cached) as { primary?: string; secondary?: string };
             if (parsed?.primary || parsed?.secondary) {
-              applyThemeColors(parsed.primary || '#F6B900', parsed.secondary || '#2E7D32');
+              applyThemeColors(parsed.primary || '#4F46E5', parsed.secondary || '#0EA5E9');
             }
           } catch {}
         }
@@ -54,7 +54,7 @@ export default function ThemeInitializer() {
         const data = await settingsAPI.get().catch(() => null as unknown);
         if (!data) return;
         if (cancelled) return;
-        applyThemeColors(data?.primaryColor || '#F6B900', data?.secondaryColor || '#2E7D32');
+        applyThemeColors(data?.primaryColor || '#4F46E5', data?.secondaryColor || '#0EA5E9');
         // sync cache
         try {
           localStorage.setItem('themeColors', JSON.stringify({ primary: data?.primaryColor, secondary: data?.secondaryColor }));

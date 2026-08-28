@@ -143,7 +143,7 @@ export default function StudentsOverviewPage() {
         rows: filteredRows,
         lang,
         labels: {
-          reportTitle: t('pages.admin.studentsOverview.excel.reportTitle', 'School — Students Overview'),
+          reportTitle: t('pages.admin.studentsOverview.excel.reportTitle', 'El Renad — Students Overview'),
           generatedAt: t('pages.admin.studentsOverview.excel.generatedAt', 'Generated at'),
           sheetName: t('pages.admin.studentsOverview.excel.sheetName', 'Students'),
           fileNamePrefix: 'students-overview',

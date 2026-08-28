@@ -15,8 +15,8 @@ const inter = Inter({ subsets: ['latin'] });
 const cairo = Cairo({ subsets: ['arabic'] });
 
 export const metadata: Metadata = {
-  title: 'باص المدرسة - نظام إدارة النقل المدرسي',
-  description: 'نظام شامل لإدارة الحافلات المدرسية ونقل الطلاب',
+  title: 'الريناد - نظام إدارة النقل الذكي',
+  description: 'نظام شامل لإدارة النقل والحافلات المدرسية',
   icons: {
     icon: '/bus_two.png',
     shortcut: '/bus_two.png',

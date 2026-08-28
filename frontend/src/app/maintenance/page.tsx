@@ -9,7 +9,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 export default function MaintenancePage() {
   const { t, isRTL } = useLanguage();
   const [maintenanceInfo, setMaintenanceInfo] = useState({
-    systemName: 'School',
+    systemName: 'El Renad',
     estimatedTime: '2 hours',
     message: t('maintenanceMessage')
   });
@@ -21,7 +21,7 @@ export default function MaintenancePage() {
         const settings = await settingsAPI.get();
         setMaintenanceInfo(prev => ({
           ...prev,
-          systemName: settings.systemName || 'School'
+          systemName: settings.systemName || 'El Renad'
         }));
       } catch (error: unknown) {
         // Silently ignore 404 errors and use default system name
@@ -30,7 +30,7 @@ export default function MaintenancePage() {
         }
         setMaintenanceInfo(prev => ({
           ...prev,
-          systemName: 'School'
+          systemName: 'El Renad'
         }));
       }
     };

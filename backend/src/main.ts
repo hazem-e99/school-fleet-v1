@@ -62,7 +62,7 @@ async function bootstrap() {
   } else {
     await app.listen(port);
   }
-  console.log(`🚀 School Backend running on http://${host || 'localhost'}:${port}`);
+  console.log(`🚀 Bus System Backend running on http://${host || 'localhost'}:${port}`);
   console.log(`📋 API Base URL: http://${host || 'localhost'}:${port}/api`);
 }
 bootstrap();

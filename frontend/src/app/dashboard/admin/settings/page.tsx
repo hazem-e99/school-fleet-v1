@@ -50,7 +50,7 @@ interface SystemSettings {
 export default function SettingsPage() {
   const [settings, setSettings] = useState<SystemSettings>({
     id: 'system-settings',
-    systemName: 'School',
+    systemName: 'University Bus Management System',
     logo: '/logo.png',
     primaryColor: '#3B82F6',
     secondaryColor: '#10B981',
@@ -85,7 +85,7 @@ export default function SettingsPage() {
       const settingsData = await settingsAPI.get();
       const defaults: SystemSettings = {
         id: 'system-settings',
-        systemName: 'School',
+        systemName: 'University Bus Management System',
         logo: '/logo.png',
         primaryColor: '#3B82F6',
         secondaryColor: '#10B981',
@@ -111,7 +111,7 @@ export default function SettingsPage() {
       if (error instanceof ApiError && error.status === 404) {
         const defaults: SystemSettings = {
           id: 'system-settings',
-          systemName: 'School',
+          systemName: 'University Bus Management System',
           logo: '/logo.png',
           primaryColor: '#3B82F6',
           secondaryColor: '#10B981',
@@ -180,7 +180,7 @@ export default function SettingsPage() {
       
       const defaultSettings: SystemSettings = {
         id: 'system-settings',
-        systemName: 'School',
+        systemName: 'University Bus Management System',
         logo: '/logo.png',
         primaryColor: '#3B82F6',
         secondaryColor: '#10B981',

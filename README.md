@@ -1,8 +1,8 @@
-# School — School Bus Management System
+# El Renad — Bus Management System
 
-A transportation management platform for schools — trip scheduling, seat
-reservations, fleet tracking, subscriptions, and role-specific dashboards for
-everyone involved in getting students on and off a bus.
+A transportation management platform — trip scheduling, seat reservations, fleet
+tracking, subscriptions, and role-specific dashboards for everyone involved in
+getting students on and off a bus.
 
 ## Roles & Dashboards
 
@@ -50,7 +50,7 @@ Seed demo data (accounts, plans, settings):
 cd backend && npm run seed
 ```
 
-Demo accounts: `admin@school.local` / `Admin@123` (and driver / conductor /
+Demo accounts: `admin@elrenad.com` / `Admin@123` (and driver / conductor /
 manager / student — see the seed script output).
 
 ## Deployment
