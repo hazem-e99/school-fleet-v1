@@ -1,0 +1,5 @@
+# Force LF line endings for shell scripts and Node scripts, regardless of a
+# contributor's local core.autocrlf setting. A CRLF shebang line
+# (`#!/usr/bin/env bash\r`) fails to execute on Linux.
+backend/scripts/*.js text eol=lf
+*.sh text eol=lf

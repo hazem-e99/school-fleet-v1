@@ -1,0 +1,65 @@
+# Render Blueprint for "School" — backend (NestJS) + frontend (Next.js).
+# Deploy: Render Dashboard -> New -> Blueprint -> pick this repo.
+# After the first deploy, fill the `sync: false` env vars (see RENDER_DEPLOY.md).
+
+services:
+  # ---------- Backend (NestJS API) ----------
+  - type: web
+    name: school-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/main
+    healthCheckPath: /api/Settings/maintenance-mode
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0            # Render requires binding all interfaces
+      # PORT is injected by Render automatically; main.ts reads process.env.PORT.
+      - key: MONGODB_URI
+        sync: false              # mongodb+srv://...@cluster0.95lwiab.mongodb.net/school
+      - key: DB_NAME
+        value: school
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: 7d
+      - key: CORS_ORIGIN
+        sync: false              # https://school-frontend-XXXX.onrender.com
+      - key: UPLOAD_DIR
+        value: ./uploads
+      - key: MAIL_USER
+        sync: false
+      - key: MAIL_PASS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: School
+      - key: MAIL_REPLY_TO
+        sync: false
+
+  # ---------- Frontend (Next.js) ----------
+  - type: web
+    name: school-frontend
+    runtime: node
+    rootDir: frontend
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start -- -p $PORT
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # NEXT_PUBLIC_* are inlined at build time — changing them needs a rebuild.
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false              # https://school-frontend-XXXX.onrender.com
+      - key: NEXT_PUBLIC_API_BASE_URL
+        sync: false              # https://school-backend-XXXX.onrender.com/api
+      - key: NEXT_PUBLIC_BACKEND_ORIGIN
+        sync: false              # https://school-backend-XXXX.onrender.com
+      - key: NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
+        sync: false
+      - key: NEXT_PUBLIC_CURRENCY
+        value: EGP

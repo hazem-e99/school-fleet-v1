@@ -1,0 +1,146 @@
+import {
+  BadRequestException,
+  Controller, Get, Post, Put, Patch, Delete,
+  Param, Body, Query, UseGuards, UseInterceptors,
+  UploadedFile, Req,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UsersService } from './users.service';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+
+const ALLOWED_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+
+@Controller('api/Users')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  async getAll(@Query('email') email?: string) {
+    if (email) {
+      return this.usersService.getByEmail(email);
+    }
+    return this.usersService.getAll();
+  }
+
+  @Get('profile')
+  async getProfile(@CurrentUser('userId') userId: string) {
+    return this.usersService.getProfile(userId);
+  }
+
+  @Get('by-role/:role')
+  async getByRole(@Param('role') role: string) {
+    return this.usersService.getByRole(role);
+  }
+
+  @Get('students-data')
+  async getStudentsData() {
+    return this.usersService.getStudentsData();
+  }
+
+  @Get('students-data/:id')
+  async getStudentDataById(@Param('id') id: string) {
+    return this.usersService.getStudentDataById(id);
+  }
+
+  /** Admin-only: one row per student joined with subscription + payment info. */
+  @Get('students-overview')
+  @Roles('Admin')
+  async getStudentsOverview() {
+    return this.usersService.getStudentsOverview();
+  }
+
+  @Get(':id')
+  async getById(@Param('id') id: string) {
+    return this.usersService.getById(id);
+  }
+
+  @Post('change-password')
+  async changePassword(
+    @CurrentUser('userId') userId: string,
+    @Body() payload: { currentPassword: string; password: string; confirmPassword: string },
+  ) {
+    return this.usersService.changePassword(userId, payload);
+  }
+
+  @Put('profile')
+  async updateProfile(
+    @CurrentUser('userId') userId: string,
+    @Body() payload: any,
+  ) {
+    return this.usersService.updateProfile(userId, payload);
+  }
+
+  @Put('driver-profile')
+  async updateDriverProfile(
+    @CurrentUser('userId') userId: string,
+    @Body() payload: any,
+  ) {
+    return this.usersService.updateProfile(userId, payload);
+  }
+
+  @Put('movement-manager-profile')
+  async updateMovementManagerProfile(
+    @CurrentUser('userId') userId: string,
+    @Body() payload: any,
+  ) {
+    return this.usersService.updateProfile(userId, payload);
+  }
+
+  @Put('admin-profile')
+  async updateAdminProfile(
+    @CurrentUser('userId') userId: string,
+    @Body() payload: any,
+  ) {
+    return this.usersService.updateProfile(userId, payload);
+  }
+
+  @Put('student-profile')
+  async updateStudentProfile(
+    @CurrentUser('userId') userId: string,
+    @Body() payload: any,
+  ) {
+    return this.usersService.updateProfile(userId, payload);
+  }
+
+  @Put('update-profile-picture')
+  @UseInterceptors(
+    FileInterceptor('profilePicture', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (_req, file, callback) => {
+        if (!ALLOWED_IMAGE_MIME_TYPES.has(file.mimetype)) {
+          callback(new BadRequestException('Only JPEG, PNG, WEBP, or GIF images are allowed.'), false);
+          return;
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  async updateProfilePicture(
+    @CurrentUser('userId') userId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file was uploaded.');
+    }
+    const fileUrl = `/uploads/${file.filename || file.originalname}`;
+    return this.usersService.updateProfilePicture(userId, fileUrl);
+  }
+
+  /**
+   * Permanently (hard) deletes the user document — see
+   * UsersService.deleteUser, which uses Model.findByIdAndDelete. Admin-only:
+   * this physically removes the account, so a normal user must never be able
+   * to invoke it for themselves or anyone else.
+   */
+  @Delete(':id')
+  @Roles('Admin')
+  async deleteUser(@Param('id') id: string) {
+    return this.usersService.deleteUser(id);
+  }
+
+  @Patch(':id')
+  async updateUser(@Param('id') id: string, @Body() payload: any) {
+    return this.usersService.updateUser(id, payload);
+  }
+}
