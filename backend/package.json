@@ -15,7 +15,8 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "seed": "node seed.js",
-    "db:init": "node seed.js"
+    "db:init": "node seed.js",
+    "reset-db": "node scripts/reset-db.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

@@ -67,16 +67,37 @@ The app connects to cluster `cluster0.95lwiab.mongodb.net`, database `school`.
 
 ## 5. Seed the database (once)
 
-Run locally against the Atlas connection string:
+Run against the Atlas connection string. Easiest is a Render one-off **Job**
+(New → Job, same repo, `rootDir: backend`, command `npm run seed`, with the
+same `MONGODB_URI` + `DB_NAME=school` env vars) — or the `elrenad-backend`
+service **Shell** tab (`npm run seed`), or locally:
 ```bash
 cd backend
 MONGODB_URI="mongodb+srv://nohoge1227_db_user:<password>@cluster0.95lwiab.mongodb.net/school?retryWrites=true&w=majority" \
 DB_NAME=school \
 npm run seed
 ```
-This creates collections, indexes, the default `settings` doc (`systemName: "El Renad"`,
-indigo/sky colors) and demo accounts (`admin@elrenad.com` / `Admin@123`, etc.).
-Alternatively use a Render one-off **Job** or the service **Shell**.
+This creates collections + indexes, the default `settings` doc
+(`systemName: "El Renad"`, indigo/sky colors), and demo data:
+| role | login | password |
+|---|---|---|
+| Admin | `admin@elrenad.com` | `Admin@123` |
+| Guardian (parent) | `parent1@elrenad.com` / `parent2@elrenad.com` | `Parent@123` |
+| Driver | `driver@elrenad.com` | `Driver@123` |
+| Conductor | `conductor@elrenad.com` | `Conductor@123` |
+| Movement Manager | `manager@elrenad.com` | `Manager@123` |
+
+plus 4 children (linked to the two guardians), 6 schools, 6 pickup areas,
+5 buses, 3 routes, 4 subscription plans.
+
+To wipe and re-seed, run `RESET_CONFIRM=YES npm run reset-db` first (or
+`node scripts/reset-db.js`), then `npm run seed`.
+
+> **`mongodb+srv` note**: the SRV lookup needs a working DNS resolver. Render's
+> is fine. If a local `npm run seed` hangs with `querySrv ECONNREFUSED`,
+> preload a public resolver: `node -e "require('dns').setServers(['8.8.8.8'])" -r`
+> is not a thing — instead put `require('dns').setServers(['8.8.8.8','1.1.1.1'])`
+> in a small `dns-fix.js` and run `node -r ./dns-fix.js seed.js`.
 
 ## 6. Notes / caveats
 
