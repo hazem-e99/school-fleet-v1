@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { StudentSubscription, StudentSubscriptionDocument } from './student-subscription.schema';
 import { User, UserDocument } from '../users/user.schema';
+import { Child, ChildDocument } from '../child/child.schema';
 import { SubscriptionPlan, SubscriptionPlanDocument } from '../subscription-plan/subscription-plan.schema';
 import { Payment, PaymentDocument } from '../payment/payment.schema';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -18,6 +19,7 @@ export class StudentSubscriptionService {
   constructor(
     @InjectModel(StudentSubscription.name) private subModel: Model<StudentSubscriptionDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Child.name) private childModel: Model<ChildDocument>,
     @InjectModel(SubscriptionPlan.name) private planModel: Model<SubscriptionPlanDocument>,
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
     private readonly notificationsService: NotificationsService,
@@ -31,15 +33,39 @@ export class StudentSubscriptionService {
     return model.findOne({ numericId: id }).exec();
   }
 
+  /** `studentId` now holds a Child numericId (legacy rows may hold a Student User id). */
+  private async resolveRider(numericId: number): Promise<{ name: string | null; email: string | null; childId: number | null; guardianId: number | null }> {
+    const child = await this.childModel.findOne({ numericId }).exec();
+    if (child) {
+      const guardian = await this.userModel.findOne({ numericId: child.guardianId }).exec();
+      return {
+        name: `${child.firstName} ${child.secondName} ${child.thirdName} ${child.lastName}`.trim(),
+        email: guardian?.email || null,
+        childId: child.numericId,
+        guardianId: child.guardianId,
+      };
+    }
+    const user = await this.findByNumericId(this.userModel, numericId);
+    return {
+      name: user ? `${user.firstName} ${user.lastName}` : null,
+      email: user?.email || null,
+      childId: null,
+      guardianId: null,
+    };
+  }
+
   private async toViewModel(sub: StudentSubscriptionDocument): Promise<any> {
     const id = this.getNumericId(sub);
-    const student = await this.findByNumericId(this.userModel, sub.studentId);
+    const rider = await this.resolveRider(sub.studentId);
     const plan = await this.findByNumericId(this.planModel, sub.subscriptionPlanId);
     return {
       id,
       studentId: sub.studentId,
-      studentName: student ? `${student.firstName} ${student.lastName}` : null,
-      studentEmail: student?.email || null,
+      childId: rider.childId,
+      childName: rider.name,
+      guardianId: rider.guardianId,
+      studentName: rider.name,
+      studentEmail: rider.email,
       subscriptionPlanId: sub.subscriptionPlanId,
       subscriptionPlanName: plan?.name || null,
       subscriptionPlanPrice: plan?.price || 0,
@@ -91,6 +117,72 @@ export class StudentSubscriptionService {
     const subs = await this.subModel.find({ studentId: userId }).sort({ createdAt: -1 }).exec();
     const vms = await Promise.all(subs.map((s) => this.toViewModel(s)));
     return createApiResponse(vms, null, true, vms.length);
+  }
+
+  /** All subscriptions across a guardian's children. */
+  async getChildrenSubscriptions(guardianId: number): Promise<ApiResponse<any[]>> {
+    const children = await this.childModel.find({ guardianId }).exec();
+    const childIds = children.map((c) => c.numericId);
+    if (!childIds.length) return createApiResponse([], null, true, 0);
+    const subs = await this.subModel
+      .find({ studentId: { $in: childIds } })
+      .sort({ createdAt: -1 })
+      .exec();
+    const vms = await Promise.all(subs.map((s) => this.toViewModel(s)));
+    return createApiResponse(vms, null, true, vms.length);
+  }
+
+  /**
+   * Guardian requests cancellation of one child's active subscription.
+   * Ownership-checked; queues for admin review (nothing cancelled here).
+   */
+  async requestCancellationForChild(
+    guardianId: number,
+    childId: number,
+    dto: RequestCancellationDto,
+  ): Promise<ApiResponse<boolean>> {
+    const child = await this.childModel.findOne({ numericId: childId, guardianId }).exec();
+    if (!child) {
+      throw new AppException(404, ErrorCodes.RESOURCE_NOT_FOUND, 'Child not found for this account.');
+    }
+
+    const sub = await this.subModel.findOne({
+      studentId: childId,
+      isActive: true,
+      status: 'Active',
+    }).exec();
+    if (!sub) {
+      throw new AppException(
+        404,
+        ErrorCodes.RESOURCE_NOT_FOUND,
+        'This child does not have an active subscription to cancel.',
+      );
+    }
+    if ((sub.cancellationStatus ?? 'None') === 'Pending') {
+      throw new AppException(409, ErrorCodes.CONFLICT, 'A cancellation request is already pending review.');
+    }
+
+    await this.subModel.findByIdAndUpdate(sub._id, {
+      cancellationStatus: 'Pending',
+      cancellationReason: dto.reason.trim(),
+      cancellationRequestedAt: new Date(),
+      cancellationReviewedById: null,
+      cancellationReviewedAt: null,
+      cancellationReviewNotes: null,
+    });
+
+    const guardian = await this.findByNumericId(this.userModel, guardianId);
+    const childName = `${child.firstName} ${child.secondName} ${child.thirdName} ${child.lastName}`.trim();
+    const guardianName = guardian ? `${guardian.firstName} ${guardian.lastName}` : `Guardian #${guardianId}`;
+    const admins = await this.userModel.find({ role: 'Admin' }).exec();
+    await this.notifySafely(
+      admins.map((a) => a.numericId).filter((n) => typeof n === 'number'),
+      'Subscription cancellation request',
+      `${guardianName} requested to cancel the subscription for ${childName}. Reason: ${dto.reason.trim()}`,
+      'Alert',
+    );
+
+    return createApiResponse(true, 'Cancellation request submitted. An administrator will review it shortly.');
   }
 
   /** Admin: all subscriptions across all students (building block for cross-cutting admin views). */
@@ -183,8 +275,11 @@ export class StudentSubscriptionService {
    * only the fields that gate re-selection are changed.
    */
   async resetForStudent(studentId: number, adminId: number): Promise<ApiResponse<{ subscriptionsReset: number; paymentsReset: number }>> {
-    const student = await this.userModel.findOne({ numericId: studentId, role: 'Student' }).exec();
-    if (!student) throw new NotFoundException('Student not found');
+    // `studentId` is a Child numericId now (legacy Student User ids may also occur).
+    const rider =
+      (await this.childModel.findOne({ numericId: studentId }).exec()) ||
+      (await this.userModel.findOne({ numericId: studentId }).exec());
+    if (!rider) throw new NotFoundException('Child not found');
 
     const subsResult = await this.subModel.updateMany(
       { studentId, isActive: true },
@@ -297,6 +392,10 @@ export class StudentSubscriptionService {
     const sub = await this.findSubByNumericId(subscriptionId);
     if (!sub) throw new NotFoundException('Subscription not found');
 
+    // Cancellation notifications go to the guardian of the child on this subscription.
+    const notifyChild = await this.childModel.findOne({ numericId: sub.studentId }).exec();
+    const notifyTarget = notifyChild ? [notifyChild.guardianId] : [sub.studentId];
+
     if ((sub.cancellationStatus ?? 'None') !== 'Pending') {
       throw new AppException(
         409,
@@ -316,7 +415,7 @@ export class StudentSubscriptionService {
       });
 
       await this.notifySafely(
-        [sub.studentId],
+        notifyTarget,
         'Cancellation request rejected',
         dto.reviewNotes
           ? `Your subscription cancellation request was rejected. Note: ${dto.reviewNotes}`
@@ -379,7 +478,7 @@ export class StudentSubscriptionService {
     });
 
     await this.notifySafely(
-      [sub.studentId],
+      notifyTarget,
       'Subscription cancelled',
       'Your subscription cancellation was approved. You can now choose a new plan.',
       'Alert',

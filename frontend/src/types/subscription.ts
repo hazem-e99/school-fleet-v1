@@ -89,6 +89,8 @@ export enum PaymentChannel {
 
 export interface CreatePaymentDTO {
   subscriptionPlanId: number;
+  /** Children (rider ids) this payment covers. Total = plan.price * childIds.length. */
+  childIds: number[];
   paymentMethod: PaymentMethod;
   paymentReferenceCode?: string | null; // 3-100 chars, optional
   paymentChannel?: PaymentChannel | null;
@@ -105,6 +107,9 @@ export interface PaymentViewModel {
   studentId: number;
   studentName?: string | null;
   studentEmail?: string | null;
+  childIds?: number[] | null;
+  childCount?: number;
+  childNames?: string[] | null;
   subscriptionPlanId: number;
   subscriptionPlanName?: string | null;
   amount: number;
@@ -195,6 +200,9 @@ export enum CancellationStatus {
 export interface StudentSubscriptionViewModel {
   id: number;
   studentId: number;
+  childId?: number | null;
+  childName?: string | null;
+  guardianId?: number | null;
   studentName?: string | null;
   studentEmail?: string | null;
   subscriptionPlanId: number;

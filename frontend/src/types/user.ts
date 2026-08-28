@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'student' | 'supervisor' | 'movement-manager' | 'driver' | 'conductor';
+export type UserRole = 'admin' | 'guardian' | 'student' | 'supervisor' | 'movement-manager' | 'driver' | 'conductor';
 
 export interface User {
   id: string | number;
@@ -88,3 +88,50 @@ export interface Admin extends User {
   role: 'admin';
   permissions?: string[];
 }
+
+export interface Guardian extends User {
+  role: 'guardian';
+}
+
+/** A child (rider) managed by a guardian. `id` slots into downstream `studentId` fields. */
+export interface Child {
+  id: number;
+  guardianId: number;
+  guardianName?: string | null;
+  guardianEmail?: string | null;
+  guardianPhone?: string | null;
+  firstName: string;
+  secondName: string;
+  thirdName: string;
+  lastName: string;
+  fullName: string;
+  schoolName: string;
+  pickupAreaName: string;
+  gender?: 'Male' | 'Female' | null;
+  dateOfBirth?: string | null;
+  status: 'Active' | 'Inactive';
+  activeSubscription?: {
+    id: number;
+    subscriptionPlanId: number;
+    subscriptionPlanName: string | null;
+    subscriptionPlanPrice: number;
+    startDate: string | null;
+    endDate: string | null;
+    status: string;
+    cancellationStatus: string;
+  } | null;
+  createdAt?: string | null;
+}
+
+export interface CreateChildDTO {
+  firstName: string;
+  secondName: string;
+  thirdName: string;
+  lastName: string;
+  schoolName: string;
+  pickupAreaName: string;
+  gender?: 'Male' | 'Female';
+  dateOfBirth?: string;
+}
+
+export type UpdateChildDTO = Partial<CreateChildDTO>;

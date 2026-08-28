@@ -283,8 +283,8 @@ describe('Bus System API - E2E Test Suite', () => {
     it('should get forms without auth', async () => {
       const r = await req('GET', '/api/Forms');
       expect(r.status).toBe(200);
-      expect(r.body.departments).toBeDefined();
-      expect(r.body.departments.length).toBeGreaterThan(0);
+      expect(r.body.roles).toBeDefined();
+      expect(r.body.roles.length).toBeGreaterThan(0);
     });
   });
 

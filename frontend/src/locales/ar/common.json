@@ -7,31 +7,40 @@
     "close": "إغلاق",
     "cancel": "إلغاء",
     "save": "حفظ",
-  "back": "رجوع",
-  "na": "غير متاح",
-  "loading": "جاري التحميل...",
-  "saving": "جارٍ الحفظ...",
-  "saveChanges": "حفظ التغييرات",
-  "tryAgain": "حاول مرة أخرى",
-  "online": "متصل",
-  "logout": "تسجيل الخروج",
-  "soon": "قريبًا",
-  "pro": "احترافي",
-  "status": {
-  "active": "نشط",
-  "inactive": "غير نشط",
-  "scheduled": "مجدولة",
-  "inProgress": "قيد التنفيذ",
-  "completed": "مكتملة",
-  "cancelled": "ملغاة",
-  "delayed": "متأخرة"
-  }
+    "back": "رجوع",
+    "na": "غير متاح",
+    "loading": "جاري التحميل...",
+    "saving": "جارٍ الحفظ...",
+    "saveChanges": "حفظ التغييرات",
+    "tryAgain": "حاول مرة أخرى",
+    "online": "متصل",
+    "logout": "تسجيل الخروج",
+    "soon": "قريبًا",
+    "pro": "احترافي",
+    "status": {
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "scheduled": "مجدولة",
+      "inProgress": "قيد التنفيذ",
+      "completed": "مكتملة",
+      "cancelled": "ملغاة",
+      "delayed": "متأخرة"
+    },
+    "edit": "تعديل",
+    "submit": "إرسال",
+    "submitting": "جارٍ الإرسال...",
+    "remove": "حذف",
+    "clear": "مسح",
+    "refresh": "تحديث",
+    "success": "تم",
+    "error": "خطأ"
   },
   "roles": {
-  "student": "طالب",
-  "driver": "سائق",
-  "supervisor": "مشرف",
-  "movementManager": "مسؤول الحركة"
+    "student": "طالب",
+    "driver": "سائق",
+    "supervisor": "مشرف",
+    "movementManager": "مسؤول الحركة",
+    "guardian": "ولي الأمر"
   },
   "errors": {
     "network": "تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.",
@@ -61,8 +70,8 @@
     "viewAll": "عرض الكل"
   },
   "sidebar": {
-  "dashboardFor": "لوحة تحكم {{role}}",
-  "activeSession": "جلسة نشطة"
+    "dashboardFor": "لوحة تحكم {{role}}",
+    "activeSession": "جلسة نشطة"
   },
   "nav": {
     "users": "المستخدمون",
@@ -101,8 +110,13 @@
       "data": "بيانات",
       "locations": "مواقع",
       "academics": "أكاديمي",
-      "all": "الكل"
-    }
+      "all": "الكل",
+      "parents": "الأهل"
+    },
+    "my_children": "أبنائي",
+    "subscriptions": "الاشتراكات",
+    "children": "الأبناء",
+    "guardians": "أولياء الأمور"
   },
   "pages": {
     "auth": {
@@ -202,14 +216,16 @@
         }
       },
       "register": {
-        "title": "تسجيل الطالب",
-        "subtitle": "انضم إلى نظام حافلات الجامعة",
-        "cardTitle": "إنشاء حساب طالب",
-        "cardSubtitle": "املأ بياناتك للبدء",
+        "title": "تسجيل ولي الأمر",
+        "subtitle": "أنشئ حسابًا وأضف أبناءك",
+        "cardTitle": "إنشاء حساب ولي أمر",
+        "cardSubtitle": "أدخل بياناتك وبيانات أبنائك",
         "sections": {
           "personal": "المعلومات الشخصية",
           "academic": "المعلومات الأكاديمية",
-          "security": "الأمان"
+          "security": "الأمان",
+          "guardian": "بيانات ولي الأمر",
+          "children": "الأبناء"
         },
         "fields": {
           "firstName": "الاسم الأول",
@@ -222,7 +238,11 @@
           "preferredArea": "منطقتك المفضلة",
           "yearOfStudy": "السنة الدراسية",
           "password": "كلمة المرور",
-          "confirmPassword": "تأكيد كلمة المرور"
+          "confirmPassword": "تأكيد كلمة المرور",
+          "secondName": "الاسم الثاني",
+          "thirdName": "الاسم الثالث",
+          "school": "المدرسة",
+          "pickupArea": "منطقة الركوب"
         },
         "placeholders": {
           "firstName": "أدخل الاسم الأول",
@@ -238,18 +258,24 @@
           "loadingYears": "جاري تحميل السنوات...",
           "selectYearOfStudy": "اختر السنة الدراسية",
           "password": "أدخل كلمة المرور",
-          "confirmPassword": "أدخل تأكيد كلمة المرور"
+          "confirmPassword": "أدخل تأكيد كلمة المرور",
+          "loadingSchools": "جارٍ تحميل المدارس...",
+          "selectSchool": "اختر المدرسة",
+          "selectPickupArea": "اختر منطقة الركوب"
         },
         "hints": {
           "nationalIdTitle": "يجب أن يكون الرقم القومي 14 رقمًا بالضبط",
           "passwordMin": "الحد الأدنى 6 أحرف",
           "noAreasAvailable": "لا توجد مناطق متاحة حاليًا. يرجى التواصل مع الدعم.",
           "noDepartmentsAvailable": "لا توجد أقسام متاحة حاليًا. يرجى التواصل مع الدعم.",
-          "noYearsAvailable": "لا توجد سنوات دراسية متاحة حاليًا. يرجى التواصل مع الدعم."
+          "noYearsAvailable": "لا توجد سنوات دراسية متاحة حاليًا. يرجى التواصل مع الدعم.",
+          "atLeastOneChild": "أضف ابنًا واحدًا على الأقل."
         },
         "cta": {
           "creating": "جارٍ إنشاء الحساب...",
-          "create": "إنشاء حساب"
+          "create": "إنشاء حساب",
+          "addChild": "إضافة ابن",
+          "removeChild": "حذف"
         },
         "alreadyHave": "لديك حساب بالفعل؟",
         "signInHere": "سجّل الدخول من هنا",
@@ -259,7 +285,8 @@
           "successMessage": "تم إنشاء حسابك بنجاح. يرجى التحقق من بريدك للحصول على رمز التحقق.",
           "successMessageNoVerification": "تم إنشاء حسابك بنجاح. يمكنك الآن تسجيل الدخول.",
           "errorTitle": "فشل التسجيل"
-        }
+        },
+        "childLabel": "ابن"
       }
     },
     "notifications": {
@@ -357,9 +384,9 @@
         "deleted": "تم حذف الإشعار بنجاح",
         "deleteFailed": "فشل حذف الإشعار",
         "cleared": "تم مسح جميع الإشعارات",
-  "clearFailed": "فشل مسح جميع الإشعارات",
-  "broadcastSent": "تم إرسال إشعار البث",
-  "broadcastFailed": "فشل إرسال البث"
+        "clearFailed": "فشل مسح جميع الإشعارات",
+        "broadcastSent": "تم إرسال إشعار البث",
+        "broadcastFailed": "فشل إرسال البث"
       },
       "confirms": {
         "clearAll": "هل أنت متأكد أنك تريد مسح جميع الإشعارات؟ هذا الإجراء لا يمكن التراجع عنه."
@@ -607,7 +634,8 @@
           "allAccountStatuses": "كل حالات الحساب",
           "allSubscriptionStatuses": "كل حالات الاشتراك",
           "allPaymentStatuses": "كل حالات الدفع",
-          "noneStatus": "لا يوجد"
+          "noneStatus": "لا يوجد",
+          "allSchools": "كل المدارس"
         },
         "columns": {
           "student": "الطالب",
@@ -626,7 +654,10 @@
           "paymentStatus": "حالة الدفع",
           "registeredOn": "تاريخ التسجيل",
           "paymentDate": "تاريخ الاشتراك/الدفع",
-          "actions": "الإجراءات"
+          "actions": "الإجراءات",
+          "school": "المدرسة",
+          "pickupArea": "منطقة الركوب",
+          "guardian": "ولي الأمر"
         },
         "paymentChannel": {
           "instapay": "إنستا باي",
@@ -796,290 +827,290 @@
           "reviewedDate": "تاريخ المراجعة"
         }
       },
-        "plans": {
-          "loading": "جاري تحميل الباقات...",
-          "title": "إدارة الباقات",
-          "subtitle": "إدارة الباقات المتاحة للاشتراك",
-          "addPlan": "إضافة باقة",
-          "listTitle": "الباقات",
-          "listCountLabel": "باقة",
-          "table": {
-            "id": "المعرف",
-            "name": "الاسم",
-            "description": "الوصف",
-            "price": "السعر",
-            "durationDays": "المدة (أيام)",
-            "status": "الحالة",
-            "actions": "الإجراءات"
-          },
-          "status": {
-            "active": "نشطة",
-            "inactive": "غير نشطة"
-          },
-          "actions": {
-            "editPlan": "تعديل الباقة",
-            "activatePlan": "تفعيل الباقة",
-            "deactivatePlan": "إلغاء تفعيل الباقة",
-            "deletePlan": "حذف الباقة"
-          },
-          "modal": {
-            "editTitle": "تعديل الباقة",
-            "addTitle": "إضافة باقة"
-          },
-          "sections": {
-            "basicDetails": "البيانات الأساسية",
-            "pricingDuration": "السعر والمدة"
-          },
-          "form": {
-            "name": "الاسم",
-            "nameHint": "3-100 حرفًا، اسم باقة فريد.",
-            "nameEg": "مثال: شهري قياسي",
-            "description": "الوصف",
-            "descriptionHint": "اختياري. حتى 500 حرف.",
-            "descriptionPh": "ملخص قصير عن الباقة",
-            "price": "السعر",
-            "priceHint": "الحد الأدنى 0.01. استخدم منزلتين عشريتين.",
-            "pricePh": "0.00",
-            "durationDays": "المدة (أيام)",
-            "durationHint": "1 - 365 يومًا.",
-            "durationPh": "30",
-            "saveChanges": "حفظ التغييرات",
-            "createPlan": "إنشاء باقة"
-          },
-          "errors": {
-            "loadFailedMsg": "فشل في تحميل الباقات",
-            "loadFailedTitle": "فشل التحميل",
-            "error": "خطأ",
-            "loadPlanDetails": "فشل في تحميل تفاصيل الباقة",
-            "updateFailed": "فشل التحديث",
-            "creationFailed": "فشل الإنشاء",
-            "saveFailedMsg": "فشل في حفظ الباقة",
-            "saveFailedTitle": "فشل الحفظ",
-            "actionFailed": "فشل الإجراء",
-            "actionFailedTitle": "فشل الإجراء"
-          },
-          "confirms": {
-            "deleteTitle": "حذف الباقة",
-            "deleteDesc": "هل أنت متأكد من حذف هذه الباقة؟ هذا الإجراء لا يمكن التراجع عنه.",
-            "activateTitle": "تفعيل الباقة",
-            "activateDesc": "هل أنت متأكد من تفعيل هذه الباقة؟",
-            "deactivateTitle": "إلغاء تفعيل الباقة",
-            "deactivateDesc": "هل أنت متأكد من إلغاء تفعيل هذه الباقة؟",
-            "confirmTitle": "تأكيد الإجراء",
-            "confirmDesc": "هل أنت متأكد؟"
-          },
-          "toasts": {
-            "planUpdated": "تم تحديث الباقة",
-            "updatedSuccessfully": "تم التحديث بنجاح",
-            "planCreated": "تم إنشاء الباقة",
-            "createdSuccessfully": "تم الإنشاء بنجاح",
-            "planDeleted": "تم حذف الباقة بنجاح",
-            "planActivated": "تم تفعيل الباقة بنجاح",
-            "planDeactivated": "تم إلغاء تفعيل الباقة بنجاح",
-            "successTitle": "نجاح"
-          }
+      "plans": {
+        "loading": "جاري تحميل الباقات...",
+        "title": "إدارة الباقات",
+        "subtitle": "إدارة الباقات المتاحة للاشتراك",
+        "addPlan": "إضافة باقة",
+        "listTitle": "الباقات",
+        "listCountLabel": "باقة",
+        "table": {
+          "id": "المعرف",
+          "name": "الاسم",
+          "description": "الوصف",
+          "price": "السعر",
+          "durationDays": "المدة (أيام)",
+          "status": "الحالة",
+          "actions": "الإجراءات"
         },
-        "preferredAreas": {
-          "loading": "جاري التحميل...",
-          "title": "المناطق المفضلة",
-          "subtitle": "إدارة المناطق التي يمكن للطلاب اختيارها عند التسجيل",
-          "addButton": "إضافة منطقة",
-          "listTitle": "المناطق",
-          "listCountLabel": "منطقة",
-          "table": {
-            "id": "المعرف",
-            "name": "الاسم",
-            "status": "الحالة",
-            "actions": "الإجراءات"
-          },
-          "status": {
-            "active": "نشطة",
-            "inactive": "غير نشطة"
-          },
-          "actions": {
-            "editArea": "تعديل المنطقة",
-            "activateArea": "تفعيل المنطقة",
-            "deactivateArea": "إلغاء تفعيل المنطقة",
-            "deleteArea": "حذف المنطقة"
-          },
-          "modal": {
-            "editTitle": "تعديل المنطقة",
-            "addTitle": "إضافة منطقة"
-          },
-          "form": {
-            "name": "الاسم",
-            "nameHint": "2-100 حرف، مثل اسم حي أو مدينة.",
-            "namePlaceholder": "مثال: مدينة نصر",
-            "saveChanges": "حفظ التغييرات",
-            "createArea": "إنشاء منطقة"
-          },
-          "errors": {
-            "loadFailedMsg": "فشل في تحميل المناطق المفضلة",
-            "loadFailedTitle": "فشل التحميل",
-            "error": "خطأ",
-            "loadAreaDetails": "فشل في تحميل تفاصيل المنطقة",
-            "updateFailed": "فشل التحديث",
-            "creationFailed": "فشل الإنشاء",
-            "saveFailedMsg": "فشل في حفظ المنطقة",
-            "saveFailedTitle": "فشل الحفظ",
-            "actionFailed": "فشل الإجراء",
-            "actionFailedTitle": "فشل الإجراء"
-          },
-          "confirms": {
-            "deleteTitle": "حذف المنطقة",
-            "deleteDesc": "هل أنت متأكد من حذف هذه المنطقة؟ الطلاب الذين اختاروها بالفعل يحتفظون بقيمتهم المحفوظة، لكنها لن تظهر بعد الآن في نموذج التسجيل.",
-            "activateTitle": "تفعيل المنطقة",
-            "activateDesc": "هل أنت متأكد من تفعيل هذه المنطقة؟ ستظهر مرة أخرى في نموذج التسجيل.",
-            "deactivateTitle": "إلغاء تفعيل المنطقة",
-            "deactivateDesc": "هل أنت متأكد من إلغاء تفعيل هذه المنطقة؟ سيتم إخفاؤها من نموذج التسجيل.",
-            "confirmTitle": "تأكيد الإجراء",
-            "confirmDesc": "هل أنت متأكد؟"
-          },
-          "toasts": {
-            "areaUpdated": "تم تحديث المنطقة",
-            "updatedSuccessfully": "تم التحديث بنجاح",
-            "areaCreated": "تم إنشاء المنطقة",
-            "createdSuccessfully": "تم الإنشاء بنجاح",
-            "areaDeleted": "تم حذف المنطقة بنجاح",
-            "areaActivated": "تم تفعيل المنطقة بنجاح",
-            "areaDeactivated": "تم إلغاء تفعيل المنطقة بنجاح",
-            "successTitle": "نجاح"
-          }
+        "status": {
+          "active": "نشطة",
+          "inactive": "غير نشطة"
         },
-        "departments": {
-          "loading": "جاري التحميل...",
-          "title": "الأقسام",
-          "subtitle": "إدارة الأقسام التي يمكن للطلاب اختيارها عند التسجيل",
-          "addButton": "إضافة قسم",
-          "listTitle": "الأقسام",
-          "listCountLabel": "قسم",
-          "table": {
-            "id": "المعرف",
-            "name": "الاسم",
-            "status": "الحالة",
-            "actions": "الإجراءات"
-          },
-          "status": {
-            "active": "نشط",
-            "inactive": "غير نشط"
-          },
-          "actions": {
-            "editItem": "تعديل القسم",
-            "activateItem": "تفعيل القسم",
-            "deactivateItem": "إلغاء تفعيل القسم",
-            "deleteItem": "حذف القسم"
-          },
-          "modal": {
-            "editTitle": "تعديل القسم",
-            "addTitle": "إضافة قسم"
-          },
-          "form": {
-            "name": "الاسم",
-            "nameHint": "2-100 حرف.",
-            "namePlaceholder": "مثال: علوم حاسب",
-            "saveChanges": "حفظ التغييرات",
-            "createItem": "إنشاء قسم"
-          },
-          "errors": {
-            "loadFailedMsg": "فشل في تحميل الأقسام",
-            "loadFailedTitle": "فشل التحميل",
-            "error": "خطأ",
-            "loadDepartmentDetails": "فشل في تحميل تفاصيل القسم",
-            "updateFailed": "فشل التحديث",
-            "creationFailed": "فشل الإنشاء",
-            "saveFailedMsg": "فشل في حفظ القسم",
-            "saveFailedTitle": "فشل الحفظ",
-            "actionFailed": "فشل الإجراء",
-            "actionFailedTitle": "فشل الإجراء"
-          },
-          "confirms": {
-            "deleteTitle": "حذف القسم",
-            "deleteDesc": "هل أنت متأكد من حذف هذا القسم؟ الطلاب الذين اختاروه بالفعل يحتفظون بقيمتهم المحفوظة، لكنه لن يظهر بعد الآن في نموذج التسجيل.",
-            "activateTitle": "تفعيل القسم",
-            "activateDesc": "هل أنت متأكد من تفعيل هذا القسم؟ سيظهر مرة أخرى في نموذج التسجيل.",
-            "deactivateTitle": "إلغاء تفعيل القسم",
-            "deactivateDesc": "هل أنت متأكد من إلغاء تفعيل هذا القسم؟ سيتم إخفاؤه من نموذج التسجيل.",
-            "confirmTitle": "تأكيد الإجراء",
-            "confirmDesc": "هل أنت متأكد؟"
-          },
-          "toasts": {
-            "departmentUpdated": "تم تحديث القسم",
-            "updatedSuccessfully": "تم التحديث بنجاح",
-            "departmentCreated": "تم إنشاء القسم",
-            "createdSuccessfully": "تم الإنشاء بنجاح",
-            "departmentDeleted": "تم حذف القسم بنجاح",
-            "departmentActivated": "تم تفعيل القسم بنجاح",
-            "departmentDeactivated": "تم إلغاء تفعيل القسم بنجاح",
-            "successTitle": "نجاح"
-          }
+        "actions": {
+          "editPlan": "تعديل الباقة",
+          "activatePlan": "تفعيل الباقة",
+          "deactivatePlan": "إلغاء تفعيل الباقة",
+          "deletePlan": "حذف الباقة"
         },
-        "yearsOfStudy": {
-          "loading": "جاري التحميل...",
-          "title": "السنوات الدراسية",
-          "subtitle": "إدارة السنوات الدراسية التي يمكن للطلاب اختيارها عند التسجيل",
-          "addButton": "إضافة سنة",
-          "listTitle": "السنوات الدراسية",
-          "listCountLabel": "سنة",
-          "table": {
-            "id": "المعرف",
-            "name": "الاسم",
-            "status": "الحالة",
-            "actions": "الإجراءات"
-          },
-          "status": {
-            "active": "نشطة",
-            "inactive": "غير نشطة"
-          },
-          "actions": {
-            "editItem": "تعديل السنة",
-            "activateItem": "تفعيل السنة",
-            "deactivateItem": "إلغاء تفعيل السنة",
-            "deleteItem": "حذف السنة"
-          },
-          "modal": {
-            "editTitle": "تعديل السنة",
-            "addTitle": "إضافة سنة"
-          },
-          "form": {
-            "name": "الاسم",
-            "nameHint": "2-100 حرف، مثل FirstYear.",
-            "namePlaceholder": "مثال: FirstYear",
-            "saveChanges": "حفظ التغييرات",
-            "createItem": "إنشاء سنة"
-          },
-          "errors": {
-            "loadFailedMsg": "فشل في تحميل السنوات الدراسية",
-            "loadFailedTitle": "فشل التحميل",
-            "error": "خطأ",
-            "loadItemDetails": "فشل في تحميل تفاصيل السنة",
-            "updateFailed": "فشل التحديث",
-            "creationFailed": "فشل الإنشاء",
-            "saveFailedMsg": "فشل في حفظ السنة",
-            "saveFailedTitle": "فشل الحفظ",
-            "actionFailed": "فشل الإجراء",
-            "actionFailedTitle": "فشل الإجراء"
-          },
-          "confirms": {
-            "deleteTitle": "حذف السنة",
-            "deleteDesc": "هل أنت متأكد من حذف هذه السنة؟ الطلاب الذين اختاروها بالفعل يحتفظون بقيمتهم المحفوظة، لكنها لن تظهر بعد الآن في نموذج التسجيل.",
-            "activateTitle": "تفعيل السنة",
-            "activateDesc": "هل أنت متأكد من تفعيل هذه السنة؟ ستظهر مرة أخرى في نموذج التسجيل.",
-            "deactivateTitle": "إلغاء تفعيل السنة",
-            "deactivateDesc": "هل أنت متأكد من إلغاء تفعيل هذه السنة؟ سيتم إخفاؤها من نموذج التسجيل.",
-            "confirmTitle": "تأكيد الإجراء",
-            "confirmDesc": "هل أنت متأكد؟"
-          },
-          "toasts": {
-            "itemUpdated": "تم تحديث السنة",
-            "updatedSuccessfully": "تم التحديث بنجاح",
-            "itemCreated": "تم إنشاء السنة",
-            "createdSuccessfully": "تم الإنشاء بنجاح",
-            "itemDeleted": "تم حذف السنة بنجاح",
-            "itemActivated": "تم تفعيل السنة بنجاح",
-            "itemDeactivated": "تم إلغاء تفعيل السنة بنجاح",
-            "successTitle": "نجاح"
-          }
+        "modal": {
+          "editTitle": "تعديل الباقة",
+          "addTitle": "إضافة باقة"
         },
+        "sections": {
+          "basicDetails": "البيانات الأساسية",
+          "pricingDuration": "السعر والمدة"
+        },
+        "form": {
+          "name": "الاسم",
+          "nameHint": "3-100 حرفًا، اسم باقة فريد.",
+          "nameEg": "مثال: شهري قياسي",
+          "description": "الوصف",
+          "descriptionHint": "اختياري. حتى 500 حرف.",
+          "descriptionPh": "ملخص قصير عن الباقة",
+          "price": "السعر",
+          "priceHint": "الحد الأدنى 0.01. استخدم منزلتين عشريتين.",
+          "pricePh": "0.00",
+          "durationDays": "المدة (أيام)",
+          "durationHint": "1 - 365 يومًا.",
+          "durationPh": "30",
+          "saveChanges": "حفظ التغييرات",
+          "createPlan": "إنشاء باقة"
+        },
+        "errors": {
+          "loadFailedMsg": "فشل في تحميل الباقات",
+          "loadFailedTitle": "فشل التحميل",
+          "error": "خطأ",
+          "loadPlanDetails": "فشل في تحميل تفاصيل الباقة",
+          "updateFailed": "فشل التحديث",
+          "creationFailed": "فشل الإنشاء",
+          "saveFailedMsg": "فشل في حفظ الباقة",
+          "saveFailedTitle": "فشل الحفظ",
+          "actionFailed": "فشل الإجراء",
+          "actionFailedTitle": "فشل الإجراء"
+        },
+        "confirms": {
+          "deleteTitle": "حذف الباقة",
+          "deleteDesc": "هل أنت متأكد من حذف هذه الباقة؟ هذا الإجراء لا يمكن التراجع عنه.",
+          "activateTitle": "تفعيل الباقة",
+          "activateDesc": "هل أنت متأكد من تفعيل هذه الباقة؟",
+          "deactivateTitle": "إلغاء تفعيل الباقة",
+          "deactivateDesc": "هل أنت متأكد من إلغاء تفعيل هذه الباقة؟",
+          "confirmTitle": "تأكيد الإجراء",
+          "confirmDesc": "هل أنت متأكد؟"
+        },
+        "toasts": {
+          "planUpdated": "تم تحديث الباقة",
+          "updatedSuccessfully": "تم التحديث بنجاح",
+          "planCreated": "تم إنشاء الباقة",
+          "createdSuccessfully": "تم الإنشاء بنجاح",
+          "planDeleted": "تم حذف الباقة بنجاح",
+          "planActivated": "تم تفعيل الباقة بنجاح",
+          "planDeactivated": "تم إلغاء تفعيل الباقة بنجاح",
+          "successTitle": "نجاح"
+        }
+      },
+      "preferredAreas": {
+        "loading": "جاري التحميل...",
+        "title": "المناطق المفضلة",
+        "subtitle": "إدارة المناطق التي يمكن للطلاب اختيارها عند التسجيل",
+        "addButton": "إضافة منطقة",
+        "listTitle": "المناطق",
+        "listCountLabel": "منطقة",
+        "table": {
+          "id": "المعرف",
+          "name": "الاسم",
+          "status": "الحالة",
+          "actions": "الإجراءات"
+        },
+        "status": {
+          "active": "نشطة",
+          "inactive": "غير نشطة"
+        },
+        "actions": {
+          "editArea": "تعديل المنطقة",
+          "activateArea": "تفعيل المنطقة",
+          "deactivateArea": "إلغاء تفعيل المنطقة",
+          "deleteArea": "حذف المنطقة"
+        },
+        "modal": {
+          "editTitle": "تعديل المنطقة",
+          "addTitle": "إضافة منطقة"
+        },
+        "form": {
+          "name": "الاسم",
+          "nameHint": "2-100 حرف، مثل اسم حي أو مدينة.",
+          "namePlaceholder": "مثال: مدينة نصر",
+          "saveChanges": "حفظ التغييرات",
+          "createArea": "إنشاء منطقة"
+        },
+        "errors": {
+          "loadFailedMsg": "فشل في تحميل المناطق المفضلة",
+          "loadFailedTitle": "فشل التحميل",
+          "error": "خطأ",
+          "loadAreaDetails": "فشل في تحميل تفاصيل المنطقة",
+          "updateFailed": "فشل التحديث",
+          "creationFailed": "فشل الإنشاء",
+          "saveFailedMsg": "فشل في حفظ المنطقة",
+          "saveFailedTitle": "فشل الحفظ",
+          "actionFailed": "فشل الإجراء",
+          "actionFailedTitle": "فشل الإجراء"
+        },
+        "confirms": {
+          "deleteTitle": "حذف المنطقة",
+          "deleteDesc": "هل أنت متأكد من حذف هذه المنطقة؟ الطلاب الذين اختاروها بالفعل يحتفظون بقيمتهم المحفوظة، لكنها لن تظهر بعد الآن في نموذج التسجيل.",
+          "activateTitle": "تفعيل المنطقة",
+          "activateDesc": "هل أنت متأكد من تفعيل هذه المنطقة؟ ستظهر مرة أخرى في نموذج التسجيل.",
+          "deactivateTitle": "إلغاء تفعيل المنطقة",
+          "deactivateDesc": "هل أنت متأكد من إلغاء تفعيل هذه المنطقة؟ سيتم إخفاؤها من نموذج التسجيل.",
+          "confirmTitle": "تأكيد الإجراء",
+          "confirmDesc": "هل أنت متأكد؟"
+        },
+        "toasts": {
+          "areaUpdated": "تم تحديث المنطقة",
+          "updatedSuccessfully": "تم التحديث بنجاح",
+          "areaCreated": "تم إنشاء المنطقة",
+          "createdSuccessfully": "تم الإنشاء بنجاح",
+          "areaDeleted": "تم حذف المنطقة بنجاح",
+          "areaActivated": "تم تفعيل المنطقة بنجاح",
+          "areaDeactivated": "تم إلغاء تفعيل المنطقة بنجاح",
+          "successTitle": "نجاح"
+        }
+      },
+      "departments": {
+        "loading": "جاري التحميل...",
+        "title": "الأقسام",
+        "subtitle": "إدارة الأقسام التي يمكن للطلاب اختيارها عند التسجيل",
+        "addButton": "إضافة قسم",
+        "listTitle": "الأقسام",
+        "listCountLabel": "قسم",
+        "table": {
+          "id": "المعرف",
+          "name": "الاسم",
+          "status": "الحالة",
+          "actions": "الإجراءات"
+        },
+        "status": {
+          "active": "نشط",
+          "inactive": "غير نشط"
+        },
+        "actions": {
+          "editItem": "تعديل القسم",
+          "activateItem": "تفعيل القسم",
+          "deactivateItem": "إلغاء تفعيل القسم",
+          "deleteItem": "حذف القسم"
+        },
+        "modal": {
+          "editTitle": "تعديل القسم",
+          "addTitle": "إضافة قسم"
+        },
+        "form": {
+          "name": "الاسم",
+          "nameHint": "2-100 حرف.",
+          "namePlaceholder": "مثال: علوم حاسب",
+          "saveChanges": "حفظ التغييرات",
+          "createItem": "إنشاء قسم"
+        },
+        "errors": {
+          "loadFailedMsg": "فشل في تحميل الأقسام",
+          "loadFailedTitle": "فشل التحميل",
+          "error": "خطأ",
+          "loadDepartmentDetails": "فشل في تحميل تفاصيل القسم",
+          "updateFailed": "فشل التحديث",
+          "creationFailed": "فشل الإنشاء",
+          "saveFailedMsg": "فشل في حفظ القسم",
+          "saveFailedTitle": "فشل الحفظ",
+          "actionFailed": "فشل الإجراء",
+          "actionFailedTitle": "فشل الإجراء"
+        },
+        "confirms": {
+          "deleteTitle": "حذف القسم",
+          "deleteDesc": "هل أنت متأكد من حذف هذا القسم؟ الطلاب الذين اختاروه بالفعل يحتفظون بقيمتهم المحفوظة، لكنه لن يظهر بعد الآن في نموذج التسجيل.",
+          "activateTitle": "تفعيل القسم",
+          "activateDesc": "هل أنت متأكد من تفعيل هذا القسم؟ سيظهر مرة أخرى في نموذج التسجيل.",
+          "deactivateTitle": "إلغاء تفعيل القسم",
+          "deactivateDesc": "هل أنت متأكد من إلغاء تفعيل هذا القسم؟ سيتم إخفاؤه من نموذج التسجيل.",
+          "confirmTitle": "تأكيد الإجراء",
+          "confirmDesc": "هل أنت متأكد؟"
+        },
+        "toasts": {
+          "departmentUpdated": "تم تحديث القسم",
+          "updatedSuccessfully": "تم التحديث بنجاح",
+          "departmentCreated": "تم إنشاء القسم",
+          "createdSuccessfully": "تم الإنشاء بنجاح",
+          "departmentDeleted": "تم حذف القسم بنجاح",
+          "departmentActivated": "تم تفعيل القسم بنجاح",
+          "departmentDeactivated": "تم إلغاء تفعيل القسم بنجاح",
+          "successTitle": "نجاح"
+        }
+      },
+      "yearsOfStudy": {
+        "loading": "جاري التحميل...",
+        "title": "السنوات الدراسية",
+        "subtitle": "إدارة السنوات الدراسية التي يمكن للطلاب اختيارها عند التسجيل",
+        "addButton": "إضافة سنة",
+        "listTitle": "السنوات الدراسية",
+        "listCountLabel": "سنة",
+        "table": {
+          "id": "المعرف",
+          "name": "الاسم",
+          "status": "الحالة",
+          "actions": "الإجراءات"
+        },
+        "status": {
+          "active": "نشطة",
+          "inactive": "غير نشطة"
+        },
+        "actions": {
+          "editItem": "تعديل السنة",
+          "activateItem": "تفعيل السنة",
+          "deactivateItem": "إلغاء تفعيل السنة",
+          "deleteItem": "حذف السنة"
+        },
+        "modal": {
+          "editTitle": "تعديل السنة",
+          "addTitle": "إضافة سنة"
+        },
+        "form": {
+          "name": "الاسم",
+          "nameHint": "2-100 حرف، مثل FirstYear.",
+          "namePlaceholder": "مثال: FirstYear",
+          "saveChanges": "حفظ التغييرات",
+          "createItem": "إنشاء سنة"
+        },
+        "errors": {
+          "loadFailedMsg": "فشل في تحميل السنوات الدراسية",
+          "loadFailedTitle": "فشل التحميل",
+          "error": "خطأ",
+          "loadItemDetails": "فشل في تحميل تفاصيل السنة",
+          "updateFailed": "فشل التحديث",
+          "creationFailed": "فشل الإنشاء",
+          "saveFailedMsg": "فشل في حفظ السنة",
+          "saveFailedTitle": "فشل الحفظ",
+          "actionFailed": "فشل الإجراء",
+          "actionFailedTitle": "فشل الإجراء"
+        },
+        "confirms": {
+          "deleteTitle": "حذف السنة",
+          "deleteDesc": "هل أنت متأكد من حذف هذه السنة؟ الطلاب الذين اختاروها بالفعل يحتفظون بقيمتهم المحفوظة، لكنها لن تظهر بعد الآن في نموذج التسجيل.",
+          "activateTitle": "تفعيل السنة",
+          "activateDesc": "هل أنت متأكد من تفعيل هذه السنة؟ ستظهر مرة أخرى في نموذج التسجيل.",
+          "deactivateTitle": "إلغاء تفعيل السنة",
+          "deactivateDesc": "هل أنت متأكد من إلغاء تفعيل هذه السنة؟ سيتم إخفاؤها من نموذج التسجيل.",
+          "confirmTitle": "تأكيد الإجراء",
+          "confirmDesc": "هل أنت متأكد؟"
+        },
+        "toasts": {
+          "itemUpdated": "تم تحديث السنة",
+          "updatedSuccessfully": "تم التحديث بنجاح",
+          "itemCreated": "تم إنشاء السنة",
+          "createdSuccessfully": "تم الإنشاء بنجاح",
+          "itemDeleted": "تم حذف السنة بنجاح",
+          "itemActivated": "تم تفعيل السنة بنجاح",
+          "itemDeactivated": "تم إلغاء تفعيل السنة بنجاح",
+          "successTitle": "نجاح"
+        }
+      },
       "trips": {
         "title": "الرحلات",
         "newTrip": "رحلة جديدة",
@@ -1372,6 +1403,85 @@
           "deactivate": "إلغاء التفعيل",
           "delete": "حذف"
         }
+      },
+      "schools": {
+        "loading": "جاري التحميل...",
+        "title": "المدارس",
+        "subtitle": "إدارة المدارس التي يمكن للطلاب اختيارها عند التسجيل",
+        "addButton": "إضافة مدرسة",
+        "listTitle": "المدارس",
+        "listCountLabel": "مدرسة",
+        "table": {
+          "id": "المعرف",
+          "name": "الاسم",
+          "status": "الحالة",
+          "actions": "الإجراءات"
+        },
+        "status": {
+          "active": "نشط",
+          "inactive": "غير نشط"
+        },
+        "actions": {
+          "editItem": "تعديل المدرسة",
+          "activateItem": "تفعيل المدرسة",
+          "deactivateItem": "إلغاء تفعيل المدرسة",
+          "deleteItem": "حذف المدرسة"
+        },
+        "modal": {
+          "editTitle": "تعديل المدرسة",
+          "addTitle": "إضافة مدرسة"
+        },
+        "form": {
+          "name": "الاسم",
+          "nameHint": "2-100 حرف.",
+          "namePlaceholder": "مثال: علوم حاسب",
+          "saveChanges": "حفظ التغييرات",
+          "createItem": "إنشاء مدرسة"
+        },
+        "errors": {
+          "loadFailedMsg": "فشل في تحميل المدارس",
+          "loadFailedTitle": "فشل التحميل",
+          "error": "خطأ",
+          "loadDepartmentDetails": "فشل في تحميل تفاصيل المدرسة",
+          "updateFailed": "فشل التحديث",
+          "creationFailed": "فشل الإنشاء",
+          "saveFailedMsg": "فشل في حفظ المدرسة",
+          "saveFailedTitle": "فشل الحفظ",
+          "actionFailed": "فشل الإجراء",
+          "actionFailedTitle": "فشل الإجراء"
+        },
+        "confirms": {
+          "deleteTitle": "حذف المدرسة",
+          "deleteDesc": "هل أنت متأكد من حذف هذا المدرسة؟ الطلاب الذين اختاروه بالفعل يحتفظون بقيمتهم المحفوظة، لكنه لن يظهر بعد الآن في نموذج التسجيل.",
+          "activateTitle": "تفعيل المدرسة",
+          "activateDesc": "هل أنت متأكد من تفعيل هذا المدرسة؟ سيظهر مرة أخرى في نموذج التسجيل.",
+          "deactivateTitle": "إلغاء تفعيل المدرسة",
+          "deactivateDesc": "هل أنت متأكد من إلغاء تفعيل هذا المدرسة؟ سيتم إخفاؤه من نموذج التسجيل.",
+          "confirmTitle": "تأكيد الإجراء",
+          "confirmDesc": "هل أنت متأكد؟"
+        },
+        "toasts": {
+          "departmentUpdated": "تم تحديث المدرسة",
+          "updatedSuccessfully": "تم التحديث بنجاح",
+          "departmentCreated": "تم إنشاء المدرسة",
+          "createdSuccessfully": "تم الإنشاء بنجاح",
+          "departmentDeleted": "تم حذف المدرسة بنجاح",
+          "departmentActivated": "تم تفعيل المدرسة بنجاح",
+          "departmentDeactivated": "تم إلغاء تفعيل المدرسة بنجاح",
+          "successTitle": "نجاح"
+        }
+      },
+      "guardiansOverview": {
+        "title": "أولياء الأمور",
+        "subtitle": "الأهل والأبناء الذين يديرونهم",
+        "loading": "جارٍ تحميل أولياء الأمور...",
+        "search": "ابحث بالاسم أو البريد أو الهاتف",
+        "empty": "لا يوجد أولياء أمور.",
+        "children": "أبناء",
+        "active": "نشط",
+        "registered": "مسجّل",
+        "subscribed": "مشترك",
+        "noPlan": "بدون باقة"
       }
     },
     "trips": {
@@ -1637,20 +1747,20 @@
           "selectDate": "اختر التاريخ",
           "chooseDate": "اختر تاريخاً"
         },
-          "fields": {
-            "bus": "الحافلة",
-            "driver": "السائق",
-            "conductor": "المسؤول",
-            "origin": "نقطة الانطلاق",
-            "destination": "الوجهة",
-            "date": "التاريخ",
-            "timeRangeLabel": "الوقت (المغادرة / الوصول)",
-            "timeRangeLabelRtl": "الوقت (الوصول / المغادرة)"
-          },
-          "stopsTitle": "نقاط التوقف",
-          "stopArrival": "الوصول",
-          "stopDeparture": "المغادرة",
-          "tripDetailsTitle": "تفاصيل الرحلة",
+        "fields": {
+          "bus": "الحافلة",
+          "driver": "السائق",
+          "conductor": "المسؤول",
+          "origin": "نقطة الانطلاق",
+          "destination": "الوجهة",
+          "date": "التاريخ",
+          "timeRangeLabel": "الوقت (المغادرة / الوصول)",
+          "timeRangeLabelRtl": "الوقت (الوصول / المغادرة)"
+        },
+        "stopsTitle": "نقاط التوقف",
+        "stopArrival": "الوصول",
+        "stopDeparture": "المغادرة",
+        "tripDetailsTitle": "تفاصيل الرحلة",
         "toast": {
           "loadedTitle": "تم تحميل الرحلات بنجاح",
           "loadedMsg": "تم العثور على {{count}} رحلة متاحة",
@@ -2148,6 +2258,53 @@
       "notifications": {
         "title": "إشعارات مسؤول الحركة",
         "subtitle": "أدر إشعارات الرحلات والمسارات وتواصل مع السائقين والمشرفين"
+      }
+    },
+    "guardian": {
+      "children": {
+        "title": "أبنائي",
+        "add": "إضافة ابن",
+        "editChild": "تعديل بيانات الابن",
+        "empty": "لا يوجد أبناء بعد. أضف أول ابن للبدء.",
+        "subscribed": "مشترك",
+        "noPlan": "بدون باقة",
+        "until": "حتى",
+        "subscribeTitle": "اشترك للأبناء في باقة",
+        "allSubscribed": "كل أبنائك لديهم اشتراك نشط.",
+        "selectChildren": "اختر الأبناء",
+        "selectAll": "اختيار الكل",
+        "days": "يوم",
+        "perChild": "لكل ابن",
+        "total": "الإجمالي",
+        "choosePlan": "اختر هذه الباقة",
+        "pickChild": "اختر ابنًا واحدًا على الأقل أولاً.",
+        "fillAll": "من فضلك أكمل كل الحقول.",
+        "added": "تمت إضافة الابن.",
+        "updated": "تم تحديث بيانات الابن.",
+        "removed": "تم حذف الابن.",
+        "removeTitle": "حذف الابن؟",
+        "removeDesc": "سيتم إلغاء تنشيط الابن وإلغاء أي اشتراك نشط.",
+        "paymentSubmitted": "تم إرسال الدفع — بانتظار موافقة الإدارة.",
+        "childrenWord": "ابن/أبناء",
+        "submitPayment": "إرسال الدفع"
+      },
+      "subscriptions": {
+        "title": "اشتراكات الأبناء",
+        "empty": "لا توجد اشتراكات بعد.",
+        "until": "حتى",
+        "requestCancel": "طلب إلغاء",
+        "cancelPending": "طلب الإلغاء قيد المراجعة"
+      },
+      "profile": {
+        "title": "ملفي الشخصي",
+        "saved": "تم تحديث الملف الشخصي."
+      },
+      "bookTrip": {
+        "title": "حجز رحلة",
+        "note": "كل ابن لديه اشتراك نشط يتم تعيينه تلقائيًا لخط مدرسته. تواصل مع إدارة المدرسة لتغيير الخط أو نقطة الركوب.",
+        "noChildren": "أضف ابنًا أولًا من صفحة \"أبنائي\".",
+        "active": "تم تعيين خط",
+        "needsPlan": "يحتاج اشتراكًا"
       }
     }
   }

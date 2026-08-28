@@ -7,7 +7,8 @@ import { useToast } from '@/components/ui/Toast';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { studentAPI } from '@/lib/api';
 import { getApiErrorMessage } from '@/lib/apiError';
-import { StudentOverviewRow } from '@/types/subscription';
+// Children overview rows come from /Users/children-overview — a superset-ish shape.
+type ChildOverviewRow = Record<string, any>;
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
@@ -34,7 +35,7 @@ export default function StudentsOverviewPage() {
   const { showToast } = useToast();
   const router = useRouter();
 
-  const [rows, setRows] = useState<StudentOverviewRow[]>([]);
+  const [rows, setRows] = useState<ChildOverviewRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
@@ -46,7 +47,7 @@ export default function StudentsOverviewPage() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await studentAPI.getOverview();
+      const data = await studentAPI.getChildrenOverview();
       setRows(data);
     } catch (error) {
       showToast({
@@ -63,13 +64,13 @@ export default function StudentsOverviewPage() {
   useEffect(() => { load(); }, [load]);
 
   const departmentOptions = useMemo(
-    () => Array.from(new Set(rows.map((r) => r.department).filter((d): d is string => !!d))).sort(),
+    () => Array.from(new Set(rows.map((r) => r.schoolName).filter((d): d is string => !!d))).sort(),
     [rows],
   );
 
   const filteredRows = useMemo(() => {
     return rows.filter((r) => {
-      const matchesDepartment = departmentFilter === 'all' || r.department === departmentFilter;
+      const matchesDepartment = departmentFilter === 'all' || r.schoolName === departmentFilter;
       const matchesAccountStatus = accountStatusFilter === 'all' || r.status === accountStatusFilter;
       const matchesSubStatus = subscriptionStatusFilter === 'all'
         || (subscriptionStatusFilter === 'none' ? !r.subscriptionStatus : r.subscriptionStatus === subscriptionStatusFilter);
@@ -140,7 +141,7 @@ export default function StudentsOverviewPage() {
       setExporting(true);
       const { exportStudentsOverview } = await import('@/lib/exportStudentsOverview');
       await exportStudentsOverview({
-        rows: filteredRows,
+        rows: filteredRows as any,
         lang,
         labels: {
           reportTitle: t('pages.admin.studentsOverview.excel.reportTitle', 'El Renad — Students Overview'),
@@ -186,7 +187,7 @@ export default function StudentsOverviewPage() {
     return <div className="p-6">{t('pages.admin.studentsOverview.loading', 'Loading students...')}</div>;
   }
 
-  const columns: ColumnDef<StudentOverviewRow>[] = [
+  const columns: ColumnDef<ChildOverviewRow>[] = [
     {
       header: t('pages.admin.studentsOverview.columns.student', 'Student'),
       accessorKey: 'fullName',
@@ -208,24 +209,24 @@ export default function StudentsOverviewPage() {
       cell: ({ getValue }) => getValue<string>() || '—',
     },
     {
-      header: t('pages.admin.studentsOverview.columns.department', 'Department'),
-      accessorKey: 'department',
+      header: t('pages.admin.studentsOverview.columns.school', 'School'),
+      accessorKey: 'schoolName',
       cell: ({ getValue }) => getValue<string>() || '—',
     },
     {
-      header: t('pages.admin.studentsOverview.columns.preferredArea', 'Preferred Area'),
-      accessorKey: 'preferredArea',
+      header: t('pages.admin.studentsOverview.columns.pickupArea', 'Pickup Area'),
+      accessorKey: 'pickupAreaName',
       cell: ({ getValue }) => getValue<string>() || '—',
     },
     {
-      header: t('pages.admin.studentsOverview.columns.yearOfStudy', 'Year of Study'),
-      accessorKey: 'yearOfStudy',
-      cell: ({ getValue }) => getValue<string>() || '—',
-    },
-    {
-      header: t('pages.admin.studentsOverview.columns.academicNumber', 'Academic No.'),
-      accessorKey: 'studentAcademicNumber',
-      cell: ({ getValue }) => getValue<string>() || '—',
+      header: t('pages.admin.studentsOverview.columns.guardian', 'Guardian'),
+      accessorKey: 'guardianName',
+      cell: ({ row }) => (
+        <div>
+          <p className="text-text-primary">{row.original.guardianName || '—'}</p>
+          <p className="text-sm text-text-secondary">{row.original.guardianPhone || row.original.guardianEmail || ''}</p>
+        </div>
+      ),
     },
     {
       header: t('pages.admin.studentsOverview.columns.accountStatus', 'Account Status'),
@@ -289,7 +290,7 @@ export default function StudentsOverviewPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.push(`/dashboard/admin/students/${row.original.id}`)}
+          onClick={() => router.push(`/dashboard/admin/guardians-overview`)}
           title={t('pages.admin.studentsOverview.viewDetails', 'View full details')}
         >
           <Eye className="w-4 h-4" />
@@ -333,7 +334,7 @@ export default function StudentsOverviewPage() {
             </div>
           </div>
           <Select value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)}>
-            <option value="all">{t('pages.admin.studentsOverview.filters.allDepartments', 'All Departments')}</option>
+            <option value="all">{t('pages.admin.studentsOverview.filters.allSchools', 'All Schools')}</option>
             {departmentOptions.map((d) => <option key={d} value={d}>{d}</option>)}
           </Select>
           <Select value={accountStatusFilter} onChange={(e) => setAccountStatusFilter(e.target.value)}>
@@ -376,7 +377,7 @@ export default function StudentsOverviewPage() {
               columns={columns}
               data={filteredRows}
               searchPlaceholder={t('pages.admin.studentsOverview.searchPlaceholder', 'Search students...')}
-              getRowClassName={(r) => SUB_STATUS_ROW_CLASS[(r as StudentOverviewRow).subscriptionStatus ?? '']}
+              getRowClassName={(r) => SUB_STATUS_ROW_CLASS[(r as ChildOverviewRow).subscriptionStatus ?? ''] ?? ''}
             />
           )}
         </CardContent>

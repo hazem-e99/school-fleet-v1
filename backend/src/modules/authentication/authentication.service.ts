@@ -4,8 +4,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from '../users/user.schema';
+import { Child, ChildDocument } from '../child/child.schema';
 import { LoginDTO } from './dto/login.dto';
 import { StudentRegistrationDTO } from './dto/student-registration.dto';
+import { GuardianRegistrationDTO } from './dto/guardian-registration.dto';
 import { StaffRegistrationDTO } from './dto/staff-registration.dto';
 import { VerificationDTO } from './dto/verification.dto';
 import { ForgotPasswordDTO } from './dto/forgot-password.dto';
@@ -22,6 +24,7 @@ export class AuthenticationService {
 
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Child.name) private childModel: Model<ChildDocument>,
     private jwtService: JwtService,
     private emailService: EmailService,
   ) {
@@ -135,6 +138,77 @@ export class AuthenticationService {
     });
 
     return createApiResponse(true, 'Student registered successfully. You can now sign in.', true);
+  }
+
+  /**
+   * A guardian (parent) self-registers and adds one or more children in the
+   * same request. The guardian is a User with role 'Guardian'; each child is a
+   * document in the `children` collection linked by `guardianId` (the
+   * guardian's numericId). Email verification stays disabled — see
+   * registerStudent for the rationale. Non-transactional to match the rest of
+   * the codebase; a failure part-way surfaces as an error.
+   */
+  async registerGuardian(dto: GuardianRegistrationDTO): Promise<ApiResponse<boolean>> {
+    if (dto.password !== dto.confirmPassword) {
+      throw new AppException(400, ErrorCodes.PASSWORD_MISMATCH, 'Passwords do not match.');
+    }
+
+    const existingUser = await this.userModel.findOne({ email: dto.email }).exec();
+    if (existingUser) {
+      throw new AppException(
+        409,
+        ErrorCodes.EMAIL_ALREADY_REGISTERED,
+        'An account with this email address already exists.',
+      );
+    }
+
+    const existingNationalId = await this.userModel.findOne({ nationalId: dto.nationalId }).exec();
+    if (existingNationalId) {
+      throw new AppException(
+        409,
+        ErrorCodes.NATIONAL_ID_ALREADY_REGISTERED,
+        'An account with this national ID already exists.',
+      );
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    const guardian = await this.userModel.create({
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      nationalId: dto.nationalId,
+      email: dto.email,
+      phoneNumber: dto.phoneNumber,
+      password: hashedPassword,
+      role: 'Guardian',
+      status: 'Active',
+      isEmailVerified: true,
+    });
+
+    const guardianNumericId =
+      guardian.numericId ??
+      parseInt((guardian._id as any).toString().slice(-8), 16) % 100000;
+
+    for (const child of dto.children) {
+      await this.childModel.create({
+        guardianId: guardianNumericId,
+        firstName: child.firstName,
+        secondName: child.secondName,
+        thirdName: child.thirdName,
+        lastName: child.lastName,
+        schoolName: child.schoolName,
+        pickupAreaName: child.pickupAreaName,
+        gender: child.gender,
+        dateOfBirth: child.dateOfBirth ? new Date(child.dateOfBirth) : undefined,
+        status: 'Active',
+      });
+    }
+
+    return createApiResponse(
+      true,
+      'Account created successfully. You can now sign in.',
+      true,
+    );
   }
 
   async registerStaff(dto: StaffRegistrationDTO): Promise<ApiResponse<boolean>> {

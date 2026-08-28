@@ -7,26 +7,12 @@ export class FormsController {
   @Get()
   async get() {
     return {
-      departments: [
-        'علاج طبيعي',
-        'طب اسنان',
-        'صيدلة',
-        'تمريض',
-        'ذكاء اصطناعي',
-        'حقوق',
-        'علوم صحية',
-        'علوم حيوية',
-        'لغات وترجمه',
-        'فنون تطبيقيه',
-        'الإدارة و العلوم المالية و الاقتصادية',
-      ],
-      yearsOfStudy: ['1', '2', '3', '4', '5'],
       busStatuses: ['Active', 'Inactive', 'UnderMaintenance', 'OutOfService'],
       tripStatuses: ['Scheduled', 'InProgress', 'Completed', 'Cancelled'],
       bookingStatuses: ['Confirmed', 'Cancelled', 'NoShow', 'Completed'],
       paymentMethods: ['Offline', 'Online'],
       paymentStatuses: ['Pending', 'Accepted', 'Rejected', 'Cancelled', 'Expired'],
-      roles: ['Admin', 'Student', 'Driver', 'Conductor', 'MovementManager'],
+      roles: ['Admin', 'Guardian', 'Driver', 'Conductor', 'MovementManager'],
       notificationTypes: ['System', 'Alert', 'Announcement', 'Reminder', 'Booking'],
     };
   }

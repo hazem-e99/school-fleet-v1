@@ -22,6 +22,13 @@ export class StudentSubscriptionController {
     return this.subService.getMySubscriptions(userId);
   }
 
+  /** Guardian: every subscription across all of their children. */
+  @Get('my-children-subscriptions')
+  @Roles('Guardian')
+  async getChildrenSubscriptions(@CurrentUser('numericId') guardianId: number) {
+    return this.subService.getChildrenSubscriptions(guardianId);
+  }
+
   /** Admin: all subscriptions across all students. */
   @Get('all')
   @Roles('Admin')
@@ -77,12 +84,12 @@ export class StudentSubscriptionController {
    * This only queues the request — nothing is cancelled until an admin approves.
    */
   @Post('request-cancellation')
-  @Roles('Student')
+  @Roles('Guardian')
   async requestCancellation(
-    @CurrentUser('numericId') userId: number,
-    @Body() dto: RequestCancellationDto,
+    @CurrentUser('numericId') guardianId: number,
+    @Body() dto: RequestCancellationDto & { childId: number },
   ) {
-    return this.subService.requestCancellation(userId, dto);
+    return this.subService.requestCancellationForChild(guardianId, Number(dto.childId), dto);
   }
 
   /** Admin approves (cancels + refunds) or rejects a pending cancellation request. */

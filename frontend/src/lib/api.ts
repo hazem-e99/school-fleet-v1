@@ -55,6 +55,7 @@ import {
   DepartmentViewModel,
   DepartmentViewModelApiResponse,
   DepartmentViewModelIEnumerableApiResponse,
+  // School types alias the Department ones structurally (kept identical shape)
   CreateDepartmentDTO,
   UpdateDepartmentDTO,
 } from "@/types/department";
@@ -330,16 +331,19 @@ export const api = {
 // Authentication API calls
 export const authAPI = {
   // Student registration
+  /** @deprecated Students no longer self-register — use registerGuardian. */
   registerStudent: (studentData: StudentRegistrationDTO) => {
-    console.log("🔗 Using endpoint:", apiConfig.AUTH.REGISTRATION_STUDENT);
-    console.log(
-      "🔗 Full URL:",
-      apiConfig.buildUrl(apiConfig.AUTH.REGISTRATION_STUDENT)
-    );
-    console.log("📤 Sending data:", studentData);
     return apiRequest<any>(apiConfig.AUTH.REGISTRATION_STUDENT, {
       method: "POST",
       body: JSON.stringify(studentData),
+    });
+  },
+
+  // Guardian (parent) registration — creates the guardian account + their children.
+  registerGuardian: (data: Record<string, unknown>) => {
+    return apiRequest<any>("/Authentication/registration-guardian", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   },
 
@@ -1213,52 +1217,82 @@ export const preferredAreasAPI = {
 // Department API — admin-managed list shown on the registration, student
 // profile, and admin student-edit dropdowns. GET /active is @Public() on the
 // backend (registration happens pre-login); every other route requires Admin.
-export const departmentsAPI = {
-  // GET /api/Department (Admin-only)
+// Admin-managed "School" list — replaces the former "Department" list. GET
+// /active is @Public() (guardian registration happens pre-login); everything
+// else is Admin-only. Endpoints live under /api/School.
+export const schoolsAPI = {
   getAll: async (): Promise<DepartmentViewModel[]> => {
-    const resp = await apiRequest<DepartmentViewModelIEnumerableApiResponse>("/Department");
+    const resp = await apiRequest<DepartmentViewModelIEnumerableApiResponse>("/School");
     return resp?.data ?? [];
   },
-  // GET /api/Department/active (public)
   getActive: async (): Promise<DepartmentViewModel[]> => {
-    const resp = await apiRequest<DepartmentViewModelIEnumerableApiResponse>("/Department/active");
+    const resp = await apiRequest<DepartmentViewModelIEnumerableApiResponse>("/School/active");
     return resp?.data ?? [];
   },
-  // GET /api/Department/{id} (Admin-only)
   getById: async (id: number | string): Promise<DepartmentViewModel | null> => {
-    const resp = await apiRequest<DepartmentViewModelApiResponse>(`/Department/${id}`);
+    const resp = await apiRequest<DepartmentViewModelApiResponse>(`/School/${id}`);
     return resp?.data ?? null;
   },
-  // POST /api/Department with CreateDepartmentDTO (Admin-only)
   create: (data: CreateDepartmentDTO): Promise<BooleanApiResponse> =>
-    apiRequest<BooleanApiResponse>("/Department", {
+    apiRequest<BooleanApiResponse>("/School", {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  // PUT /api/Department/{id} with UpdateDepartmentDTO (Admin-only)
   update: (
     id: number | string,
     data: UpdateDepartmentDTO
   ): Promise<BooleanApiResponse> =>
-    apiRequest<BooleanApiResponse>(`/Department/${id}`, {
+    apiRequest<BooleanApiResponse>(`/School/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
-  // DELETE /api/Department/{id} (Admin-only)
   delete: (id: number | string): Promise<BooleanApiResponse> =>
-    apiRequest<BooleanApiResponse>(`/Department/${id}`, {
+    apiRequest<BooleanApiResponse>(`/School/${id}`, {
       method: "DELETE",
     }),
-  // PUT /api/Department/{id}/activate (Admin-only)
   activate: (id: number | string): Promise<BooleanApiResponse> =>
-    apiRequest<BooleanApiResponse>(`/Department/${id}/activate`, {
+    apiRequest<BooleanApiResponse>(`/School/${id}/activate`, {
       method: "PUT",
     }),
-  // PUT /api/Department/{id}/deactivate (Admin-only)
   deactivate: (id: number | string): Promise<BooleanApiResponse> =>
-    apiRequest<BooleanApiResponse>(`/Department/${id}/deactivate`, {
+    apiRequest<BooleanApiResponse>(`/School/${id}/deactivate`, {
       method: "PUT",
     }),
+};
+
+/** @deprecated Use schoolsAPI — the "Department" concept is now "School". */
+export const departmentsAPI = schoolsAPI;
+
+// Children — a guardian's own children (CRUD) plus admin reads.
+export const childrenAPI = {
+  getMyChildren: async (): Promise<any[]> => {
+    const resp = await apiRequest<{ data: any[] }>("/Child/my-children");
+    return resp?.data ?? [];
+  },
+  create: (data: Record<string, unknown>): Promise<{ data: any; success: boolean }> =>
+    apiRequest<{ data: any; success: boolean }>("/Child", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: number | string, data: Record<string, unknown>): Promise<{ data: any; success: boolean }> =>
+    apiRequest<{ data: any; success: boolean }>(`/Child/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  remove: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/Child/${id}`, { method: "DELETE" }),
+  getById: async (id: number | string): Promise<any | null> => {
+    const resp = await apiRequest<{ data: any }>(`/Child/${id}`);
+    return resp?.data ?? null;
+  },
+  getAll: async (): Promise<any[]> => {
+    const resp = await apiRequest<{ data: any[] }>("/Child/all");
+    return resp?.data ?? [];
+  },
+  getByGuardian: async (guardianId: number | string): Promise<any[]> => {
+    const resp = await apiRequest<{ data: any[] }>(`/Child/by-guardian/${guardianId}`);
+    return resp?.data ?? [];
+  },
 };
 
 // Year of Study API — admin-managed list shown on the registration, student
@@ -1507,9 +1541,19 @@ export const studentAPI = {
     return Array.isArray(list) ? list : [];
   },
 
-  // GET /api/Users/students-overview - Admin-only joined registration+subscription+payment view
+  // GET /api/Users/students-overview - Admin-only joined registration+subscription+payment view (legacy)
   getOverview: async (): Promise<StudentOverviewRow[]> => {
     const resp = await apiRequest<StudentOverviewApiResponse>("/Users/students-overview");
+    return resp?.data ?? [];
+  },
+  // GET /api/Users/children-overview - Admin-only: one row per child + guardian + subscription/payment
+  getChildrenOverview: async (): Promise<any[]> => {
+    const resp = await apiRequest<{ data: any[] }>("/Users/children-overview");
+    return resp?.data ?? [];
+  },
+  // GET /api/Users/guardians-overview - Admin-only: one row per guardian
+  getGuardiansOverview: async (): Promise<any[]> => {
+    const resp = await apiRequest<{ data: any[] }>("/Users/guardians-overview");
     return resp?.data ?? [];
   },
 };
@@ -1567,6 +1611,12 @@ export const studentSubscriptionAPI = {
   // GET /api/StudentSubscription/my-subscriptions
   getMySubscriptions: async (): Promise<StudentSubscriptionViewModel[]> => {
     const resp = await apiRequest<StudentSubscriptionViewModelIEnumerableApiResponse>("/StudentSubscription/my-subscriptions");
+    return resp?.data ?? [];
+  },
+
+  // GET /api/StudentSubscription/my-children-subscriptions - Guardian: all children's subscriptions
+  getChildrenSubscriptions: async (): Promise<StudentSubscriptionViewModel[]> => {
+    const resp = await apiRequest<StudentSubscriptionViewModelIEnumerableApiResponse>("/StudentSubscription/my-children-subscriptions");
     return resp?.data ?? [];
   },
 
@@ -1630,10 +1680,10 @@ export const studentSubscriptionAPI = {
       { method: "PUT" }
     ),
 
-  // POST /api/StudentSubscription/request-cancellation - student asks to cancel
-  // their own active subscription. Reason is required; nothing is cancelled
+  // POST /api/StudentSubscription/request-cancellation - guardian asks to cancel
+  // one child's active subscription. { childId, reason }. Nothing is cancelled
   // until an admin approves.
-  requestCancellation: (dto: RequestCancellationDTO): Promise<BooleanApiResponse> =>
+  requestCancellation: (dto: RequestCancellationDTO & { childId: number }): Promise<BooleanApiResponse> =>
     apiRequest<BooleanApiResponse>("/StudentSubscription/request-cancellation", {
       method: "POST",
       body: JSON.stringify(dto),

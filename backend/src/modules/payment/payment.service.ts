@@ -5,6 +5,8 @@ import { Payment, PaymentDocument } from './payment.schema';
 import { User, UserDocument } from '../users/user.schema';
 import { SubscriptionPlan, SubscriptionPlanDocument } from '../subscription-plan/subscription-plan.schema';
 import { StudentSubscription, StudentSubscriptionDocument } from '../student-subscription/student-subscription.schema';
+import { Child, ChildDocument } from '../child/child.schema';
+import { NotificationsService } from '../notifications/notifications.service';
 import { createApiResponse, ApiResponse } from '../../common/interfaces/api-response.interface';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCodes } from '../../common/exceptions/error-codes';
@@ -28,15 +30,38 @@ export class PaymentService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(SubscriptionPlan.name) private planModel: Model<SubscriptionPlanDocument>,
     @InjectModel(StudentSubscription.name) private subModel: Model<StudentSubscriptionDocument>,
+    @InjectModel(Child.name) private childModel: Model<ChildDocument>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private getNumericId(doc: any): number {
     return parseInt((doc._id as any).toString().slice(-8), 16) % 100000;
   }
 
+  /** child-first name resolution: `studentId` now holds a Child numericId (legacy rows may hold a Student User id). */
+  private async resolveRider(numericId: number): Promise<{ name: string | null; email: string | null; guardianId: number | null; schoolName: string | null }> {
+    const child = await this.childModel.findOne({ numericId }).exec();
+    if (child) {
+      const guardian = await this.userModel.findOne({ numericId: child.guardianId }).exec();
+      return {
+        name: `${child.firstName} ${child.secondName} ${child.thirdName} ${child.lastName}`.trim(),
+        email: guardian?.email || null,
+        guardianId: child.guardianId,
+        schoolName: child.schoolName,
+      };
+    }
+    const user = await this.userModel.findOne({ numericId }).exec();
+    return {
+      name: user ? `${user.firstName} ${user.lastName}`.trim() : null,
+      email: user?.email || null,
+      guardianId: null,
+      schoolName: null,
+    };
+  }
+
   private async toViewModel(payment: PaymentDocument): Promise<any> {
     const id = this.getNumericId(payment);
-    const student = await this.findByNumericId(this.userModel, payment.studentId);
+    const rider = await this.resolveRider(payment.studentId);
     const plan = await this.findByNumericId(this.planModel, payment.subscriptionPlanId);
     const reviewer = payment.adminReviewedById
       ? await this.findByNumericId(this.userModel, payment.adminReviewedById)
@@ -45,11 +70,20 @@ export class PaymentService {
       ? await this.findByNumericId(this.userModel, payment.refundedBy)
       : null;
 
+    let childNames: string[] | null = null;
+    if (payment.childIds && payment.childIds.length > 1) {
+      const kids = await this.childModel.find({ numericId: { $in: payment.childIds } }).exec();
+      childNames = kids.map((k) => `${k.firstName} ${k.secondName} ${k.thirdName} ${k.lastName}`.trim());
+    }
+
     return {
       id,
       studentId: payment.studentId,
-      studentName: student ? `${student.firstName} ${student.lastName}` : null,
-      studentEmail: student?.email || null,
+      studentName: rider.name,
+      studentEmail: rider.email,
+      childIds: payment.childIds ?? null,
+      childCount: payment.childCount ?? 1,
+      childNames,
       subscriptionPlanId: payment.subscriptionPlanId,
       subscriptionPlanName: plan?.name || null,
       amount: payment.amount,
@@ -88,6 +122,12 @@ export class PaymentService {
     return createApiResponse(await this.toViewModel(payment));
   }
 
+  /**
+   * A guardian pays for one or more of their children. `userId` is the
+   * guardian's numericId. `dto.childIds` is the set of children this payment
+   * covers (1..N); the total is `plan.price * childIds.length`. On admin
+   * Accept, review() fans this out into one StudentSubscription per child.
+   */
   async create(dto: any, userId: number): Promise<ApiResponse<boolean>> {
     const plan = await this.findByNumericId(this.planModel, dto.subscriptionPlanId);
     if (!plan) {
@@ -107,10 +147,37 @@ export class PaymentService {
       }
     }
 
+    const childIds: number[] = Array.isArray(dto.childIds)
+      ? Array.from(
+          new Set(
+            (dto.childIds as any[])
+              .map((n) => Number(n))
+              .filter((n) => Number.isFinite(n)),
+          ),
+        )
+      : [];
+    if (childIds.length === 0) {
+      throw new AppException(400, ErrorCodes.VALIDATION_ERROR, 'Select at least one child to subscribe.');
+    }
+
+    const ownedChildren = await this.childModel
+      .find({ numericId: { $in: childIds }, guardianId: userId, status: 'Active' })
+      .exec();
+    if (ownedChildren.length !== childIds.length) {
+      throw new AppException(
+        403,
+        ErrorCodes.VALIDATION_ERROR,
+        'One or more selected children are not valid for this account.',
+      );
+    }
+
+    const { childIds: _omit, ...rest } = dto;
     await this.paymentModel.create({
-      ...dto,
-      studentId: userId,
-      amount: plan.price || 0,
+      ...rest,
+      studentId: childIds[0],
+      childIds,
+      childCount: childIds.length,
+      amount: (plan.price || 0) * childIds.length,
       status: 'Pending',
     });
     return createApiResponse(true, 'Payment created successfully');
@@ -121,6 +188,57 @@ export class PaymentService {
     if (!payment) throw new NotFoundException('Payment not found');
     await this.paymentModel.findByIdAndDelete(payment._id);
     return createApiResponse(true, 'Payment deleted');
+  }
+
+  /** Create-or-refresh the active subscription for a single rider (child). */
+  private async activateSubscriptionForRider(
+    riderId: number,
+    payment: PaymentDocument,
+    plan: any,
+    subscriptionCode: string | null,
+  ): Promise<void> {
+    const durationDays = plan?.durationInDays || 30;
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + durationDays);
+
+    const existing = await this.subModel.findOne({
+      studentId: riderId,
+      isActive: true,
+      status: 'Active',
+    }).exec();
+
+    if (!existing) {
+      await this.subModel.create({
+        studentId: riderId,
+        subscriptionPlanId: payment.subscriptionPlanId,
+        startDate,
+        endDate,
+        isActive: true,
+        status: 'Active',
+        paymentMethod: payment.paymentMethod,
+        paymentReferenceCode: payment.paymentReferenceCode || subscriptionCode || null,
+        cancellationStatus: 'None',
+      });
+    } else {
+      // Reusing an existing subscription row: clear any prior cancellation state,
+      // otherwise a re-subscribed rider inherits a stale Approved/Rejected flag.
+      await this.subModel.findByIdAndUpdate(existing._id, {
+        subscriptionPlanId: payment.subscriptionPlanId,
+        startDate,
+        endDate,
+        isActive: true,
+        status: 'Active',
+        paymentMethod: payment.paymentMethod,
+        cancellationStatus: 'None',
+        cancellationReason: null,
+        cancellationRequestedAt: null,
+        cancellationReviewedById: null,
+        cancellationReviewedAt: null,
+        cancellationReviewNotes: null,
+        cancelledPaymentId: null,
+      });
+    }
   }
 
   async review(id: number, dto: any, adminId: number): Promise<ApiResponse<boolean>> {
@@ -136,55 +254,49 @@ export class PaymentService {
 
     if (dto.status === 'Accepted') {
       const plan = await this.findByNumericId(this.planModel, payment.subscriptionPlanId);
-      const durationDays = plan?.durationInDays || 30;
-      const startDate = new Date();
-      const endDate = new Date(startDate);
-      endDate.setDate(endDate.getDate() + durationDays);
+      const riderIds =
+        payment.childIds && payment.childIds.length > 0
+          ? payment.childIds
+          : [payment.studentId];
 
-      const existing = await this.subModel.findOne({
-        studentId: payment.studentId,
-        isActive: true,
-        status: 'Active',
-      }).exec();
+      for (const riderId of riderIds) {
+        await this.activateSubscriptionForRider(riderId, payment, plan, dto.subscriptionCode || null);
+      }
 
-      if (!existing) {
-        await this.subModel.create({
-          studentId: payment.studentId,
-          subscriptionPlanId: payment.subscriptionPlanId,
-          startDate,
-          endDate,
-          isActive: true,
-          status: 'Active',
-          paymentMethod: payment.paymentMethod,
-          paymentReferenceCode: payment.paymentReferenceCode || dto.subscriptionCode || null,
-          cancellationStatus: 'None',
-        });
-      } else {
-        // Reusing an existing subscription row: clear any prior cancellation state,
-        // otherwise a re-subscribed student inherits a stale Approved/Rejected flag.
-        await this.subModel.findByIdAndUpdate(existing._id, {
-          subscriptionPlanId: payment.subscriptionPlanId,
-          startDate,
-          endDate,
-          isActive: true,
-          status: 'Active',
-          paymentMethod: payment.paymentMethod,
-          cancellationStatus: 'None',
-          cancellationReason: null,
-          cancellationRequestedAt: null,
-          cancellationReviewedById: null,
-          cancellationReviewedAt: null,
-          cancellationReviewNotes: null,
-          cancelledPaymentId: null,
-        });
+      // Notify the guardian (resolved from the first child), not the child rows.
+      const firstChild = await this.childModel.findOne({ numericId: riderIds[0] }).exec();
+      if (firstChild) {
+        try {
+          await this.notificationsService.broadcast({
+            userIds: [firstChild.guardianId],
+            title: 'Subscription activated',
+            message:
+              riderIds.length > 1
+                ? `Your payment was approved. ${riderIds.length} children are now subscribed to ${plan?.name || 'the plan'}.`
+                : `Your payment was approved. Your child is now subscribed to ${plan?.name || 'the plan'}.`,
+            type: 'Alert',
+          });
+        } catch {
+          // best-effort — never fail the review over a notification
+        }
       }
     }
 
     return createApiResponse(true, 'Payment reviewed');
   }
 
+  /**
+   * A guardian's payments — payments are keyed by child numericId (in
+   * `studentId` and/or `childIds`), so resolve the guardian's children first.
+   * Falls back to `{ studentId: userId }` for a legacy self-serve student.
+   */
   async getMyPayments(userId: number): Promise<ApiResponse<any[]>> {
-    const payments = await this.paymentModel.find({ studentId: userId }).sort({ createdAt: -1 }).exec();
+    const children = await this.childModel.find({ guardianId: userId }).exec();
+    const childIds = children.map((c) => c.numericId);
+    const query = childIds.length
+      ? { $or: [{ studentId: { $in: childIds } }, { childIds: { $in: childIds } }] }
+      : { studentId: userId };
+    const payments = await this.paymentModel.find(query).sort({ createdAt: -1 }).exec();
     const vms = await Promise.all(payments.map((p) => this.toViewModel(p)));
     return createApiResponse(vms, null, true, vms.length);
   }
@@ -234,13 +346,16 @@ export class PaymentService {
    * a student who upgraded has two Accepted rows but is one subscriber.
    */
   async getSubscriptionReport(): Promise<ApiResponse<any>> {
-    const [payments, students, plans] = await Promise.all([
+    const [payments, children, guardians, plans] = await Promise.all([
       this.paymentModel.find().sort({ createdAt: -1 }).exec(),
-      this.userModel.find({ role: 'Student' }).select('-password').exec(),
+      this.childModel.find().exec(),
+      this.userModel.find({ role: 'Guardian' }).select('-password').exec(),
       this.planModel.find().exec(),
     ]);
 
-    const studentMap = new Map<number, any>(students.map((s) => [s.numericId, s]));
+    const childMap = new Map<number, any>(children.map((c) => [c.numericId, c]));
+    const guardianMap = new Map<number, any>(guardians.map((g) => [g.numericId, g]));
+    const activeChildren = children.filter((c) => c.status === 'Active');
     const planMap = new Map<number, any>(plans.map((p) => [p.numericId, p]));
 
     const channelOf = (p: PaymentDocument) => p.paymentChannel || 'unknown';
@@ -279,8 +394,10 @@ export class PaymentService {
     const refundedAmount = refunded.reduce((sum, p) => sum + (p.refundAmount ?? p.amount ?? 0), 0);
 
     const totals = {
-      totalStudents: students.length,
-      subscribedStudents: new Set(accepted.map((p) => p.studentId)).size,
+      totalStudents: activeChildren.length,
+      subscribedStudents: new Set(
+        accepted.flatMap((p) => (p.childIds && p.childIds.length ? p.childIds : [p.studentId])),
+      ).size,
       totalPayments: payments.length,
       acceptedCount: accepted.length,
       pendingCount: payments.filter((p) => p.status === 'Pending').length,
@@ -293,15 +410,19 @@ export class PaymentService {
     };
 
     const details = payments.map((p) => {
-      const student = studentMap.get(p.studentId);
+      const child = childMap.get(p.studentId);
+      const guardian = child ? guardianMap.get(child.guardianId) : null;
       const plan = planMap.get(p.subscriptionPlanId);
       return {
         paymentId: p.numericId,
         studentId: p.studentId,
-        studentName: student ? `${student.firstName} ${student.lastName}` : null,
-        studentEmail: student?.email || null,
-        studentAcademicNumber: student?.studentAcademicNumber || null,
-        department: student?.department || null,
+        studentName: child
+          ? `${child.firstName} ${child.secondName} ${child.thirdName} ${child.lastName}`.trim()
+          : null,
+        childCount: p.childCount ?? 1,
+        schoolName: child?.schoolName || null,
+        guardianName: guardian ? `${guardian.firstName} ${guardian.lastName}`.trim() : null,
+        guardianEmail: guardian?.email || null,
         planName: plan?.name || null,
         amount: p.amount || 0,
         paymentMethod: p.paymentMethod,

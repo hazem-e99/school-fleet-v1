@@ -18,8 +18,9 @@ import { PaymentModule } from './modules/payment/payment.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SubscriptionPlanModule } from './modules/subscription-plan/subscription-plan.module';
 import { PreferredAreaModule } from './modules/preferred-area/preferred-area.module';
-import { DepartmentModule } from './modules/department/department.module';
+import { SchoolModule } from './modules/school/school.module';
 import { YearOfStudyModule } from './modules/year-of-study/year-of-study.module';
+import { ChildModule } from './modules/child/child.module';
 import { StudentSubscriptionModule } from './modules/student-subscription/student-subscription.module';
 import { RoutesModule } from './modules/routes/routes.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
@@ -52,8 +53,9 @@ import { AdminSystemModule } from './modules/admin-system/admin-system.module';
     NotificationsModule,
     SubscriptionPlanModule,
     PreferredAreaModule,
-    DepartmentModule,
+    SchoolModule,
     YearOfStudyModule,
+    ChildModule,
     StudentSubscriptionModule,
     RoutesModule,
     TripRoutesModule,

@@ -43,11 +43,25 @@ export class UsersController {
     return this.usersService.getStudentDataById(id);
   }
 
-  /** Admin-only: one row per student joined with subscription + payment info. */
+  /** Admin-only: one row per student joined with subscription + payment info (legacy). */
   @Get('students-overview')
   @Roles('Admin')
   async getStudentsOverview() {
     return this.usersService.getStudentsOverview();
+  }
+
+  /** Admin-only: one row per active child joined with guardian + subscription + payment. */
+  @Get('children-overview')
+  @Roles('Admin')
+  async getChildrenOverview() {
+    return this.usersService.getChildrenOverview();
+  }
+
+  /** Admin-only: one row per guardian with child counts and active-subscription counts. */
+  @Get('guardians-overview')
+  @Roles('Admin')
+  async getGuardiansOverview() {
+    return this.usersService.getGuardiansOverview();
   }
 
   @Get(':id')

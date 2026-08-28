@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from './user.schema';
+import { Child, ChildDocument } from '../child/child.schema';
 import { StudentSubscription, StudentSubscriptionDocument } from '../student-subscription/student-subscription.schema';
 import { Payment, PaymentDocument } from '../payment/payment.schema';
 import { SubscriptionPlan, SubscriptionPlanDocument } from '../subscription-plan/subscription-plan.schema';
@@ -14,6 +15,7 @@ import { ErrorCodes } from '../../common/exceptions/error-codes';
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Child.name) private childModel: Model<ChildDocument>,
     @InjectModel(StudentSubscription.name) private subModel: Model<StudentSubscriptionDocument>,
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
     @InjectModel(SubscriptionPlan.name) private planModel: Model<SubscriptionPlanDocument>,
@@ -254,6 +256,131 @@ export class UsersService {
         // --- History counts (cheap extras from data already in memory) ---
         totalSubscriptionsCount: studentSubs.length,
         totalPaymentsCount: studentPayments.length,
+      };
+    });
+
+    return createApiResponse(data, null, true, data.length);
+  }
+
+  /**
+   * One row per active child, joined with the child's guardian, current
+   * subscription and most relevant payment. Mirrors getStudentsOverview but
+   * over the `children` collection.
+   */
+  async getChildrenOverview(): Promise<ApiResponse<any[]>> {
+    const [children, guardians, subs, payments, plans] = await Promise.all([
+      this.childModel.find({ status: 'Active' }).sort({ createdAt: -1 }).exec(),
+      this.userModel.find({ role: 'Guardian' }).select('-password').exec(),
+      this.subModel.find().sort({ createdAt: -1 }).exec(),
+      this.paymentModel.find().sort({ createdAt: -1 }).exec(),
+      this.planModel.find().exec(),
+    ]);
+
+    const guardianMap = new Map<number, any>(guardians.map((g) => [g.numericId, g]));
+    const planMap = new Map<number, any>(plans.map((p) => [p.numericId, p]));
+
+    const subsByRider = new Map<number, typeof subs>();
+    for (const s of subs) {
+      const list = subsByRider.get(s.studentId) ?? [];
+      list.push(s);
+      subsByRider.set(s.studentId, list);
+    }
+    const paymentsByRider = new Map<number, typeof payments>();
+    for (const p of payments) {
+      const list = paymentsByRider.get(p.studentId) ?? [];
+      list.push(p);
+      paymentsByRider.set(p.studentId, list);
+    }
+
+    const data = children.map((child) => {
+      const id = child.numericId;
+      const guardian = guardianMap.get(child.guardianId);
+      const riderSubs = subsByRider.get(id) ?? [];
+      const currentSub = riderSubs.find((s) => s.status === 'Active') ?? riderSubs[0] ?? null;
+      const currentPlan = currentSub ? planMap.get(currentSub.subscriptionPlanId) : null;
+      const riderPayments = paymentsByRider.get(id) ?? [];
+      const currentPayment = riderPayments.find((p) => p.status === 'Accepted') ?? riderPayments[0] ?? null;
+
+      return {
+        id,
+        firstName: child.firstName,
+        lastName: child.lastName,
+        fullName: `${child.firstName} ${child.secondName} ${child.thirdName} ${child.lastName}`.trim(),
+        schoolName: child.schoolName,
+        pickupAreaName: child.pickupAreaName,
+        gender: child.gender || null,
+        dateOfBirth: child.dateOfBirth || null,
+        status: child.status,
+        registeredAt: (child as any).createdAt || null,
+
+        guardianId: child.guardianId,
+        guardianName: guardian ? `${guardian.firstName} ${guardian.lastName}`.trim() : null,
+        guardianEmail: guardian?.email || null,
+        guardianPhone: guardian?.phoneNumber || null,
+
+        subscriptionId: currentSub?.numericId ?? null,
+        subscriptionPlanId: currentSub?.subscriptionPlanId ?? null,
+        subscriptionPlanName: currentPlan?.name ?? null,
+        subscriptionPlanPrice: currentPlan?.price ?? null,
+        subscriptionStatus: currentSub?.status ?? null,
+        subscriptionStartDate: currentSub?.startDate ?? null,
+        subscriptionEndDate: currentSub?.endDate ?? null,
+        subscriptionIsActive: currentSub?.isActive ?? null,
+        cancellationStatus: currentSub?.cancellationStatus ?? null,
+
+        paymentId: currentPayment?.numericId ?? null,
+        paymentAmount: currentPayment?.amount ?? null,
+        paymentMethod: currentPayment?.paymentMethod ?? null,
+        paymentChannel: currentPayment?.paymentChannel ?? null,
+        paymentStatus: currentPayment?.status ?? null,
+        paymentReferenceCode: currentPayment?.paymentReferenceCode ?? null,
+        paymentDate: (currentPayment as any)?.createdAt ?? null,
+
+        totalSubscriptionsCount: riderSubs.length,
+        totalPaymentsCount: riderPayments.length,
+      };
+    });
+
+    return createApiResponse(data, null, true, data.length);
+  }
+
+  /** One row per guardian: identity + child counts + active-subscription count. */
+  async getGuardiansOverview(): Promise<ApiResponse<any[]>> {
+    const [guardians, children, subs] = await Promise.all([
+      this.userModel.find({ role: 'Guardian' }).select('-password').sort({ createdAt: -1 }).exec(),
+      this.childModel.find().exec(),
+      this.subModel.find({ isActive: true, status: 'Active' }).exec(),
+    ]);
+
+    const activeRiderIds = new Set(subs.map((s) => s.studentId));
+    const childrenByGuardian = new Map<number, typeof children>();
+    for (const c of children) {
+      const list = childrenByGuardian.get(c.guardianId) ?? [];
+      list.push(c);
+      childrenByGuardian.set(c.guardianId, list);
+    }
+
+    const data = guardians.map((g) => {
+      const kids = (childrenByGuardian.get(g.numericId) ?? []).filter((c) => c.status === 'Active');
+      return {
+        id: g.numericId,
+        fullName: `${g.firstName} ${g.lastName}`.trim(),
+        firstName: g.firstName,
+        lastName: g.lastName,
+        email: g.email,
+        phoneNumber: g.phoneNumber || null,
+        nationalId: g.nationalId || null,
+        status: g.status,
+        registeredAt: (g as any).createdAt || null,
+        childrenCount: kids.length,
+        activeSubscriptionsCount: kids.filter((c) => activeRiderIds.has(c.numericId)).length,
+        children: kids.map((c) => ({
+          id: c.numericId,
+          fullName: `${c.firstName} ${c.secondName} ${c.thirdName} ${c.lastName}`.trim(),
+          schoolName: c.schoolName,
+          pickupAreaName: c.pickupAreaName,
+          hasActiveSubscription: activeRiderIds.has(c.numericId),
+        })),
       };
     });
 

@@ -46,7 +46,8 @@ interface NavigationItem {
 const navigationItems = {
   admin: [
     { name: 'Users', href: '/dashboard/admin/users', icon: Users, badge: 'Manage' },
-    { name: 'Students Overview', href: '/dashboard/admin/students-overview', icon: GraduationCap, badge: 'All' },
+    { name: 'Children', href: '/dashboard/admin/students-overview', icon: GraduationCap, badge: 'All' },
+    { name: 'Guardians', href: '/dashboard/admin/guardians-overview', icon: Users, badge: 'Parents' },
     { name: 'Buses', href: '/dashboard/admin/buses', icon: Bus, badge: 'Fleet' },
     { name: 'Live Tracking', href: '/dashboard/admin/tracking', icon: Radio, badge: 'Live' },
     { name: 'Trips', href: '/trips', icon: Calendar, badge: 'Schedule' },
@@ -64,6 +65,13 @@ const navigationItems = {
     { name: 'Voting', href: '/dashboard/student/voting', icon: ClipboardCheck, badge: 'Forms' },
     { name: 'Notifications', href: '/dashboard/student/notifications', icon: Bell },
     { name: 'Profile', href: '/dashboard/student/profile', icon: User, badge: 'Account' },
+  ],
+  guardian: [
+    { name: 'My Children', href: '/dashboard/guardian/children', icon: GraduationCap, badge: 'Manage' },
+    { name: 'Subscriptions', href: '/dashboard/guardian/subscriptions', icon: CreditCard, badge: 'Plans' },
+    { name: 'Book Trip', href: '/dashboard/guardian/book-trip', icon: Bus, badge: 'New' },
+    { name: 'Notifications', href: '/dashboard/guardian/notifications', icon: Bell },
+    { name: 'Profile', href: '/dashboard/guardian/profile', icon: User, badge: 'Account' },
   ],
   supervisor: [
     { name: 'My Trips', href: '/dashboard/supervisor/my-trips', icon: Calendar, badge: 'Active' },
@@ -96,6 +104,14 @@ const roleConfig = {
     accentColor: 'from-orange-500 to-orange-600'
   },
   student: {
+    icon: GraduationCap,
+    color: 'from-orange-500 to-orange-600',
+    bgColor: 'from-orange-50 to-orange-100',
+    textColor: 'text-orange-600',
+    badgeColor: 'bg-orange-500 text-white',
+    accentColor: 'from-orange-500 to-orange-600'
+  },
+  guardian: {
     icon: GraduationCap,
     color: 'from-orange-500 to-orange-600',
     bgColor: 'from-orange-50 to-orange-100',

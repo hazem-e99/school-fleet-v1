@@ -4,6 +4,7 @@ import { Connection, Model, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 import { User, UserDocument } from '../users/user.schema';
+import { Child, ChildDocument } from '../child/child.schema';
 import { Bus, BusDocument } from '../buses/bus.schema';
 import { Trip, TripDocument } from '../trips/trip.schema';
 import { TripBooking, TripBookingDocument } from '../trip-booking/trip-booking.schema';
@@ -36,6 +37,7 @@ export class AdminSystemService {
   constructor(
     @InjectConnection() private readonly connection: Connection,
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    @InjectModel(Child.name) private readonly childModel: Model<ChildDocument>,
     @InjectModel(Bus.name) private readonly busModel: Model<BusDocument>,
     @InjectModel(Trip.name) private readonly tripModel: Model<TripDocument>,
     @InjectModel(TripBooking.name) private readonly tripBookingModel: Model<TripBookingDocument>,
@@ -139,6 +141,7 @@ export class AdminSystemService {
     const deleted: Record<string, number> = {};
 
     const businessCollections: Array<[string, Model<any>]> = [
+      ['children', this.childModel],
       ['buses', this.busModel],
       ['trips', this.tripModel],
       ['tripBookings', this.tripBookingModel],

@@ -584,6 +584,7 @@ export default function UsersPage() {
               >
                 <option value="all">{t('pages.admin.users.allRoles')}</option>
                 <option value="student">Student</option>
+                <option value="guardian">Guardian</option>
                 <option value="driver">Driver</option>
                 <option value="conductor">Conductor</option>
                 <option value="movement-manager">Movement Manager</option>
@@ -1047,6 +1048,7 @@ export default function UsersPage() {
                   required
                 >
                   <option value="student">Student</option>
+                <option value="guardian">Guardian</option>
                   <option value="driver">Driver</option>
                   <option value="conductor">Conductor</option>
                   <option value="movement-manager">Movement Manager</option>

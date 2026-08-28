@@ -19,6 +19,7 @@ export class DbMigrationService implements OnApplicationBootstrap {
       const collections = await db.listCollections().toArray();
       const targetCollections = [
         'users',
+        'children',
         'buses',
         'trips',
         'tripbookings',

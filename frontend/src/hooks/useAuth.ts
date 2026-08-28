@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 					Conductor: 'supervisor',
 					Supervisor: 'supervisor',
 					Student: 'student',
+					Guardian: 'guardian',
 				};
 				const apiRole = String((parsed as { role?: string })?.role || '').trim();
 				const normalizedRole: User['role'] = roleMap[apiRole] || (apiRole.toLowerCase() as User['role']) || 'student';
@@ -88,6 +89,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				Conductor: 'supervisor',
 				Supervisor: 'supervisor',
 				Student: 'student',
+				Guardian: 'guardian',
 			};
 			const normalizedRole: User['role'] = roleMap[apiRole] || (apiRole.toLowerCase() as User['role']) || 'student';
 

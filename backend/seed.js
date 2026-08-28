@@ -42,6 +42,18 @@ const COLLECTIONS = {
       { key: { status: 1 } },
     ],
   },
+  children: {
+    indexes: [
+      { key: { guardianId: 1 } },
+      { key: { status: 1 } },
+    ],
+  },
+  schools: {
+    indexes: [{ key: { name: 1 }, options: { unique: true } }],
+  },
+  preferredareas: {
+    indexes: [{ key: { name: 1 }, options: { unique: true } }],
+  },
   buses: {
     indexes: [
       { key: { busNumber: 1 }, options: { unique: true } },
@@ -122,7 +134,7 @@ async function getSeedData() {
   const now = new Date();
 
   const adminPass = await hashPassword('Admin@123');
-  const studentPass = await hashPassword('Student@123');
+  const parentPass = await hashPassword('Parent@123');
   const driverPass = await hashPassword('Driver@123');
   const conductorPass = await hashPassword('Conductor@123');
   const managerPass = await hashPassword('Manager@123');
@@ -186,32 +198,26 @@ async function getSeedData() {
       {
         firstName: 'Omar',
         lastName: 'Khaled',
-        email: 'student@elrenad.com',
-        password: studentPass,
-        role: 'Student',
+        email: 'parent1@elrenad.com',
+        password: parentPass,
+        role: 'Guardian',
         phoneNumber: '01000000005',
         nationalId: '12345678901238',
         status: 'Active',
         isEmailVerified: true,
-        studentAcademicNumber: 'STU-2025-001',
-        department: 'Computer Science',
-        yearOfStudy: '3',
         createdAt: now,
         updatedAt: now,
       },
       {
         firstName: 'Fatma',
         lastName: 'Mahmoud',
-        email: 'student2@elrenad.com',
-        password: studentPass,
-        role: 'Student',
+        email: 'parent2@elrenad.com',
+        password: parentPass,
+        role: 'Guardian',
         phoneNumber: '01000000006',
         nationalId: '12345678901239',
         status: 'Active',
         isEmailVerified: true,
-        studentAcademicNumber: 'STU-2025-002',
-        department: 'Engineering',
-        yearOfStudy: '2',
         createdAt: now,
         updatedAt: now,
       },
@@ -243,6 +249,24 @@ async function getSeedData() {
         createdAt: now,
         updatedAt: now,
       },
+    ],
+
+    schools: [
+      { name: 'مدرسة النيل الدولية', isActive: true, createdAt: now, updatedAt: now },
+      { name: 'مدرسة المستقبل', isActive: true, createdAt: now, updatedAt: now },
+      { name: 'مدرسة الأندلس', isActive: true, createdAt: now, updatedAt: now },
+      { name: 'مدرسة النصر', isActive: true, createdAt: now, updatedAt: now },
+      { name: 'مدرسة السلام', isActive: true, createdAt: now, updatedAt: now },
+      { name: 'مدرسة المنارة', isActive: true, createdAt: now, updatedAt: now },
+    ],
+
+    preferredareas: [
+      { name: 'المعادي', isActive: true, createdAt: now, updatedAt: now },
+      { name: 'مدينة نصر', isActive: true, createdAt: now, updatedAt: now },
+      { name: 'مصر الجديدة', isActive: true, createdAt: now, updatedAt: now },
+      { name: 'الهرم', isActive: true, createdAt: now, updatedAt: now },
+      { name: 'شبرا', isActive: true, createdAt: now, updatedAt: now },
+      { name: '6 أكتوبر', isActive: true, createdAt: now, updatedAt: now },
     ],
 
     buses: [
@@ -383,6 +407,8 @@ async function getSeedData() {
     ],
 
     // These start empty - populated through the application
+    // (children are seeded in Step 3b since they need guardian numericIds)
+    children: [],
     trips: [],
     tripbookings: [],
     payments: [],
@@ -588,6 +614,91 @@ async function main() {
       console.log(`  [SKIP]    trips - already has ${tripsCount} document(s)`);
     }
 
+    // ---- Step 3b: Create sample children linked to the guardian accounts ----
+    console.log('\n--- Step 3b: Creating Sample Children ---\n');
+
+    const childrenCollection = db.collection('children');
+    const childrenCount = await childrenCollection.countDocuments();
+
+    if (childrenCount === 0) {
+      const now = new Date();
+      const getNumericId = (doc) => parseInt(doc._id.toString().slice(-8), 16) % 100000;
+      const guardians = await db
+        .collection('users')
+        .find({ role: 'Guardian' })
+        .sort({ email: 1 })
+        .toArray();
+      const schools = await db.collection('schools').find().toArray();
+      const areas = await db.collection('preferredareas').find().toArray();
+
+      if (guardians.length >= 2 && schools.length >= 3 && areas.length >= 3) {
+        const g1 = getNumericId(guardians[0]); // parent1@elrenad.com
+        const g2 = getNumericId(guardians[1]); // parent2@elrenad.com
+
+        const sampleChildren = [
+          {
+            guardianId: g1,
+            firstName: 'يوسف',
+            secondName: 'عمر',
+            thirdName: 'خالد',
+            lastName: 'عبد الله',
+            schoolName: schools[0].name,
+            pickupAreaName: areas[0].name,
+            gender: 'Male',
+            status: 'Active',
+            createdAt: now,
+            updatedAt: now,
+          },
+          {
+            guardianId: g1,
+            firstName: 'ملك',
+            secondName: 'عمر',
+            thirdName: 'خالد',
+            lastName: 'عبد الله',
+            schoolName: schools[1].name,
+            pickupAreaName: areas[0].name,
+            gender: 'Female',
+            status: 'Active',
+            createdAt: now,
+            updatedAt: now,
+          },
+          {
+            guardianId: g2,
+            firstName: 'آدم',
+            secondName: 'محمود',
+            thirdName: 'سمير',
+            lastName: 'حسن',
+            schoolName: schools[2].name,
+            pickupAreaName: areas[1].name,
+            gender: 'Male',
+            status: 'Active',
+            createdAt: now,
+            updatedAt: now,
+          },
+          {
+            guardianId: g2,
+            firstName: 'سلمى',
+            secondName: 'محمود',
+            thirdName: 'سمير',
+            lastName: 'حسن',
+            schoolName: schools[3 % schools.length].name,
+            pickupAreaName: areas[2].name,
+            gender: 'Female',
+            status: 'Active',
+            createdAt: now,
+            updatedAt: now,
+          },
+        ];
+
+        const childResult = await childrenCollection.insertMany(sampleChildren);
+        console.log(`  [SEEDED]  children - inserted ${childResult.insertedCount} child record(s)`);
+      } else {
+        console.log('  [SKIP]    children - not enough guardians/schools/areas to seed');
+      }
+    } else {
+      console.log(`  [SKIP]    children - already has ${childrenCount} document(s)`);
+    }
+
     // ---- Step 4: Create sample notifications ----
     console.log('\n--- Step 4: Creating Sample Notifications ---\n');
 
@@ -638,8 +749,8 @@ async function main() {
     console.log('  Driver:             driver@elrenad.com     / Driver@123');
     console.log('  Conductor:          conductor@elrenad.com  / Conductor@123');
     console.log('  Movement Manager:   manager@elrenad.com    / Manager@123');
-    console.log('  Student:            student@elrenad.com    / Student@123');
-    console.log('  Student 2:          student2@elrenad.com   / Student@123');
+    console.log('  Guardian (Parent):  parent1@elrenad.com    / Parent@123');
+    console.log('  Guardian (Parent):  parent2@elrenad.com    / Parent@123');
     console.log('');
   } catch (error) {
     console.error('\n❌ Error:', error.message);

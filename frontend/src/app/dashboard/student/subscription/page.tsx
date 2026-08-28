@@ -303,7 +303,8 @@ export default function StudentSubscriptionPage() {
 
     try {
       setCancelSubmitting(true);
-      const res = await studentSubscriptionAPI.requestCancellation({ reason });
+      // Legacy student page (students no longer self-serve). childId is required by the API now.
+      const res = await studentSubscriptionAPI.requestCancellation({ reason, childId: 0 });
       if (!res?.success) throw new Error(res?.message || 'Request failed');
 
       showToast({
@@ -371,8 +372,10 @@ export default function StudentSubscriptionPage() {
         ? (onlineChannel === 'vodafone' ? PaymentChannel.Vodafone : PaymentChannel.InstaPay)
         : (offlineChannel === 'visa' ? PaymentChannel.Visa : PaymentChannel.Cash);
 
+      // Legacy student page — students no longer self-serve; guardians subscribe children.
       const paymentData: CreatePaymentDTO = {
         subscriptionPlanId: selectedPlan.id,
+        childIds: [],
         paymentMethod: paymentMethod,
         paymentChannel: resolvedChannel,
         paymentReferenceCode: (paymentMethod === PaymentMethod.Online && onlineChannel === 'instapay') ? paymentReferenceCode.trim() : null

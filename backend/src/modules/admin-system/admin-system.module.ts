@@ -4,6 +4,7 @@ import { AdminSystemController } from './admin-system.controller';
 import { AdminSystemService } from './admin-system.service';
 
 import { User, UserSchema } from '../users/user.schema';
+import { Child, ChildSchema } from '../child/child.schema';
 import { Bus, BusSchema } from '../buses/bus.schema';
 import { Trip, TripSchema } from '../trips/trip.schema';
 import { TripBooking, TripBookingSchema } from '../trip-booking/trip-booking.schema';
@@ -20,6 +21,7 @@ import { BusLocation, BusLocationSchema } from '../bus-tracking/bus-location.sch
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
+      { name: Child.name, schema: ChildSchema },
       { name: Bus.name, schema: BusSchema },
       { name: Trip.name, schema: TripSchema },
       { name: TripBooking.name, schema: TripBookingSchema },

@@ -20,6 +20,7 @@ export class PaymentController {
   }
 
   @Get('my-payments')
+  @Roles('Guardian')
   async getMyPayments(@CurrentUser('numericId') userId: number) {
     return this.paymentService.getMyPayments(userId);
   }
@@ -68,6 +69,7 @@ export class PaymentController {
   }
 
   @Post()
+  @Roles('Guardian')
   async create(
     @Body() dto: any,
     @CurrentUser('numericId') userId: number,

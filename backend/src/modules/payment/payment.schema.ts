@@ -5,8 +5,22 @@ export type PaymentDocument = Payment & Document;
 
 @Schema({ timestamps: true, collection: 'payments' })
 export class Payment {
+  /**
+   * The rider this payment is for. For a single-child payment it's that
+   * child's numericId; for a multi-child payment (guardian "subscribe all")
+   * it's the FIRST child's numericId so existing `find({ studentId })` admin
+   * queries still return the row — `childIds` carries the full set.
+   */
   @Prop({ required: true })
   studentId: number;
+
+  /** All children covered by this payment. Present for multi-child payments. */
+  @Prop({ type: [Number], default: undefined })
+  childIds: number[];
+
+  /** Denormalised count — 1 for a single-child payment, N for a bulk one. */
+  @Prop({ default: 1 })
+  childCount: number;
 
   @Prop({ required: true })
   subscriptionPlanId: number;

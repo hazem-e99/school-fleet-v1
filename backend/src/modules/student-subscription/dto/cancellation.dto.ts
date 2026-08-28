@@ -2,8 +2,11 @@ import { IsIn, IsNumber, IsOptional, IsString, MaxLength, Min, MinLength } from 
 
 const CANCELLATION_DECISIONS = ['Approved', 'Rejected'];
 
-/** Student asks to cancel their active subscription. A reason is mandatory. */
+/** Guardian asks to cancel one child's active subscription. A reason is mandatory. */
 export class RequestCancellationDto {
+  @IsNumber({}, { message: 'A child must be selected.' })
+  childId: number;
+
   @IsString({ message: 'A cancellation reason is required.' })
   @MinLength(3, { message: 'The cancellation reason must be at least 3 characters long.' })
   @MaxLength(500, { message: 'The cancellation reason must not exceed 500 characters.' })

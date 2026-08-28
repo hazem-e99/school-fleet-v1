@@ -24,14 +24,13 @@ import {
   Trash2,
   Lock,
   GraduationCap,
-  Calendar,
+
   MapPin
 } from 'lucide-react';
 import { settingsAPI, adminSystemAPI, PurgeDatabaseResponseData } from '@/lib/api';
 import { useLanguage } from '@/hooks/useLanguage';
 import { ApiError, getApiErrorMessage } from '@/lib/apiError';
-import DepartmentsPanel from '@/components/admin/DepartmentsPanel';
-import YearsOfStudyPanel from '@/components/admin/YearsOfStudyPanel';
+import SchoolsPanel from '@/components/admin/SchoolsPanel';
 import PreferredAreasPanel from '@/components/admin/PreferredAreasPanel';
 
 const PURGE_CONFIRMATION_PHRASE = 'DELETE ALL DATA';
@@ -64,7 +63,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
   const { t, language: currentLanguage, isRTL } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'maintenance' | 'departments' | 'yearsOfStudy' | 'preferredAreas' | 'danger'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'maintenance' | 'schools' | 'preferredAreas' | 'danger'>('general');
 
   // Danger Zone: purge-all-data state
   const [showPurgeModal, setShowPurgeModal] = useState(false);
@@ -363,14 +362,11 @@ export default function SettingsPage() {
           <Button variant={activeTab === 'maintenance' ? 'default' : 'outline'} onClick={() => setActiveTab('maintenance')} size="sm">
             <Wrench className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> Maintenance
           </Button>
-          <Button variant={activeTab === 'departments' ? 'default' : 'outline'} onClick={() => setActiveTab('departments')} size="sm">
-            <GraduationCap className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> Departments
-          </Button>
-          <Button variant={activeTab === 'yearsOfStudy' ? 'default' : 'outline'} onClick={() => setActiveTab('yearsOfStudy')} size="sm">
-            <Calendar className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> Years of Study
+          <Button variant={activeTab === 'schools' ? 'default' : 'outline'} onClick={() => setActiveTab('schools')} size="sm">
+            <GraduationCap className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> Schools
           </Button>
           <Button variant={activeTab === 'preferredAreas' ? 'default' : 'outline'} onClick={() => setActiveTab('preferredAreas')} size="sm">
-            <MapPin className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> Preferred Areas
+            <MapPin className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> Pickup Areas
           </Button>
           <Button
             variant={activeTab === 'danger' ? 'destructive' : 'outline'}
@@ -387,11 +383,10 @@ export default function SettingsPage() {
           hero/card layout, so they render standalone instead of nested
           inside the "Settings Content" card below (moved here from their
           former standalone /dashboard/admin/... routes). */}
-      {activeTab === 'departments' && <DepartmentsPanel />}
-      {activeTab === 'yearsOfStudy' && <YearsOfStudyPanel />}
+      {activeTab === 'schools' && <SchoolsPanel />}
       {activeTab === 'preferredAreas' && <PreferredAreasPanel />}
 
-      {activeTab !== 'departments' && activeTab !== 'yearsOfStudy' && activeTab !== 'preferredAreas' && (
+      {activeTab !== 'schools' && activeTab !== 'preferredAreas' && (
         <>
       {/* Settings Content */}
       <Card className="max-w-screen-2xl mx-auto">

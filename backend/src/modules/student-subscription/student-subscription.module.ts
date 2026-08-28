@@ -6,6 +6,7 @@ import { StudentSubscription, StudentSubscriptionSchema } from './student-subscr
 import { User, UserSchema } from '../users/user.schema';
 import { SubscriptionPlan, SubscriptionPlanSchema } from '../subscription-plan/subscription-plan.schema';
 import { Payment, PaymentSchema } from '../payment/payment.schema';
+import { Child, ChildSchema } from '../child/child.schema';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
@@ -15,6 +16,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
       { name: User.name, schema: UserSchema },
       { name: SubscriptionPlan.name, schema: SubscriptionPlanSchema },
       { name: Payment.name, schema: PaymentSchema },
+      { name: Child.name, schema: ChildSchema },
     ]),
     // Provides NotificationsService for cancellation request/review notifications.
     NotificationsModule,
