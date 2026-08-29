@@ -1,0 +1,78 @@
+name: Keep Render services awake
+
+# Render's free plan spins a web service down after ~15 min of no traffic, and
+# the next request then takes 30-60s to cold-start. This workflow pings both
+# services every ~13 minutes so they stay warm.
+#
+# GitHub's cron scheduler is best-effort and often runs several minutes late on
+# free runners, so the interval is set below 15 min with margin. It also does
+# not run on schedule while the repo is inactive for 60+ days — a manual
+# "Run workflow" (or any push) re-arms it.
+#
+# Setup: add these Repository *Variables* (Settings -> Secrets and variables ->
+# Actions -> Variables), no secrets needed since the endpoints are public:
+#   BACKEND_URL   e.g. https://elrenad-backend.onrender.com
+#   FRONTEND_URL  e.g. https://elrenad-frontend.onrender.com
+# If a variable is missing, that target is skipped (workflow still succeeds).
+
+on:
+  schedule:
+    - cron: '*/13 * * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: keep-alive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping backend
+        env:
+          BACKEND_URL: ${{ vars.BACKEND_URL }}
+        run: |
+          if [ -z "$BACKEND_URL" ]; then
+            echo "BACKEND_URL variable not set — skipping backend ping."
+            exit 0
+          fi
+          url="${BACKEND_URL%/}/api/Settings/maintenance-mode"
+          echo "GET $url"
+          # Retry a few times: a cold service can take 30-60s to answer the
+          # first request. --max-time covers one attempt; the loop covers the
+          # wake-up window.
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 40 "$url" || echo 000)
+            echo "attempt $i -> HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "backend is awake"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "backend did not return 200 after retries"
+          exit 1
+
+      - name: Ping frontend
+        if: always()
+        env:
+          FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+        run: |
+          if [ -z "$FRONTEND_URL" ]; then
+            echo "FRONTEND_URL variable not set — skipping frontend ping."
+            exit 0
+          fi
+          url="${FRONTEND_URL%/}/"
+          echo "GET $url"
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 40 "$url" || echo 000)
+            echo "attempt $i -> HTTP $code"
+            if [ "$code" = "200" ] || [ "$code" = "307" ] || [ "$code" = "308" ]; then
+              echo "frontend is awake"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "frontend did not return a success code after retries"
+          exit 1
