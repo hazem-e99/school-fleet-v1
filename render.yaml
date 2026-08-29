@@ -9,7 +9,9 @@ services:
     runtime: node
     rootDir: backend
     plan: free
-    buildCommand: npm ci && npm run build
+    # --include=dev: NODE_ENV=production (below) otherwise makes npm ci skip
+    # devDependencies, but @nestjs/cli (the `nest build` compiler) lives there.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: node dist/main
     healthCheckPath: /api/Settings/maintenance-mode
     autoDeploy: true
@@ -44,7 +46,10 @@ services:
     runtime: node
     rootDir: frontend
     plan: free
-    buildCommand: npm ci && npm run build
+    # --include=dev: NODE_ENV=production (below) otherwise makes npm ci skip
+    # devDependencies, but tailwindcss / @tailwindcss/postcss / typescript
+    # (all needed by `next build`) live there.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm run start -- -p $PORT
     autoDeploy: true
     envVars:
