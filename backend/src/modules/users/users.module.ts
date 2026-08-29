@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { MulterModule } from '@nestjs/platform-express';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { User, UserSchema } from './user.schema';
@@ -8,6 +7,7 @@ import { StudentSubscription, StudentSubscriptionSchema } from '../student-subsc
 import { Payment, PaymentSchema } from '../payment/payment.schema';
 import { SubscriptionPlan, SubscriptionPlanSchema } from '../subscription-plan/subscription-plan.schema';
 import { Child, ChildSchema } from '../child/child.schema';
+import { FilesModule } from '../files/files.module';
 
 @Module({
   imports: [
@@ -18,7 +18,7 @@ import { Child, ChildSchema } from '../child/child.schema';
       { name: SubscriptionPlan.name, schema: SubscriptionPlanSchema },
       { name: Child.name, schema: ChildSchema },
     ]),
-    MulterModule.register({ dest: './uploads' }),
+    FilesModule,
   ],
   controllers: [UsersController],
   providers: [UsersService],

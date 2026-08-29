@@ -5,7 +5,9 @@ import {
   UploadedFile, Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { UsersService } from './users.service';
+import { FilesService } from '../files/files.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 
@@ -13,7 +15,10 @@ const ALLOWED_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp
 
 @Controller('api/Users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly filesService: FilesService,
+  ) {}
 
   @Get()
   async getAll(@Query('email') email?: string) {
@@ -120,6 +125,7 @@ export class UsersController {
   @Put('update-profile-picture')
   @UseInterceptors(
     FileInterceptor('profilePicture', {
+      storage: memoryStorage(),
       limits: { fileSize: 5 * 1024 * 1024 },
       fileFilter: (_req, file, callback) => {
         if (!ALLOWED_IMAGE_MIME_TYPES.has(file.mimetype)) {
@@ -134,11 +140,13 @@ export class UsersController {
     @CurrentUser('userId') userId: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    if (!file) {
+    if (!file || !file.buffer) {
       throw new BadRequestException('No file was uploaded.');
     }
-    const fileUrl = `/uploads/${file.filename || file.originalname}`;
-    return this.usersService.updateProfilePicture(userId, fileUrl);
+    // Store the bytes in MongoDB (GridFS) so they survive redeploys; the DB
+    // keeps a /files/<id> URL served by GET /api/files/:id.
+    const id = await this.filesService.upload(file.buffer, file.originalname, file.mimetype);
+    return this.usersService.updateProfilePicture(userId, `/files/${id}`);
   }
 
   /**

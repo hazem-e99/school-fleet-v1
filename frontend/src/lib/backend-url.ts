@@ -22,6 +22,11 @@ export const toBackendAssetUrl = (imagePath: string | undefined): string => {
   }
 
   if (imagePath.startsWith('/')) {
+    // New: uploads are stored in MongoDB GridFS, served at /api/files/<id>.
+    if (imagePath.startsWith('/files/')) {
+      return `${API_BASE_URL}${imagePath}`;
+    }
+    // Legacy: files that used to be served by the backend's static /uploads mount.
     if (imagePath.startsWith('/uploads')) {
       return `${BACKEND_ORIGIN}${imagePath}`;
     }

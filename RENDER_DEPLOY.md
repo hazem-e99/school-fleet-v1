@@ -103,10 +103,9 @@ To wipe and re-seed, run `RESET_CONFIRM=YES npm run reset-db` first (or
 
 - **Free plan** services spin down after ~15 min idle; the first request after
   idle takes ~30–60s. Fine for testing; upgrade for always-on.
-- **Ephemeral filesystem**: files under `UPLOAD_DIR` (profile pictures) are lost
-  on every redeploy/restart. For persistence, attach a Render **Disk** (paid) to
-  `elrenad-backend` mounted at `backend/uploads`, or switch uploads to external
-  object storage (S3/Cloudinary).
+- **Uploads**: profile pictures are stored in **MongoDB GridFS** (bucket
+  `uploads`) in the same Atlas database, served by `GET /api/files/:id`. They
+  survive redeploys — no Render Disk or `UPLOAD_DIR` needed.
 - **Custom domain**: add it per service under **Settings → Custom Domains**, then
   update `NEXT_PUBLIC_APP_URL` / `NEXT_PUBLIC_API_BASE_URL` /
   `NEXT_PUBLIC_BACKEND_ORIGIN` / `CORS_ORIGIN` accordingly and rebuild the

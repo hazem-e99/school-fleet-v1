@@ -18,6 +18,7 @@ import {
   Clock
 } from 'lucide-react';
 import { studentAPI, preferredAreasAPI, departmentsAPI, yearsOfStudyAPI } from '@/lib/api';
+import { toBackendAssetUrl } from '@/lib/backend-url';
 import { StudentViewModel } from '@/types/user';
 import { validateStudentEdit } from '@/utils/validateStudentRegistration';
 import { mergeWithCurrentValue } from '@/lib/constants';
@@ -269,7 +270,7 @@ export default function EditStudentPage() {
               <div className="w-24 h-24 rounded-2xl bg-gray-100 ring-1 ring-black/5 flex items-center justify-center overflow-hidden shadow-sm relative">
                 {student.profilePictureUrl ? (
                   <Image
-                    src={student.profilePictureUrl}
+                    src={toBackendAssetUrl(student.profilePictureUrl)}
                     alt={`${student.firstName} ${student.lastName}`}
                     fill
                     sizes="96px"

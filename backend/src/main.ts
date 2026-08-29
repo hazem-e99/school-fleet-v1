@@ -2,9 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
-import { join, isAbsolute } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import * as fs from 'fs';
 import { AppException } from './common/exceptions/app.exception';
 import { ErrorCodes } from './common/exceptions/error-codes';
 import { formatValidationErrors } from './common/utils/format-validation-errors';
@@ -46,15 +44,8 @@ async function bootstrap() {
     }),
   );
 
-  const uploadDir = configService.get<string>('UPLOAD_DIR', './uploads');
-  const resolvedUploadDir = isAbsolute(uploadDir)
-    ? uploadDir
-    : join(process.cwd(), uploadDir);
-
-  if (!fs.existsSync(resolvedUploadDir)) {
-    fs.mkdirSync(resolvedUploadDir, { recursive: true });
-  }
-  app.useStaticAssets(resolvedUploadDir, { prefix: '/uploads/' });
+  // Uploaded files (profile pictures) are stored in MongoDB GridFS and served
+  // by GET /api/files/:id — see FilesModule. No local disk / static mount.
 
   const host = configService.get<string>('HOST');
   if (host) {

@@ -10,6 +10,7 @@ import { SubscriptionPlan, SubscriptionPlanDocument } from '../subscription-plan
 import { createApiResponse, ApiResponse } from '../../common/interfaces/api-response.interface';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCodes } from '../../common/exceptions/error-codes';
+import { FilesService } from '../files/files.service';
 
 @Injectable()
 export class UsersService {
@@ -19,6 +20,7 @@ export class UsersService {
     @InjectModel(StudentSubscription.name) private subModel: Model<StudentSubscriptionDocument>,
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
     @InjectModel(SubscriptionPlan.name) private planModel: Model<SubscriptionPlanDocument>,
+    private readonly filesService: FilesService,
   ) {}
 
   private toViewModel(user: UserDocument) {
@@ -146,6 +148,18 @@ export class UsersService {
   }
 
   async updateProfilePicture(userId: string, fileUrl: string): Promise<ApiResponse<any>> {
+    // Free the previous GridFS file (if the old value was one) so replacing an
+    // avatar doesn't orphan chunks. Best-effort — never block the update on it.
+    const current = await this.userModel.findById(userId).select('profilePictureUrl').exec();
+    const prevMatch = current?.profilePictureUrl?.match(/^\/files\/([a-f0-9]{24})$/);
+    if (prevMatch) {
+      try {
+        await this.filesService.deleteById(prevMatch[1]);
+      } catch {
+        // ignore
+      }
+    }
+
     const user = await this.userModel
       .findByIdAndUpdate(userId, { profilePictureUrl: fileUrl }, { new: true })
       .select('-password')

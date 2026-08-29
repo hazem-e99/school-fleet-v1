@@ -29,8 +29,6 @@ services:
         value: 7d
       - key: CORS_ORIGIN
         sync: false              # https://elrenad-frontend-XXXX.onrender.com
-      - key: UPLOAD_DIR
-        value: ./uploads
       - key: MAIL_USER
         sync: false
       - key: MAIL_PASS
