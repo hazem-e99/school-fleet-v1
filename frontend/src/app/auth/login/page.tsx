@@ -11,7 +11,6 @@ import { Eye, EyeOff } from 'lucide-react';
 import { validateLogin } from '@/utils/validateLogin';
 import { useI18n } from '@/contexts/LanguageContext';
 import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
-import Image from 'next/image';
 import { getApiErrorMessage } from '@/lib/apiError';
 
 export default function LoginPage() {
@@ -81,42 +80,55 @@ export default function LoginPage() {
       <div className="relative grid grid-cols-1 lg:grid-cols-2 flex-1">
         {/* Illustration Panel */}
         <div className="hidden lg:flex items-center justify-center p-12 bg-gradient-to-br from-primary/10 to-white">
-          <div className="max-w-lg w-full space-y-10">
+          <div className="max-w-lg w-full space-y-8">
+            {/* Logo */}
+            <div className="flex flex-col items-center text-center">
+              <img
+                src="/logo.jpg"
+                alt={t('pages.auth.login.title', 'الريناد')}
+                className="w-28 h-28 object-contain rounded-2xl shadow-lg"
+              />
+              <h2 className="mt-4 text-2xl font-bold text-text-primary">
+                {t('pages.auth.login.about.title', 'منصة الريناد للنقل الجامعي')}
+              </h2>
+              <p className="text-sm text-text-secondary mt-2 max-w-sm">
+                {t('pages.auth.login.about.description', 'حجز وتتبع الرحلات، إدارة المشتركين، وإشعارات لحظية.')}
+              </p>
+            </div>
+
+            {/* Hero bus */}
             <div className="relative">
               <img
-                src="/bus-login.png"
+                src="/bus-hero.png"
                 alt={t('pages.auth.login.illustrationAlt', 'School bus illustration')}
-                width={800}
-                height={600}
-                className="w-full h-auto animate-bounce"
-                style={{
-                  animation: 'moveBus 6.5s linear infinite'
-                }}
+                className="w-full h-auto drop-shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+                style={{ animation: 'moveBus 6.5s ease-in-out infinite' }}
               />
             </div>
-            
+
             <style jsx>{`
               @keyframes moveBus {
-                0% {
-                  transform: translateY(-20px);
-                }
-                50% {
-                  transform: translateY(20px);
-                }
-                100% {
-                  transform: translateY(-20px);
-                }
+                0% { transform: translateY(-16px); }
+                50% { transform: translateY(16px); }
+                100% { transform: translateY(-16px); }
               }
             `}</style>
 
-            {/* About Section */}
-            <div className="mt-12 text-center">
-              <h3 className="text-lg font-semibold text-text-primary">
-                {t('pages.auth.login.about.title', 'About the Bus System')}
-              </h3>
-              <p className="text-sm text-text-secondary mt-2">
-                {t('pages.auth.login.about.description', 'Book campus bus trips, manage subscriptions, and track routes — fast and easy.')}
-              </p>
+            {/* Fleet gallery */}
+            <div className="grid grid-cols-4 gap-3">
+              {['/gallery/bus-1.png', '/gallery/bus-2.png', '/gallery/bus-3.png', '/gallery/bus-4.png'].map((src, i) => (
+                <div
+                  key={src}
+                  className="rounded-xl bg-white/60 border border-white/40 p-2 shadow-sm backdrop-blur-sm"
+                >
+                  <img
+                    src={src}
+                    alt={`${t('pages.auth.login.illustrationAlt', 'حافلة الريناد')} ${i + 1}`}
+                    loading="lazy"
+                    className="w-full h-16 object-contain"
+                  />
+                </div>
+              ))}
             </div>
           </div>
         </div>
