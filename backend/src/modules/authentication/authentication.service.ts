@@ -9,7 +9,6 @@ import { LoginDTO } from './dto/login.dto';
 import { StudentRegistrationDTO } from './dto/student-registration.dto';
 import { GuardianRegistrationDTO } from './dto/guardian-registration.dto';
 import { StaffRegistrationDTO } from './dto/staff-registration.dto';
-import { ForgotPasswordDTO } from './dto/forgot-password.dto';
 import { createApiResponse, ApiResponse } from '../../common/interfaces/api-response.interface';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCodes } from '../../common/exceptions/error-codes';
@@ -208,31 +207,5 @@ export class AuthenticationService {
     });
 
     return createApiResponse(true, `${dto.role} registered successfully`, true);
-  }
-
-  /**
-   * Password reset with no email/SMS channel: the caller proves ownership with
-   * phone number + national ID, then sets a new password in the same request.
-   */
-  async forgotPassword(dto: ForgotPasswordDTO): Promise<ApiResponse<boolean>> {
-    if (dto.newPassword !== dto.confirmPassword) {
-      throw new AppException(400, ErrorCodes.PASSWORD_MISMATCH, 'Passwords do not match.');
-    }
-
-    const user = await this.userModel
-      .findOne({ phoneNumber: dto.phoneNumber, nationalId: dto.nationalId })
-      .exec();
-    if (!user) {
-      throw new AppException(
-        400,
-        ErrorCodes.AUTH_INVALID_CREDENTIALS,
-        'No account matches that phone number and national ID.',
-      );
-    }
-
-    const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
-    await this.userModel.findByIdAndUpdate(user._id, { password: hashedPassword });
-
-    return createApiResponse(true, 'Password reset successfully. You can now sign in.', true);
   }
 }

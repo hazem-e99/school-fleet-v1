@@ -141,6 +141,7 @@
           "signingIn": "Signing in..."
         },
         "forgotPassword": "Forgot your password?",
+        "forgotHint": "Forgot your password? Contact the administrator to reset it.",
         "terms": "By continuing, you agree to our Terms and Privacy Policy.",
         "signupPrompt": "Don't have an account?",
         "signup": "Sign up",
@@ -1280,8 +1281,19 @@
         "students": "Students",
         "drivers": "Drivers",
         "conductors": "Conductors",
-        "searchPlaceholder": "Search users by name or email...",
+        "searchPlaceholder": "Search users by name or phone...",
         "allRoles": "All Roles",
+        "resetPassword": {
+          "action": "Reset password",
+          "title": "Reset Password",
+          "description": "Set a new password for",
+          "label": "New password",
+          "placeholder": "At least 6 characters",
+          "tooShort": "Password must be at least 6 characters.",
+          "done": "Password reset successfully.",
+          "saving": "Saving...",
+          "cta": "Reset password"
+        },
         "usersList": "Users List",
         "noUsers": "No users found",
         "tryAdjusting": "Try adjusting filters or add a new user.",

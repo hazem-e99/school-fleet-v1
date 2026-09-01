@@ -146,6 +146,27 @@ export class UsersService {
     return createApiResponse(true, 'Password changed successfully');
   }
 
+  /** Admin-only: set another user's password by their numericId. No old-password check. */
+  async adminResetPassword(
+    numericId: string,
+    payload: { newPassword: string; confirmPassword?: string },
+  ): Promise<ApiResponse<boolean>> {
+    const newPassword = (payload?.newPassword || '').trim();
+    if (newPassword.length < 6) {
+      throw new AppException(400, ErrorCodes.VALIDATION_ERROR, 'Password must be at least 6 characters long.');
+    }
+    if (payload.confirmPassword !== undefined && payload.newPassword !== payload.confirmPassword) {
+      throw new AppException(400, ErrorCodes.PASSWORD_MISMATCH, 'Passwords do not match.');
+    }
+    const user = await this.userModel.findOne({ numericId: parseInt(numericId, 10) }).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.userModel.findByIdAndUpdate(user._id, { password: hashed });
+    return createApiResponse(true, 'Password reset successfully');
+  }
+
   async updateProfilePicture(userId: string, fileUrl: string): Promise<ApiResponse<any>> {
     // Free the previous GridFS file (if the old value was one) so replacing an
     // avatar doesn't orphan chunks. Best-effort — never block the update on it.

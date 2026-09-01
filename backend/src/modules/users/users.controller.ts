@@ -82,6 +82,19 @@ export class UsersController {
     return this.usersService.changePassword(userId, payload);
   }
 
+  /**
+   * Admin resets another user's password (there is no self-service reset — no
+   * email/SMS channel). Takes the target user's numericId and a new password.
+   */
+  @Put(':id/reset-password')
+  @Roles('Admin')
+  async adminResetPassword(
+    @Param('id') id: string,
+    @Body() payload: { newPassword: string; confirmPassword?: string },
+  ) {
+    return this.usersService.adminResetPassword(id, payload);
+  }
+
   @Put('profile')
   async updateProfile(
     @CurrentUser('userId') userId: string,

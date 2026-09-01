@@ -3,7 +3,6 @@ import { getApiConfig } from "./config";
 import { ApiError } from "./apiError";
 import {
   LoginDTO,
-  ForgotPasswordDTO,
   StaffRegistrationDTO,
 } from "@/types/auth";
 import { Bus, BusApiResponse, BusRequest, BusListParams } from "@/types/bus";
@@ -358,14 +357,6 @@ export const authAPI = {
       body: JSON.stringify(credentials),
     });
   },
-
-  // Password reset — one step: phone + national ID + new password.
-  forgotPassword: (data: ForgotPasswordDTO) => {
-    return apiRequest<any>(apiConfig.AUTH.FORGOT_PASSWORD, {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  },
 };
 
 // User-related API calls - use global endpoints
@@ -455,6 +446,13 @@ export const userAPI = {
     apiRequest<any>("/Users/change-password", {
       method: "POST",
       body: JSON.stringify(payload),
+    }),
+
+  // Admin: reset another user's password (by numericId). Admin-only on the backend.
+  adminResetPassword: (id: string | number, newPassword: string) =>
+    apiRequest<any>(`/Users/${id}/reset-password`, {
+      method: "PUT",
+      body: JSON.stringify({ newPassword, confirmPassword: newPassword }),
     }),
 
   // Get profile

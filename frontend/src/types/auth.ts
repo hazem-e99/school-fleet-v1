@@ -49,22 +49,5 @@ export interface StaffRegistrationResponse {
   requestId: string;
 }
 
-// ForgotPasswordDTO - Request schema. No email/SMS channel: prove ownership
-// with phone + national ID, then set the new password in the same request.
-export interface ForgotPasswordDTO {
-  phoneNumber: string;     // pattern: ^01[0-2,5]{1}[0-9]{8}$
-  nationalId: string;      // pattern: ^\d{14}$
-  newPassword: string;     // minLength: 6
-  confirmPassword: string; // minLength: 1
-}
-
-// ForgotPasswordResponse - Full API response
-export interface ForgotPasswordResponse {
-  data: boolean;
-  count: number;
-  message: string;
-  success: boolean;
-  timestamp: string;       // ISO date string
-  errorCode: string;
-  requestId: string;
-}
+// There is no self-service password reset. An admin resets a user's password
+// via PUT /api/Users/:id/reset-password (see userAPI.adminResetPassword).

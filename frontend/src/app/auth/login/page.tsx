@@ -209,11 +209,9 @@ export default function LoginPage() {
                     </Button>
                   </form>
 
-                  <div className="mt-6 text-center">
-                    <Link href="/auth/forgot-password" className="text-sm text-primary hover:text-primary-hover font-medium">
-                      {t('pages.auth.login.forgotPassword', 'Forgot your password?')}
-                    </Link>
-                  </div>
+                  <p className="mt-6 text-center text-xs text-text-muted">
+                    {t('pages.auth.login.forgotHint', 'Forgot your password? Contact the administrator to reset it.')}
+                  </p>
 
                   <p className="mt-4 text-center text-xs text-text-muted">
                     {t('pages.auth.login.terms', 'By continuing, you agree to our Terms and Privacy Policy.')}

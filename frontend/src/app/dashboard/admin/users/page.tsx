@@ -8,14 +8,15 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
-import { 
-  Users, 
-  Search, 
-  Trash2, 
+import {
+  Users,
+  Search,
+  Trash2,
   Eye,
   UserPlus,
   Shield,
-  Phone
+  Phone,
+  KeyRound
 } from 'lucide-react';
 import { userAPI, authAPI, studentAPI } from '@/lib/api';
 import { getApiConfig } from '@/lib/config';
@@ -25,6 +26,7 @@ import Image from 'next/image';
 import { DataTable } from '@/components/ui/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { getApiErrorMessage } from '@/lib/apiError';
 import { User, UserRole, Student } from '@/types/user';
 import { formatDate } from '@/utils/formatDate';
 import { useI18n } from '@/contexts/LanguageContext';
@@ -70,6 +72,9 @@ export default function UsersPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [resetPwTarget, setResetPwTarget] = useState<User | null>(null);
+  const [newPw, setNewPw] = useState('');
+  const [resettingPw, setResettingPw] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [newUser, setNewUser] = useState({
@@ -438,6 +443,25 @@ export default function UsersPage() {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!resetPwTarget) return;
+    if (newPw.trim().length < 6) {
+      showToast({ type: 'error', title: t('common.error', 'Error'), message: t('pages.admin.users.resetPassword.tooShort', 'Password must be at least 6 characters.') });
+      return;
+    }
+    setResettingPw(true);
+    try {
+      await userAPI.adminResetPassword(resetPwTarget.id.toString(), newPw.trim());
+      showToast({ type: 'success', title: t('common.success', 'Success'), message: t('pages.admin.users.resetPassword.done', 'Password reset successfully.') });
+      setResetPwTarget(null);
+      setNewPw('');
+    } catch (err) {
+      showToast({ type: 'error', title: t('common.error', 'Error'), message: getApiErrorMessage(err) });
+    } finally {
+      setResettingPw(false);
+    }
+  };
+
   if (isLoadingUsers) {
     return (
       <div className="space-y-6 p-6">
@@ -697,6 +721,14 @@ export default function UsersPage() {
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="sm" onClick={() => handleViewUser(row.original)}>
                       <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { setResetPwTarget(row.original); setNewPw(''); }}
+                      title={t('pages.admin.users.resetPassword.action', 'Reset password')}
+                    >
+                      <KeyRound className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -1309,6 +1341,57 @@ export default function UsersPage() {
           </div>
         )}
       </Modal>
+      {/* Reset Password Modal (admin-driven) */}
+      <Modal
+        isOpen={!!resetPwTarget}
+        onClose={() => { setResetPwTarget(null); setNewPw(''); }}
+        title={t('pages.admin.users.resetPassword.title', 'Reset Password')}
+        size="md"
+      >
+        {resetPwTarget && (
+          <div className="space-y-4">
+            <p className="text-sm text-text-secondary">
+              {t('pages.admin.users.resetPassword.description', 'Set a new password for')}{' '}
+              <span className="font-semibold text-text-primary">{resetPwTarget.name}</span>
+              {' '}({resetPwTarget.phoneNumber || resetPwTarget.phone || ''}).
+            </p>
+            <div>
+              <label className={`block text-sm font-medium text-gray-700 mb-1 ${isRTL ? 'text-right' : ''}`}>
+                {t('pages.admin.users.resetPassword.label', 'New password')}
+              </label>
+              <Input
+                type="text"
+                value={newPw}
+                onChange={(e) => setNewPw(e.target.value)}
+                placeholder={t('pages.admin.users.resetPassword.placeholder', 'At least 6 characters')}
+                minLength={6}
+                autoComplete="new-password"
+                className={isRTL ? 'text-right placeholder:text-right' : undefined}
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => { setResetPwTarget(null); setNewPw(''); }}
+                disabled={resettingPw}
+              >
+                {t('common.cancel', 'Cancel')}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleResetPassword}
+                disabled={resettingPw || newPw.trim().length < 6}
+              >
+                {resettingPw
+                  ? t('pages.admin.users.resetPassword.saving', 'Saving...')
+                  : t('pages.admin.users.resetPassword.cta', 'Reset password')}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
       <ConfirmDialog
         open={confirmState.open}
         title="Permanently delete user?"
