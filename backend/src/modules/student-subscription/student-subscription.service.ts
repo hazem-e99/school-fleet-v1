@@ -34,13 +34,11 @@ export class StudentSubscriptionService {
   }
 
   /** `studentId` now holds a Child numericId (legacy rows may hold a Student User id). */
-  private async resolveRider(numericId: number): Promise<{ name: string | null; email: string | null; childId: number | null; guardianId: number | null }> {
+  private async resolveRider(numericId: number): Promise<{ name: string | null; childId: number | null; guardianId: number | null }> {
     const child = await this.childModel.findOne({ numericId }).exec();
     if (child) {
-      const guardian = await this.userModel.findOne({ numericId: child.guardianId }).exec();
       return {
-        name: `${child.firstName} ${child.secondName} ${child.thirdName} ${child.lastName}`.trim(),
-        email: guardian?.email || null,
+        name: child.name,
         childId: child.numericId,
         guardianId: child.guardianId,
       };
@@ -48,7 +46,6 @@ export class StudentSubscriptionService {
     const user = await this.findByNumericId(this.userModel, numericId);
     return {
       name: user ? `${user.firstName} ${user.lastName}` : null,
-      email: user?.email || null,
       childId: null,
       guardianId: null,
     };
@@ -65,7 +62,6 @@ export class StudentSubscriptionService {
       childName: rider.name,
       guardianId: rider.guardianId,
       studentName: rider.name,
-      studentEmail: rider.email,
       subscriptionPlanId: sub.subscriptionPlanId,
       subscriptionPlanName: plan?.name || null,
       subscriptionPlanPrice: plan?.price || 0,
@@ -172,7 +168,7 @@ export class StudentSubscriptionService {
     });
 
     const guardian = await this.findByNumericId(this.userModel, guardianId);
-    const childName = `${child.firstName} ${child.secondName} ${child.thirdName} ${child.lastName}`.trim();
+    const childName = child.name;
     const guardianName = guardian ? `${guardian.firstName} ${guardian.lastName}` : `Guardian #${guardianId}`;
     const admins = await this.userModel.find({ role: 'Admin' }).exec();
     await this.notifySafely(
@@ -525,7 +521,6 @@ export class StudentSubscriptionService {
         id: sub.numericId,
         studentId: sub.studentId,
         studentName: student ? `${student.firstName} ${student.lastName}` : null,
-        studentEmail: student?.email || null,
         subscriptionPlanId: sub.subscriptionPlanId,
         subscriptionPlanName: plan?.name || null,
         subscriptionPlanPrice: plan?.price || 0,

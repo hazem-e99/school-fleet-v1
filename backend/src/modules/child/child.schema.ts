@@ -17,16 +17,7 @@ export class Child {
   guardianId: number;
 
   @Prop({ required: true })
-  firstName: string;
-
-  @Prop({ required: true })
-  secondName: string;
-
-  @Prop({ required: true })
-  thirdName: string;
-
-  @Prop({ required: true })
-  lastName: string;
+  name: string;
 
   @Prop({ required: true })
   schoolName: string;

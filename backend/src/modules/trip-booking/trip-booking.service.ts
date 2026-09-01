@@ -28,7 +28,6 @@ export class TripBookingService {
       tripId: booking.tripId,
       studentId: booking.studentId,
       studentName: student ? `${student.firstName} ${student.lastName}` : null,
-      studentEmail: student?.email || null,
       pickupStopLocationId: booking.pickupStopLocationId,
       pickupStopName: null,
       userSubscriptionId: booking.userSubscriptionId,

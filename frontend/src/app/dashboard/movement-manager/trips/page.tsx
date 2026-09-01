@@ -98,7 +98,7 @@ export default function MovementManagerTripsPage() {
         ]);
         const users = Array.isArray((usersRes as ApiResponse<User[]>)?.data) ? (usersRes as ApiResponse<User[]>).data : (Array.isArray(usersRes) ? usersRes : []);
         const toNum = (u: User) => Number(u?.id ?? u?.userId);
-        const toName = (u: User) => (u?.fullName || `${u?.firstName || ''} ${u?.lastName || ''}`.trim() || u?.name || u?.email || 'User');
+        const toName = (u: User) => (u?.fullName || `${u?.firstName || ''} ${u?.lastName || ''}`.trim() || u?.name || 'User');
         const role = (u: User) => String(u?.role || '').toLowerCase();
         setDrivers(users.filter((u: User) => role(u) === 'driver').map((u: User) => ({ id: toNum(u), name: `${toName(u)} (#${toNum(u)})` })).filter(d => Number.isFinite(d.id) && d.id > 0));
         const busesList = (busesRes as ApiResponse<Bus[]>)?.data ?? [];

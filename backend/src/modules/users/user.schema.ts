@@ -11,16 +11,14 @@ export class User {
   @Prop({ required: true })
   lastName: string;
 
-  @Prop({ required: true, unique: true })
-  email: string;
-
   @Prop({ required: true })
   password: string;
 
   @Prop({ required: true, enum: ['Admin', 'Student', 'Guardian', 'Driver', 'Conductor', 'MovementManager'] })
   role: string;
 
-  @Prop()
+  // Phone number is the login identity.
+  @Prop({ required: true, unique: true, index: true })
   phoneNumber: string;
 
   @Prop({ unique: true, sparse: true })
@@ -31,21 +29,6 @@ export class User {
 
   @Prop()
   profilePictureUrl: string;
-
-  @Prop({ default: false })
-  isEmailVerified: boolean;
-
-  @Prop()
-  verificationCode: string;
-
-  @Prop()
-  verificationCodeExpires: Date;
-
-  @Prop()
-  resetToken: string;
-
-  @Prop()
-  resetTokenExpires: Date;
 
   // Student-specific fields
   @Prop()

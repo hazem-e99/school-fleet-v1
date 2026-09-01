@@ -30,7 +30,6 @@ export class UsersService {
       profileId: id,
       firstName: user.firstName,
       lastName: user.lastName,
-      email: user.email,
       phoneNumber: user.phoneNumber,
       nationalId: user.nationalId,
       profilePictureUrl: user.profilePictureUrl,
@@ -69,8 +68,8 @@ export class UsersService {
     return createApiResponse(this.toViewModel(user));
   }
 
-  async getByEmail(email: string): Promise<ApiResponse<any[]>> {
-    const users = await this.userModel.find({ email: new RegExp(email, 'i') }).select('-password').exec();
+  async getByPhone(phone: string): Promise<ApiResponse<any[]>> {
+    const users = await this.userModel.find({ phoneNumber: new RegExp(phone, 'i') }).select('-password').exec();
     const data = users.map((u) => this.toViewModel(u));
     return createApiResponse(data, null, true, data.length);
   }
@@ -234,7 +233,6 @@ export class UsersService {
         firstName: student.firstName,
         lastName: student.lastName,
         fullName: `${student.firstName} ${student.lastName}`.trim(),
-        email: student.email,
         phoneNumber: student.phoneNumber || null,
         nationalId: student.nationalId || null,
         status: student.status,
@@ -317,9 +315,8 @@ export class UsersService {
 
       return {
         id,
-        firstName: child.firstName,
-        lastName: child.lastName,
-        fullName: `${child.firstName} ${child.secondName} ${child.thirdName} ${child.lastName}`.trim(),
+        name: child.name,
+        fullName: child.name,
         schoolName: child.schoolName,
         pickupAreaName: child.pickupAreaName,
         gender: child.gender || null,
@@ -329,7 +326,6 @@ export class UsersService {
 
         guardianId: child.guardianId,
         guardianName: guardian ? `${guardian.firstName} ${guardian.lastName}`.trim() : null,
-        guardianEmail: guardian?.email || null,
         guardianPhone: guardian?.phoneNumber || null,
 
         subscriptionId: currentSub?.numericId ?? null,
@@ -381,7 +377,6 @@ export class UsersService {
         fullName: `${g.firstName} ${g.lastName}`.trim(),
         firstName: g.firstName,
         lastName: g.lastName,
-        email: g.email,
         phoneNumber: g.phoneNumber || null,
         nationalId: g.nationalId || null,
         status: g.status,
@@ -390,7 +385,8 @@ export class UsersService {
         activeSubscriptionsCount: kids.filter((c) => activeRiderIds.has(c.numericId)).length,
         children: kids.map((c) => ({
           id: c.numericId,
-          fullName: `${c.firstName} ${c.secondName} ${c.thirdName} ${c.lastName}`.trim(),
+          name: c.name,
+          fullName: c.name,
           schoolName: c.schoolName,
           pickupAreaName: c.pickupAreaName,
           hasActiveSubscription: activeRiderIds.has(c.numericId),

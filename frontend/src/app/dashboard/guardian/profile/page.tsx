@@ -16,7 +16,7 @@ export default function GuardianProfilePage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phoneNumber: '', nationalId: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', phoneNumber: '', nationalId: '' });
 
   const load = async () => {
     setLoading(true);
@@ -25,7 +25,6 @@ export default function GuardianProfilePage() {
       setForm({
         firstName: p?.firstName || '',
         lastName: p?.lastName || '',
-        email: p?.email || '',
         phoneNumber: p?.phoneNumber || p?.phone || '',
         nationalId: p?.nationalId || '',
       });
@@ -47,7 +46,6 @@ export default function GuardianProfilePage() {
       await userAPI.updateProfile({
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
-        email: form.email.trim(),
         phoneNumber: form.phoneNumber.trim(),
       });
       showToast({ type: 'success', title: t('common.success', 'Success'), message: t('pages.guardian.profile.saved', 'Profile updated.') });
@@ -85,10 +83,6 @@ export default function GuardianProfilePage() {
             <div>
               <label className="block text-sm font-medium mb-1">{t('pages.auth.register.fields.lastName', 'Last Name')}</label>
               <Input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} disabled={!editing} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">{t('pages.auth.register.fields.email', 'Email')}</label>
-              <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} disabled={!editing} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">{t('pages.auth.register.fields.phoneNumber', 'Phone Number')}</label>

@@ -55,7 +55,6 @@ export interface ExportLabels {
   // details columns
   index: string;
   student: string;
-  email: string;
   academicNumber: string;
   department: string;
   plan: string;
@@ -195,7 +194,6 @@ export async function exportSubscriptionReport(opts: {
   details.columns = [
     { header: labels.index, key: 'i', width: 6 },
     { header: labels.student, key: 'student', width: 26 },
-    { header: labels.email, key: 'email', width: 28 },
     { header: labels.academicNumber, key: 'academic', width: 16 },
     { header: labels.department, key: 'department', width: 22 },
     { header: labels.plan, key: 'plan', width: 18 },
@@ -219,7 +217,6 @@ export async function exportSubscriptionReport(opts: {
     const added = details.addRow({
       i: idx + 1,
       student: d.studentName || '—',
-      email: d.studentEmail || '—',
       academic: d.studentAcademicNumber || '—',
       department: d.department || '—',
       plan: d.planName || '—',

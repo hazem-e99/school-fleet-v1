@@ -3,9 +3,6 @@ import { getApiConfig } from "./config";
 import { ApiError } from "./apiError";
 import {
   LoginDTO,
-  VerificationDTO,
-  StudentRegistrationDTO,
-  ResetPasswordDTO,
   ForgotPasswordDTO,
   StaffRegistrationDTO,
 } from "@/types/auth";
@@ -330,15 +327,6 @@ export const api = {
 
 // Authentication API calls
 export const authAPI = {
-  // Student registration
-  /** @deprecated Students no longer self-register — use registerGuardian. */
-  registerStudent: (studentData: StudentRegistrationDTO) => {
-    return apiRequest<any>(apiConfig.AUTH.REGISTRATION_STUDENT, {
-      method: "POST",
-      body: JSON.stringify(studentData),
-    });
-  },
-
   // Guardian (parent) registration — creates the guardian account + their children.
   registerGuardian: (data: Record<string, unknown>) => {
     return apiRequest<any>("/Authentication/registration-guardian", {
@@ -371,65 +359,11 @@ export const authAPI = {
     });
   },
 
-  // Email verification
-  verifyEmail: (verificationData: VerificationDTO) => {
-    console.log("🔗 Using endpoint:", apiConfig.AUTH.VERIFICATION);
-    return apiRequest<any>(apiConfig.AUTH.VERIFICATION, {
-      method: "POST",
-      body: JSON.stringify({
-        email: verificationData.email,
-        verificationCode: verificationData.code,
-      }),
-    });
-  },
-
-  // Forgot password
-  forgotPassword: (emailData: ForgotPasswordDTO) => {
-    console.log("🔗 Using endpoint:", apiConfig.AUTH.FORGOT_PASSWORD);
-    console.log(
-      "🔗 Full URL:",
-      apiConfig.buildUrl(apiConfig.AUTH.FORGOT_PASSWORD)
-    );
+  // Password reset — one step: phone + national ID + new password.
+  forgotPassword: (data: ForgotPasswordDTO) => {
     return apiRequest<any>(apiConfig.AUTH.FORGOT_PASSWORD, {
       method: "POST",
-      body: JSON.stringify(emailData),
-    });
-  },
-
-  // Reset password
-  resetPassword: (resetData: ResetPasswordDTO) => {
-    console.log("🔗 Using endpoint:", apiConfig.AUTH.RESET_PASSWORD);
-    console.log(
-      "🔗 Full URL:",
-      apiConfig.buildUrl(apiConfig.AUTH.RESET_PASSWORD)
-    );
-    return apiRequest<any>(apiConfig.AUTH.RESET_PASSWORD, {
-      method: "POST",
-      body: JSON.stringify(resetData),
-    });
-  },
-
-  // Verify reset token
-  verifyResetToken: (verificationData: {
-    email: string;
-    resetToken: string;
-  }) => {
-    console.log(
-      "🔗 Using endpoint for reset verification:",
-      apiConfig.AUTH.RESET_PASSWORD_VERIFICATION
-    );
-    console.log(
-      "🔗 Full URL:",
-      apiConfig.buildUrl(apiConfig.AUTH.RESET_PASSWORD_VERIFICATION)
-    );
-    console.log("📤 Sending reset verification data:", verificationData);
-    return apiRequest<any>(apiConfig.AUTH.RESET_PASSWORD_VERIFICATION, {
-      method: "POST",
-      body: JSON.stringify({
-        email: verificationData.email,
-        resetToken: verificationData.resetToken,
-        action: "verify", // Add action to distinguish from forgot password
-      }),
+      body: JSON.stringify(data),
     });
   },
 };
@@ -460,9 +394,8 @@ const mapGlobalUserToApp = (u: any) => {
   return {
     id: String(u.id ?? u.userId ?? ""),
     profileId: String(u.profileId ?? ""),
-    name: fullName || u.name || u.email || "Unknown",
+    name: fullName || u.name || "Unknown",
     fullName: fullName || undefined,
-    email: u.email || "",
     role: mapGlobalRole(u.role),
     phone: u.phoneNumber || u.phone || "",
     nationalId: u.nationalId || "",
@@ -497,18 +430,18 @@ export const userAPI = {
     return item ? mapGlobalUserToApp(item) : null;
   },
 
-  // Get user by email (fallback to filtering all if endpoint unsupported)
-  getByEmail: async (email: string) => {
+  // Get user by phone (fallback to filtering all if endpoint unsupported)
+  getByPhone: async (phone: string) => {
     try {
       const resp = await apiRequest<any>(
-        `/Users?email=${encodeURIComponent(email)}`
+        `/Users?phone=${encodeURIComponent(phone)}`
       );
       const list = resp?.data ?? resp ?? [];
       return Array.isArray(list) ? list.map(mapGlobalUserToApp) : [];
     } catch {
       const all = await userAPI.getAll();
       return (all || []).filter(
-        (u: any) => (u.email || "").toLowerCase() === email.toLowerCase()
+        (u: any) => (u.phone || "").toLowerCase() === phone.toLowerCase()
       );
     }
   },
@@ -554,7 +487,6 @@ export const userAPI = {
   updateProfile: (payload: {
     firstName?: string;
     lastName?: string;
-    email?: string;
     phoneNumber?: string;
   }) =>
     apiRequest<unknown>("/Users/profile", {
@@ -566,7 +498,6 @@ export const userAPI = {
   updateDriverProfile: (payload: {
     firstName?: string;
     lastName?: string;
-    email?: string;
     phoneNumber?: string;
     licenseNumber?: string;
   }) =>
@@ -579,7 +510,6 @@ export const userAPI = {
   updateMovementManagerProfile: (payload: {
     firstName?: string;
     lastName?: string;
-    email?: string;
     phoneNumber?: string;
   }) =>
     apiRequest<unknown>("/Users/movement-manager-profile", {
@@ -591,7 +521,6 @@ export const userAPI = {
   updateAdminProfile: (payload: {
     firstName?: string;
     lastName?: string;
-    email?: string;
     phoneNumber?: string;
   }) =>
     apiRequest<unknown>("/Users/admin-profile", {
@@ -603,7 +532,6 @@ export const userAPI = {
   updateStudentProfile: (payload: {
     firstName?: string;
     lastName?: string;
-    email?: string;
     phoneNumber?: string;
     department?: string;
     preferredArea?: string;
@@ -1499,7 +1427,7 @@ export interface PurgeDatabaseResponseData {
   atomic: boolean;
   deleted: Record<string, number>;
   preserved: {
-    admin: { id: string; email: string };
+    admin: { id: string; phoneNumber: string };
     settings: boolean;
   };
 }

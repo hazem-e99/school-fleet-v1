@@ -30,7 +30,6 @@ interface AdminProfile {
   id: number;
   firstName: string;
   lastName: string;
-  email: string;
   phoneNumber: string;
   nationalId: string;
   profilePictureUrl: string;
@@ -53,7 +52,6 @@ export default function AdminProfilePage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
     phoneNumber: ''
   });
 
@@ -71,7 +69,6 @@ export default function AdminProfilePage() {
           id: parseInt(response.id) || 0,
           firstName: response.firstName || '',
           lastName: response.lastName || '',
-          email: response.email || '',
           phoneNumber: response.phoneNumber || '',
           nationalId: response.nationalId || '',
           profilePictureUrl: response.profilePictureUrl || '/avatar-placeholder.svg',
@@ -83,7 +80,6 @@ export default function AdminProfilePage() {
         setFormData({
           firstName: profileData.firstName,
           lastName: profileData.lastName,
-          email: profileData.email,
           phoneNumber: profileData.phoneNumber
         });
         
@@ -119,12 +115,11 @@ export default function AdminProfilePage() {
       const trimmedData = {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
-        email: formData.email.trim(),
         phoneNumber: formData.phoneNumber.trim()
       };
 
       // Check if at least one field is provided
-      if (!trimmedData.firstName && !trimmedData.lastName && !trimmedData.email && !trimmedData.phoneNumber) {
+      if (!trimmedData.firstName && !trimmedData.lastName && !trimmedData.phoneNumber) {
   alert(t('pages.admin.profile.alerts.fillOne', 'Please fill in at least one field to update.'));
         return;
       }
@@ -140,11 +135,6 @@ export default function AdminProfilePage() {
         return;
       }
 
-      // Validate email format
-      if (trimmedData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedData.email)) {
-  alert(t('pages.admin.profile.alerts.invalidEmail', 'Please enter a valid email address.'));
-        return;
-      }
 
       console.log('💾 Saving admin profile to /api/Users/admin-profile...');
       
@@ -175,7 +165,6 @@ export default function AdminProfilePage() {
       setFormData({
         firstName: profile.firstName,
         lastName: profile.lastName,
-        email: profile.email,
         phoneNumber: profile.phoneNumber
       });
     }
@@ -533,32 +522,6 @@ export default function AdminProfilePage() {
                     </div>
                   </div>
 
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700">
-                      {t('pages.admin.profile.personal.email', 'Email Address')}
-                    </label>
-                    <div className="relative">
-                      <Input
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        placeholder={t('pages.admin.profile.personal.placeholders.email', 'Enter your email')}
-                        className={`transition-all duration-200 ${
-                          isEditing 
-                            ? 'border-blue-300 focus:border-blue-500 focus:ring-blue-500' 
-                            : 'bg-gray-50 border-gray-200'
-                        }`}
-                      />
-                      {isEditing && (
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                          <Mail className="w-4 h-4 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
 
                   {/* Phone Number */}
                   <div className="space-y-2">

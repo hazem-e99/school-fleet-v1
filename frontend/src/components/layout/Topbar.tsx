@@ -78,10 +78,10 @@ export const Topbar = () => {
           // Create user profile object with correct data
           const userProfile = {
             id: String(profileData.id || user.id),
-            name: profileData.firstName && profileData.lastName 
-              ? `${profileData.firstName} ${profileData.lastName}` 
+            name: profileData.firstName && profileData.lastName
+              ? `${profileData.firstName} ${profileData.lastName}`
               : profileData.fullName || user.fullName || user.name,
-            email: profileData.email || user.email,
+            phoneNumber: profileData.phoneNumber || user.phoneNumber || user.phone,
             role: profileData.role || user.role,
             avatar: buildImageUrl(profileData.profilePictureUrl || profileData.avatar)
           };
@@ -105,7 +105,7 @@ export const Topbar = () => {
         setUserProfile({
           id: user.id,
           name: user.fullName || user.name,
-          email: user.email,
+          phoneNumber: user.phoneNumber || user.phone,
           role: user.role,
           avatar: null
         });

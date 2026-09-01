@@ -229,7 +229,6 @@ export class VotingService {
       surveyId: data.surveyId,
       studentId,
       studentName: student ? `${student.firstName} ${student.lastName}` : `Student #${studentId}`,
-      studentEmail: student?.email || '',
       voteDateKey,
       answers: data.answers,
     });
@@ -268,7 +267,7 @@ export class VotingService {
         .filter(Boolean);
 
       if (q.questionType === 'multiple-choice' || q.questionType === 'yes-no') {
-        const optionCounts: Record<string, { count: number; students: Array<{ id: number; name: string; email: string }> }> = {};
+        const optionCounts: Record<string, { count: number; students: Array<{ id: number; name: string }> }> = {};
 
         for (const opt of (q.options?.length ? q.options : ['Yes', 'No'])) {
           optionCounts[opt] = { count: 0, students: [] };
@@ -284,7 +283,6 @@ export class VotingService {
             optionCounts[ans.answer].students.push({
               id: vote.studentId,
               name: vote.studentName,
-              email: vote.studentEmail,
             });
           }
         }
@@ -321,7 +319,6 @@ export class VotingService {
         .map(v => ({
           studentId: v.studentId,
           studentName: v.studentName,
-          studentEmail: v.studentEmail,
           answer: v.answers.find(a => a.questionIndex === qIndex)?.answer || '',
           date: v.voteDateKey,
         }));
@@ -343,7 +340,6 @@ export class VotingService {
       voters: votes.map(v => ({
         studentId: v.studentId,
         studentName: v.studentName,
-        studentEmail: v.studentEmail,
         voteDateKey: v.voteDateKey,
         submittedAt: (v as any).createdAt,
       })),
@@ -355,7 +351,6 @@ export class VotingService {
     return createApiResponse(votes.map(v => ({
       studentId: v.studentId,
       studentName: v.studentName,
-      studentEmail: v.studentEmail,
       answers: v.answers,
       submittedAt: (v as any).createdAt,
     })), null, true, votes.length);

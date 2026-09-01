@@ -3,7 +3,6 @@ import {
   ArrayMinSize,
   IsArray,
   IsDateString,
-  IsEmail,
   IsIn,
   IsOptional,
   IsString,
@@ -14,25 +13,10 @@ import {
 } from 'class-validator';
 
 export class GuardianChildDTO {
-  @IsString({ message: 'First name is required.' })
-  @MinLength(2, { message: 'First name must be at least 2 characters long.' })
-  @MaxLength(20, { message: 'First name must not exceed 20 characters.' })
-  firstName: string;
-
-  @IsString({ message: 'Second name is required.' })
-  @MinLength(2, { message: 'Second name must be at least 2 characters long.' })
-  @MaxLength(20, { message: 'Second name must not exceed 20 characters.' })
-  secondName: string;
-
-  @IsString({ message: 'Third name is required.' })
-  @MinLength(2, { message: 'Third name must be at least 2 characters long.' })
-  @MaxLength(20, { message: 'Third name must not exceed 20 characters.' })
-  thirdName: string;
-
-  @IsString({ message: 'Last name is required.' })
-  @MinLength(2, { message: 'Last name must be at least 2 characters long.' })
-  @MaxLength(20, { message: 'Last name must not exceed 20 characters.' })
-  lastName: string;
+  @IsString({ message: 'Child name is required.' })
+  @MinLength(2, { message: 'Child name must be at least 2 characters long.' })
+  @MaxLength(60, { message: 'Child name must not exceed 60 characters.' })
+  name: string;
 
   @IsString({ message: 'School is required.' })
   @MinLength(1, { message: 'School is required.' })
@@ -65,10 +49,6 @@ export class GuardianRegistrationDTO {
   @IsString()
   @Matches(/^\d{14}$/, { message: 'National ID must be exactly 14 digits.' })
   nationalId: string;
-
-  @IsEmail({}, { message: 'Please enter a valid email address.' })
-  @MinLength(1, { message: 'Email address is required.' })
-  email: string;
 
   @IsString()
   @Matches(/^01[0-2,5]{1}[0-9]{8}$/, { message: 'Please enter a valid Egyptian phone number.' })

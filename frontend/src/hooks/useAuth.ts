@@ -10,7 +10,7 @@ import { ApiError } from '@/lib/apiError';
 interface AuthContextType {
 	user: User | null;
 	/** Resolves on success, throws (ApiError when available) with the real failure reason otherwise. */
-	login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+	login: (phoneNumber: string, password: string, rememberMe?: boolean) => Promise<void>;
 	logout: () => void;
 	isLoading: boolean;
 }
@@ -65,13 +65,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		setIsLoading(false);
 	}, []);
 
-	const login = async (email: string, password: string, rememberMe: boolean = false): Promise<void> => {
+	const login = async (phoneNumber: string, password: string, rememberMe: boolean = false): Promise<void> => {
 		setIsLoading(true);
 
 		try {
 			// Use global authentication API — throws ApiError on invalid credentials,
-			// unverified email, suspended account, network failure, etc.
-			const response: LoginResponse = await authAPI.login({ email, password, rememberMe });
+			// suspended account, network failure, etc.
+			const response: LoginResponse = await authAPI.login({ phoneNumber, password, rememberMe });
 
 			if (!response || !response.success || !response.data) {
 				throw new ApiError({ message: response?.message || 'Unable to sign in. Please try again.' });
@@ -97,14 +97,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			const foundUser: User = {
 				id: userData.id,
 				profileId: userData.profileId,
-				email: userData.email || '',
 				fullName: userData.fullName || '',
 				role: normalizedRole,
 				token: userData.token || '',
 				expiration: userData.expiration || '',
 				// Add default values for compatibility
 				name: userData.fullName || '',
-				phone: '',
+				phone: userData.phoneNumber || '',
 				nationalId: '',
 				department: '',
 				academicYear: '',

@@ -31,14 +31,6 @@ services:
         value: 7d
       - key: CORS_ORIGIN
         sync: false              # https://elrenad-frontend-XXXX.onrender.com
-      - key: MAIL_USER
-        sync: false
-      - key: MAIL_PASS
-        sync: false
-      - key: MAIL_FROM_NAME
-        value: El Renad
-      - key: MAIL_REPLY_TO
-        sync: false
 
   # ---------- Frontend (Next.js) ----------
   - type: web

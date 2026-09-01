@@ -30,7 +30,7 @@ interface TripWithStops {
 interface Student {
 	id: string;
 	name: string;
-	email: string;
+	phoneNumber?: string;
 	role: string;
 }
 
@@ -59,7 +59,6 @@ interface TableRow {
 	id: string;
 	studentId: string;
 	studentName: string;
-	studentEmail: string;
 	stopId: string;
 	stopName: string;
 	stopTime: string;
@@ -162,7 +161,6 @@ export default function TripAttendancePage() {
 					id: bk.id,
 					studentId: bk.studentId,
 					studentName: student?.name || bk.studentId,
-					studentEmail: student?.email || '',
 					stopId: bk.stopId,
 					stopName: stop?.stopName || '-',
 					stopTime: stop?.stopTime || '-',
@@ -170,7 +168,7 @@ export default function TripAttendancePage() {
 					attendanceStatus: attendanceByBooking[bk.id] || null,
 				};
 			})
-			.filter(r => (stopFilter === 'all' || r.stopId === stopFilter) && (search === '' || r.studentName.toLowerCase().includes(search.toLowerCase()) || r.studentEmail.toLowerCase().includes(search.toLowerCase())));
+			.filter(r => (stopFilter === 'all' || r.stopId === stopFilter) && (search === '' || r.studentName.toLowerCase().includes(search.toLowerCase())));
 		return list;
 	}, [bookings, students, trip?.stops, stopFilter, search, attendanceByBooking]);
 
@@ -258,7 +256,6 @@ export default function TripAttendancePage() {
 								<TableRow key={r.id}>
 									<TableCell>
 										<div className="font-medium">{r.studentName}</div>
-										<div className="text-xs text-[#757575]">{r.studentEmail}</div>
 									</TableCell>
 									<TableCell className="flex items-center gap-2"><MapPin className="w-4 h-4 text-primary" />{r.stopName}</TableCell>
 									<TableCell className="text-sm"><Clock className="w-4 h-4 inline mr-1" />{r.stopTime}</TableCell>

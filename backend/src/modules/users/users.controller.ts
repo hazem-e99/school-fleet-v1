@@ -21,9 +21,9 @@ export class UsersController {
   ) {}
 
   @Get()
-  async getAll(@Query('email') email?: string) {
-    if (email) {
-      return this.usersService.getByEmail(email);
+  async getAll(@Query('phone') phone?: string) {
+    if (phone) {
+      return this.usersService.getByPhone(phone);
     }
     return this.usersService.getAll();
   }

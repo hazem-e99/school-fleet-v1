@@ -83,9 +83,6 @@ export class VoteResponse {
   @Prop()
   studentName: string;
 
-  @Prop()
-  studentEmail: string;
-
   @Prop({ required: true })
   voteDateKey: string;
 

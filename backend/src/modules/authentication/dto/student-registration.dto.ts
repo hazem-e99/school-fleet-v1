@@ -1,4 +1,4 @@
-import { IsString, IsEmail, MinLength, MaxLength, Matches } from 'class-validator';
+import { IsString, MinLength, MaxLength, Matches } from 'class-validator';
 
 export class StudentRegistrationDTO {
   @IsString({ message: 'First name is required.' })
@@ -14,10 +14,6 @@ export class StudentRegistrationDTO {
   @IsString()
   @Matches(/^\d{14}$/, { message: 'National ID must be exactly 14 digits.' })
   nationalId: string;
-
-  @IsEmail({}, { message: 'Please enter a valid email address.' })
-  @MinLength(1, { message: 'Email address is required.' })
-  email: string;
 
   @IsString()
   @Matches(/^01[0-2,5]{1}[0-9]{8}$/, { message: 'Please enter a valid Egyptian phone number.' })

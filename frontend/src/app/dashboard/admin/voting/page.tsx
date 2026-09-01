@@ -505,7 +505,7 @@ export default function AdminVotingPage() {
                                   <p className="text-xs text-gray-500 mb-1">{t(`${P}.results.studentsWhoChose`, 'Students who chose this:')}</p>
                                   <div className="flex flex-wrap gap-1">
                                     {data.students.map((s: any, si: number) => (
-                                      <span key={si} className="text-xs bg-gray-100 px-2 py-1 rounded-full">{s.name} ({s.email})</span>
+                                      <span key={si} className="text-xs bg-gray-100 px-2 py-1 rounded-full">{s.name}</span>
                                     ))}
                                   </div>
                                 </div>
@@ -536,7 +536,7 @@ export default function AdminVotingPage() {
                         {qa.textAnswers.map((ta: any, ti: number) => (
                           <div key={ti} className="bg-gray-50 rounded-lg p-3">
                             <p className="text-sm">{ta.answer}</p>
-                            <p className="text-xs text-gray-400 mt-1">— {ta.studentName} ({ta.studentEmail}) | {ta.date}</p>
+                            <p className="text-xs text-gray-400 mt-1">— {ta.studentName} | {ta.date}</p>
                           </div>
                         ))}
                       </div>
@@ -553,7 +553,6 @@ export default function AdminVotingPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t(`${P}.results.student`, 'Student')}</TableHead>
-                      <TableHead>{t(`${P}.results.email`, 'Email')}</TableHead>
                       <TableHead>{t(`${P}.results.date`, 'Date')}</TableHead>
                       <TableHead>{t(`${P}.results.submitted`, 'Submitted')}</TableHead>
                     </TableRow>
@@ -562,7 +561,6 @@ export default function AdminVotingPage() {
                     {resultsData.voters.map((v: any, vi: number) => (
                       <TableRow key={vi}>
                         <TableCell className="font-medium">{v.studentName}</TableCell>
-                        <TableCell className="text-sm">{v.studentEmail}</TableCell>
                         <TableCell className="text-sm">{v.voteDateKey}</TableCell>
                         <TableCell className="text-sm">{v.submittedAt ? new Date(v.submittedAt).toLocaleString() : '-'}</TableCell>
                       </TableRow>

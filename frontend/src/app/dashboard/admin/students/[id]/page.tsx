@@ -178,7 +178,7 @@ export default function ViewStudentPage() {
               <CardTitle className="text-2xl">
                 {student.firstName} {student.lastName}
               </CardTitle>
-              <p className="text-text-secondary">{student.email}</p>
+              <p className="text-text-secondary">{student.phoneNumber}</p>
               <div className="flex flex-wrap gap-2 mt-2">
                 <Badge variant="outline">
                   <GraduationCap className="w-3 h-3 mr-1" />
@@ -216,13 +216,6 @@ export default function ViewStudentPage() {
                 <p className="text-text-primary font-semibold tracking-wide">
                 {student.firstName} {student.lastName}
               </p>
-            </div>
-            <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Email Address</label>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-gray-500" />
-                <p className="text-text-primary">{student.email}</p>
-              </div>
             </div>
             <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Phone Number</label>

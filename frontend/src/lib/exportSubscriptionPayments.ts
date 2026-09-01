@@ -46,7 +46,6 @@ export interface ExportPaymentsLabels {
   sheetName: string;
   fileNamePrefix: string;
   student: string;
-  email: string;
   plan: string;
   amount: string;
   method: string;
@@ -77,7 +76,6 @@ export async function exportSubscriptionPayments(opts: {
 
   sheet.columns = [
     { header: labels.student, key: 'student', width: 24 },
-    { header: labels.email, key: 'email', width: 28 },
     { header: labels.plan, key: 'plan', width: 22 },
     { header: labels.amount, key: 'amount', width: 14 },
     { header: labels.method, key: 'method', width: 14 },
@@ -101,7 +99,6 @@ export async function exportSubscriptionPayments(opts: {
 
     const added = sheet.addRow({
       student: r.studentName || '—',
-      email: r.studentEmail || '—',
       plan: planWithDuration,
       amount: r.amount ?? 0,
       method: r.paymentMethodText || '—',

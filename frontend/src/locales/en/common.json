@@ -124,12 +124,12 @@
         "title": "Welcome back 👋",
         "subtitle": "Login to Book Your Bus",
         "fields": {
-          "email": "Email",
-          "password": "Password"
+          "password": "Password",
+          "phoneNumber": "Phone Number"
         },
         "placeholders": {
-          "email": "Enter your email",
-          "password": "Enter your password"
+          "password": "Enter your password",
+          "phoneNumber": "Enter your phone number"
         },
         "aria": {
           "showPassword": "Show password",
@@ -151,38 +151,40 @@
           "description": "Book campus bus trips, manage subscriptions, and track routes — fast and easy."
         },
         "errors": {
-          "invalidCredentials": "Invalid email or password",
+          "invalidCredentials": "Invalid phone number or password",
           "generic": "An error occurred. Please try again."
         },
         "validation": {
-          "emailRequired": "Email is required",
-          "emailMin": "Email must be at least 5 characters long",
-          "emailMax": "Email must not exceed 100 characters",
-          "emailInvalid": "Please enter a valid email address",
           "passwordRequired": "Password is required",
-          "passwordMin": "Password must be at least 1 character long"
+          "passwordMin": "Password must be at least 1 character long",
+          "phoneRequired": "Phone number is required",
+          "phoneInvalid": "Please enter a valid Egyptian phone number"
         }
       },
       "forgotPassword": {
-        "title": "Forgot Password?",
-        "description": "Enter your email address and we'll send you a link to reset your password.",
+        "title": "Reset Password",
+        "description": "Enter your phone number and national ID to set a new password.",
         "fields": {
-          "email": "Email Address"
+          "phoneNumber": "Phone Number",
+          "nationalId": "National ID",
+          "newPassword": "New Password",
+          "confirmPassword": "Confirm Password"
         },
-        "placeholders": {
-          "email": "Enter your email"
-        },
+        "placeholders": {},
         "cta": {
           "sending": "Sending...",
-          "send": "Send Reset Link"
+          "send": "Send Reset Link",
+          "save": "Reset Password",
+          "saving": "Saving..."
         },
         "backToLogin": "Back to Login",
         "toasts": {
-          "successTitle": "Email Sent",
-          "successMessage": "If an account exists with that email, a reset link has been sent.",
+          "successTitle": "Password Reset",
+          "successMessage": "Your password has been reset. You can now sign in.",
           "errorTitle": "Error",
           "errorMessage": "Failed to send reset link. Please try again."
-        }
+        },
+        "invalid": "Please fill in all fields correctly. Passwords must match and be at least 6 characters."
       },
       "resetPasswordVerification": {
         "title": "Enter Verification Code",
@@ -232,24 +234,21 @@
           "lastName": "Last Name",
           "phoneNumber": "Phone Number",
           "nationalId": "National ID",
-          "email": "Email",
           "studentAcademicNumber": "Student Academic Number",
           "department": "Department",
           "preferredArea": "Preferred Area",
           "yearOfStudy": "Year of Study",
           "password": "Password",
           "confirmPassword": "Confirm Password",
-          "secondName": "Second Name",
-          "thirdName": "Third Name",
           "school": "School",
-          "pickupArea": "Pickup Area"
+          "pickupArea": "Pickup Area",
+          "childName": "Child Name"
         },
         "placeholders": {
           "firstName": "Enter first name",
           "lastName": "Enter last name",
           "phoneNumber": "Enter phone number",
           "nationalId": "Enter national ID",
-          "universityEmail": "Enter university email",
           "studentAcademicNumber": "Enter student academic number",
           "selectDepartment": "Select Department",
           "selectPreferredArea": "Select your preferred area",

@@ -63,7 +63,7 @@ interface Bus {
 interface Driver {
   id: string;
   name: string;
-  email: string;
+
   phone: string;
   status: string;
 }
@@ -148,7 +148,6 @@ export default function SupervisorTripsPage() {
         const transformedDrivers = (driversRes as any[]).map((driver: any) => ({
           id: driver.id?.toString() || '',
           name: driver.name || driver.fullName || '',
-          email: driver.email || '',
           phone: driver.phone || '',
           status: driver.status || 'active'
         }));

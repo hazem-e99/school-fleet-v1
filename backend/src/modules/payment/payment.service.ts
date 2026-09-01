@@ -39,13 +39,11 @@ export class PaymentService {
   }
 
   /** child-first name resolution: `studentId` now holds a Child numericId (legacy rows may hold a Student User id). */
-  private async resolveRider(numericId: number): Promise<{ name: string | null; email: string | null; guardianId: number | null; schoolName: string | null }> {
+  private async resolveRider(numericId: number): Promise<{ name: string | null; guardianId: number | null; schoolName: string | null }> {
     const child = await this.childModel.findOne({ numericId }).exec();
     if (child) {
-      const guardian = await this.userModel.findOne({ numericId: child.guardianId }).exec();
       return {
-        name: `${child.firstName} ${child.secondName} ${child.thirdName} ${child.lastName}`.trim(),
-        email: guardian?.email || null,
+        name: child.name,
         guardianId: child.guardianId,
         schoolName: child.schoolName,
       };
@@ -53,7 +51,6 @@ export class PaymentService {
     const user = await this.userModel.findOne({ numericId }).exec();
     return {
       name: user ? `${user.firstName} ${user.lastName}`.trim() : null,
-      email: user?.email || null,
       guardianId: null,
       schoolName: null,
     };
@@ -73,14 +70,13 @@ export class PaymentService {
     let childNames: string[] | null = null;
     if (payment.childIds && payment.childIds.length > 1) {
       const kids = await this.childModel.find({ numericId: { $in: payment.childIds } }).exec();
-      childNames = kids.map((k) => `${k.firstName} ${k.secondName} ${k.thirdName} ${k.lastName}`.trim());
+      childNames = kids.map((k) => k.name);
     }
 
     return {
       id,
       studentId: payment.studentId,
       studentName: rider.name,
-      studentEmail: rider.email,
       childIds: payment.childIds ?? null,
       childCount: payment.childCount ?? 1,
       childNames,
@@ -416,13 +412,11 @@ export class PaymentService {
       return {
         paymentId: p.numericId,
         studentId: p.studentId,
-        studentName: child
-          ? `${child.firstName} ${child.secondName} ${child.thirdName} ${child.lastName}`.trim()
-          : null,
+        studentName: child ? child.name : null,
         childCount: p.childCount ?? 1,
         schoolName: child?.schoolName || null,
         guardianName: guardian ? `${guardian.firstName} ${guardian.lastName}`.trim() : null,
-        guardianEmail: guardian?.email || null,
+        guardianPhone: guardian?.phoneNumber || null,
         planName: plan?.name || null,
         amount: p.amount || 0,
         paymentMethod: p.paymentMethod,

@@ -401,7 +401,6 @@ export default function StudentSubscriptionsPanel() {
           sheetName: t('pages.admin.studentSubscriptions.excel.sheetName', 'Payments'),
           fileNamePrefix: 'subscription-payments',
           student: t('pages.admin.studentSubscriptions.table.student', 'Student'),
-          email: t('pages.admin.studentSubscriptions.excel.email', 'Email'),
           plan: t('pages.admin.studentSubscriptions.table.plan', 'Plan'),
           amount: t('pages.admin.studentSubscriptions.table.amount', 'Amount'),
           method: t('pages.admin.studentSubscriptions.table.paymentMethod', 'Payment Method'),

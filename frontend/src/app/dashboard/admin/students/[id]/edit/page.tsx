@@ -27,7 +27,6 @@ interface StudentEditData {
   firstName: string;
   lastName: string;
   nationalId: string;
-  email: string;
   phoneNumber: string;
   studentAcademicNumber: string;
   department: string;
@@ -44,7 +43,6 @@ export default function EditStudentPage() {
     firstName: '',
     lastName: '',
     nationalId: '',
-    email: '',
     phoneNumber: '',
     studentAcademicNumber: '',
     department: '',
@@ -107,7 +105,6 @@ export default function EditStudentPage() {
           firstName: studentData.firstName || '',
           lastName: studentData.lastName || '',
           nationalId: studentData.nationalId || '',
-          email: studentData.email || '',
           phoneNumber: studentData.phoneNumber || '',
           studentAcademicNumber: studentData.studentAcademicNumber || '',
           department: studentData.department || '',
@@ -285,7 +282,7 @@ export default function EditStudentPage() {
               <CardTitle className="text-2xl">
                 {student.firstName} {student.lastName}
               </CardTitle>
-              <p className="text-text-secondary">{student.email}</p>
+              <p className="text-text-secondary">{student.phoneNumber}</p>
               <p className="text-sm text-text-muted">Student ID: #{student.id}</p>
             </div>
           </div>
@@ -375,17 +372,6 @@ export default function EditStudentPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">Email *</label>
-                  <Input 
-                    type="email" 
-                    value={formData.email} 
-                    onChange={(e) => handleInputChange('email', e.target.value)} 
-                    placeholder="Enter university email"
-                    required 
-                  />
-                </div>
-                
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-1">Student Academic Number *</label>
                   <Input 

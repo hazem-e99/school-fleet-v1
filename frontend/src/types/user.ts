@@ -7,7 +7,6 @@ export interface User {
   lastName?: string;
   name?: string; // Keep for backward compatibility
   fullName?: string;
-  email?: string;
   password?: string;
   role: UserRole;
   phoneNumber?: string;
@@ -33,7 +32,6 @@ export interface StudentViewModel {
   id: number;
   firstName?: string;
   lastName?: string;
-  email?: string;
   phoneNumber?: string;
   nationalId?: string;
   profilePictureUrl?: string;
@@ -98,12 +96,9 @@ export interface Child {
   id: number;
   guardianId: number;
   guardianName?: string | null;
-  guardianEmail?: string | null;
   guardianPhone?: string | null;
-  firstName: string;
-  secondName: string;
-  thirdName: string;
-  lastName: string;
+  name: string;
+  /** Alias of `name`, kept so existing UI reading child.fullName keeps working. */
   fullName: string;
   schoolName: string;
   pickupAreaName: string;
@@ -124,10 +119,7 @@ export interface Child {
 }
 
 export interface CreateChildDTO {
-  firstName: string;
-  secondName: string;
-  thirdName: string;
-  lastName: string;
+  name: string;
   schoolName: string;
   pickupAreaName: string;
   gender?: 'Male' | 'Female';

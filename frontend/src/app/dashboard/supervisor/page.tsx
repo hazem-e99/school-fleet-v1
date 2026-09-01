@@ -76,7 +76,7 @@ interface BusData {
 interface DriverData {
   id: string;
   name: string;
-  email: string;
+
   role: string;
   phone: string;
   status: string;
@@ -108,7 +108,7 @@ interface RouteData {
 interface SupervisorData {
   id: string;
   name: string;
-  email: string;
+
   role: string;
   phone: string;
   status: string;
@@ -186,7 +186,6 @@ export default function SupervisorDashboard() {
         const transformedSupervisor: SupervisorData = {
           id: supervisor.id?.toString() || '',
           name: supervisor.name || supervisor.fullName || '',
-          email: supervisor.email || '',
           role: supervisor.role || 'supervisor',
           phone: supervisor.phone || '',
           status: supervisor.status || 'active',
@@ -269,7 +268,7 @@ export default function SupervisorDashboard() {
             const transformedDriver: DriverData = {
               id: driver.id?.toString() || '',
               name: driver.name || driver.fullName || '',
-              email: driver.email || '',
+
               role: driver.role || 'driver',
               phone: driver.phone || '',
               status: driver.status || 'active',

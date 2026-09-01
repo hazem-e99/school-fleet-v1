@@ -10,27 +10,9 @@ import {
 export class UpdateChildDto {
   @IsOptional()
   @IsString()
-  @MinLength(2, { message: 'First name must be at least 2 characters long.' })
-  @MaxLength(20, { message: 'First name must not exceed 20 characters.' })
-  firstName?: string;
-
-  @IsOptional()
-  @IsString()
-  @MinLength(2, { message: 'Second name must be at least 2 characters long.' })
-  @MaxLength(20, { message: 'Second name must not exceed 20 characters.' })
-  secondName?: string;
-
-  @IsOptional()
-  @IsString()
-  @MinLength(2, { message: 'Third name must be at least 2 characters long.' })
-  @MaxLength(20, { message: 'Third name must not exceed 20 characters.' })
-  thirdName?: string;
-
-  @IsOptional()
-  @IsString()
-  @MinLength(2, { message: 'Last name must be at least 2 characters long.' })
-  @MaxLength(20, { message: 'Last name must not exceed 20 characters.' })
-  lastName?: string;
+  @MinLength(2, { message: 'Child name must be at least 2 characters long.' })
+  @MaxLength(60, { message: 'Child name must not exceed 60 characters.' })
+  name?: string;
 
   @IsOptional()
   @IsString()

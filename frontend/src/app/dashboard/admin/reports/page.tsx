@@ -73,7 +73,6 @@ export default function AdminReportsPage() {
     return report.details.filter((d) => {
       const matchesSearch = !term
         || (d.studentName || '').toLowerCase().includes(term)
-        || (d.studentEmail || '').toLowerCase().includes(term)
         || (d.planName || '').toLowerCase().includes(term)
         || (d.paymentReferenceCode || '').toLowerCase().includes(term);
       const matchesChannel = channelFilter === 'all' || (d.paymentChannel || 'unknown') === channelFilter;
@@ -120,7 +119,6 @@ export default function AdminReportsPage() {
           },
           index: t('pages.admin.reports.details.index', '#'),
           student: t('pages.admin.reports.details.student', 'Student'),
-          email: t('pages.admin.reports.details.email', 'Email'),
           academicNumber: t('pages.admin.reports.details.academicNumber', 'Academic No.'),
           department: t('pages.admin.reports.details.department', 'Department'),
           plan: t('pages.admin.reports.details.plan', 'Plan'),
@@ -380,7 +378,6 @@ export default function AdminReportsPage() {
                     <TableRow key={d.paymentId}>
                       <TableCell>
                         <div className="font-medium">{d.studentName || '—'}</div>
-                        <div className="text-sm text-gray-500">{d.studentEmail || ''}</div>
                       </TableCell>
                       <TableCell>{d.planName || '—'}</TableCell>
                       <TableCell className="font-medium text-green-600">

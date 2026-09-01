@@ -20,7 +20,6 @@ interface User {
   id: string;
   fullName?: string;
   name?: string;
-  email?: string;
 }
 
 interface TripData {
@@ -155,16 +154,14 @@ export default function EditTripPage() {
         const transformedDrivers = Array.isArray(driverUsers) ? driverUsers.map(user => ({
           id: user.id?.toString() || '',
           fullName: user.fullName || '',
-          name: user.name || '',
-          email: user.email || ''
+          name: user.name || ''
         })) : [];
         setDrivers(transformedDrivers);
         
         const transformedConductors = Array.isArray(conductorUsers) ? conductorUsers.map(user => ({
           id: user.id?.toString() || '',
           fullName: user.fullName || '',
-          name: user.name || '',
-          email: user.email || ''
+          name: user.name || ''
         })) : [];
         setConductors(transformedConductors);
       } catch (e: unknown) {
@@ -308,7 +305,7 @@ export default function EditTripPage() {
               <select {...form.register('driverId')} className="mt-1 w-full border rounded px-3 py-2 bg-white">
                 <option value="">{loadingLookups ? t('common.loading', 'Loading...') : t('pages.admin.trips.form.placeholders.selectDriver', 'Select a driver')}</option>
                 {drivers.map((u) => {
-                  const name = u.fullName || u.name || u.email || `User`;
+                  const name = u.fullName || u.name || `User`;
                   const label = `${name} (ID: ${u.id})`;
                   return <option key={u.id} value={u.id}>{label}</option>;
                 })}
@@ -320,7 +317,7 @@ export default function EditTripPage() {
               <select {...form.register('conductorId')} className="mt-1 w-full border rounded px-3 py-2 bg-white">
                 <option value="">{loadingLookups ? t('common.loading', 'Loading...') : t('pages.admin.trips.form.placeholders.selectConductor', 'Select a conductor')}</option>
                 {conductors.map((u) => {
-                  const name = u.fullName || u.name || u.email || `User`;
+                  const name = u.fullName || u.name || `User`;
                   const label = `${name} (ID: ${u.id})`;
                   return <option key={u.id} value={u.id}>{label}</option>;
                 })}

@@ -20,10 +20,7 @@ import { PreferredAreaViewModel } from '@/types/preferredArea';
 import { SchoolViewModel } from '@/types/school';
 
 const emptyChild = (): GuardianChildData => ({
-  firstName: '',
-  secondName: '',
-  thirdName: '',
-  lastName: '',
+  name: '',
   schoolName: '',
   pickupAreaName: '',
   gender: '',
@@ -34,7 +31,6 @@ export default function RegisterPage() {
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [nationalId, setNationalId] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -96,7 +92,6 @@ export default function RegisterPage() {
       firstName,
       lastName,
       nationalId,
-      email,
       phoneNumber,
       password,
       confirmPassword,
@@ -118,10 +113,7 @@ export default function RegisterPage() {
       const data = await authAPI.registerGuardian({
         ...payload,
         children: children.map((c) => ({
-          firstName: c.firstName.trim(),
-          secondName: c.secondName.trim(),
-          thirdName: c.thirdName.trim(),
-          lastName: c.lastName.trim(),
+          name: c.name.trim(),
           schoolName: c.schoolName,
           pickupAreaName: c.pickupAreaName,
           ...(c.gender ? { gender: c.gender } : {}),
@@ -229,12 +221,6 @@ export default function RegisterPage() {
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-text-primary mb-1">
-                      {t('pages.auth.register.fields.email', 'Email')} *
-                    </label>
-                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputCls} />
-                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-text-primary mb-1">
@@ -287,11 +273,11 @@ export default function RegisterPage() {
                           </button>
                         )}
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <Input placeholder={t('pages.auth.register.fields.firstName', 'First Name')} value={child.firstName} onChange={(e) => updateChild(idx, { firstName: e.target.value })} required minLength={2} maxLength={20} className={inputCls} />
-                        <Input placeholder={t('pages.auth.register.fields.secondName', 'Second Name')} value={child.secondName} onChange={(e) => updateChild(idx, { secondName: e.target.value })} required minLength={2} maxLength={20} className={inputCls} />
-                        <Input placeholder={t('pages.auth.register.fields.thirdName', 'Third Name')} value={child.thirdName} onChange={(e) => updateChild(idx, { thirdName: e.target.value })} required minLength={2} maxLength={20} className={inputCls} />
-                        <Input placeholder={t('pages.auth.register.fields.lastName', 'Last Name')} value={child.lastName} onChange={(e) => updateChild(idx, { lastName: e.target.value })} required minLength={2} maxLength={20} className={inputCls} />
+                      <div>
+                        <label className="block text-sm font-medium text-text-primary mb-1">
+                          {t('pages.auth.register.fields.childName', 'Child Name')} *
+                        </label>
+                        <Input placeholder={t('pages.auth.register.fields.childName', 'Child Name')} value={child.name} onChange={(e) => updateChild(idx, { name: e.target.value })} required minLength={2} maxLength={60} className={inputCls} />
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>

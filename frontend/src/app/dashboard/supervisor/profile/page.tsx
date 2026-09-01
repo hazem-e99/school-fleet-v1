@@ -35,7 +35,6 @@ interface SupervisorProfile {
   id: number;
   firstName: string;
   lastName: string;
-  email: string;
   phoneNumber: string;
   nationalId: string;
   profilePictureUrl: string;
@@ -59,7 +58,6 @@ export default function SupervisorProfilePage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
     phoneNumber: ''
   });
 
@@ -77,7 +75,6 @@ export default function SupervisorProfilePage() {
           id: parseInt(response.id) || 0,
           firstName: response.firstName || '',
           lastName: response.lastName || '',
-          email: response.email || '',
           phoneNumber: response.phoneNumber || '',
           nationalId: response.nationalId || '',
           profilePictureUrl: response.profilePictureUrl || '/avatar-placeholder.svg',
@@ -89,7 +86,6 @@ export default function SupervisorProfilePage() {
           setFormData({
           firstName: profileData.firstName,
           lastName: profileData.lastName,
-          email: profileData.email,
           phoneNumber: profileData.phoneNumber
         });
         
@@ -125,12 +121,11 @@ export default function SupervisorProfilePage() {
       const trimmedData = {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
-        email: formData.email.trim(),
         phoneNumber: formData.phoneNumber.trim()
       };
 
       // Check if at least one field is provided
-      if (!trimmedData.firstName && !trimmedData.lastName && !trimmedData.email && !trimmedData.phoneNumber) {
+      if (!trimmedData.firstName && !trimmedData.lastName && !trimmedData.phoneNumber) {
         alert(t('pages.supervisor.profile.alerts.fillOne'));
       return;
     }
@@ -146,11 +141,6 @@ export default function SupervisorProfilePage() {
         return;
       }
 
-      // Validate email format
-      if (trimmedData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedData.email)) {
-        alert(t('pages.supervisor.profile.alerts.invalidEmail'));
-        return;
-      }
 
       console.log('💾 Saving supervisor profile to /api/Users/profile...');
       
@@ -181,7 +171,6 @@ export default function SupervisorProfilePage() {
     setFormData({
         firstName: profile.firstName,
         lastName: profile.lastName,
-        email: profile.email,
         phoneNumber: profile.phoneNumber
       });
     }
@@ -544,32 +533,6 @@ export default function SupervisorProfilePage() {
                     </div>
                   </div>
                   
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700">
-                      {t('pages.supervisor.profile.personal.email')}
-                    </label>
-                    <div className="relative">
-                      <Input
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        placeholder={t('pages.supervisor.profile.personal.placeholders.email')}
-                        className={`transition-all duration-200 ${
-                          isEditing 
-                            ? 'border-orange-300 focus:border-orange-500 focus:ring-orange-500' 
-                            : 'bg-gray-50 border-gray-200'
-                        }`}
-                      />
-                      {isEditing && (
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                          <Mail className="w-4 h-4 text-gray-400" />
-                      </div>
-                    )}
-                    </div>
-                  </div>
                   
                   {/* Phone Number */}
                   <div className="space-y-2">

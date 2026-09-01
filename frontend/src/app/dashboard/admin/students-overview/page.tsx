@@ -149,7 +149,6 @@ export default function StudentsOverviewPage() {
           sheetName: t('pages.admin.studentsOverview.excel.sheetName', 'Students'),
           fileNamePrefix: 'students-overview',
           student: t('pages.admin.studentsOverview.columns.student', 'Student'),
-          email: t('pages.admin.studentsOverview.excel.email', 'Email'),
           phone: t('pages.admin.studentsOverview.columns.phone', 'Phone'),
           nationalId: t('pages.admin.studentsOverview.columns.nationalId', 'National ID'),
           department: t('pages.admin.studentsOverview.columns.department', 'Department'),
@@ -194,7 +193,6 @@ export default function StudentsOverviewPage() {
       cell: ({ row }) => (
         <div>
           <p className="font-semibold text-text-primary">{row.original.fullName}</p>
-          <p className="text-sm text-text-secondary">{row.original.email || '—'}</p>
         </div>
       ),
     },
@@ -224,7 +222,7 @@ export default function StudentsOverviewPage() {
       cell: ({ row }) => (
         <div>
           <p className="text-text-primary">{row.original.guardianName || '—'}</p>
-          <p className="text-sm text-text-secondary">{row.original.guardianPhone || row.original.guardianEmail || ''}</p>
+          <p className="text-sm text-text-secondary">{row.original.guardianPhone || ''}</p>
         </div>
       ),
     },

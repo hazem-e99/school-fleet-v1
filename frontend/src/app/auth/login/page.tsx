@@ -14,25 +14,22 @@ import LanguageSwitcher from '@/components/ui/LanguageSwitcher';
 import { getApiErrorMessage } from '@/lib/apiError';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const { login } = useAuth();
   const router = useRouter();
   const { t } = useI18n();
 
   const translateErrors = (errs: string[]) => {
     const map: Record<string, string> = {
-      'Email is required': t('pages.auth.login.validation.emailRequired', 'Email is required'),
-      'Email must be at least 5 characters long': t('pages.auth.login.validation.emailMin', 'Email must be at least 5 characters long'),
-      'Email must not exceed 100 characters': t('pages.auth.login.validation.emailMax', 'Email must not exceed 100 characters'),
-      'Please enter a valid email address': t('pages.auth.login.validation.emailInvalid', 'Please enter a valid email address'),
+      'Phone number is required': t('pages.auth.login.validation.phoneRequired', 'Phone number is required'),
+      'Please enter a valid Egyptian phone number': t('pages.auth.login.validation.phoneInvalid', 'Please enter a valid Egyptian phone number'),
       'Password is required': t('pages.auth.login.validation.passwordRequired', 'Password is required'),
-      'Password must be at least 1 character long': t('pages.auth.login.validation.passwordMin', 'Password must be at least 1 character long'),
     };
     return errs.map(e => map[e] || e).join(', ');
   };
@@ -40,8 +37,8 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    const validation = validateLogin({ email, password, rememberMe });
+
+    const validation = validateLogin({ phoneNumber, password, rememberMe });
     if (!validation.isValid) {
       setError(translateErrors(validation.errors));
       return;
@@ -50,8 +47,8 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password, rememberMe);
-      const userRole = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).role : 'student';
+      await login(phoneNumber, password, rememberMe);
+      const userRole = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).role : 'guardian';
       const dashboardPath = `/dashboard/${userRole.toLowerCase()}`;
       router.push(dashboardPath);
     } catch (err: unknown) {
@@ -61,7 +58,7 @@ export default function LoginPage() {
     }
   };
 
-  const isFormValid = email.trim().length >= 5 && password.trim().length >= 1;
+  const isFormValid = phoneNumber.trim().length >= 11 && password.trim().length >= 1;
 
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col">
@@ -146,16 +143,18 @@ export default function LoginPage() {
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                      <label htmlFor="email" className="block text-sm font-semibold text-text-primary mb-2">
-                        {t('pages.auth.login.fields.email', 'Email')}
+                      <label htmlFor="phoneNumber" className="block text-sm font-semibold text-text-primary mb-2">
+                        {t('pages.auth.login.fields.phoneNumber', 'Phone Number')}
                       </label>
                       <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder={t('pages.auth.login.placeholders.email', 'Enter your email')}
-                        autoComplete="email"
+                        id="phoneNumber"
+                        type="tel"
+                        inputMode="tel"
+                        pattern="^01[0-2,5]{1}[0-9]{8}$"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder={t('pages.auth.login.placeholders.phoneNumber', 'Enter your phone number')}
+                        autoComplete="tel"
                         required
                         className="h-11 rounded-xl bg-background/70 transition-colors focus:ring-2 focus:ring-primary/40 focus:border-primary"
                       />

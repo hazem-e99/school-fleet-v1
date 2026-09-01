@@ -429,7 +429,7 @@ export default function TripBookingsPage() {
                   <TableCell>
                     <div>
                       <div className="font-medium">{booking.studentName || `Student ${booking.studentId}`}</div>
-                      <div className="text-sm text-gray-500">{booking.studentEmail}</div>
+                      
                     </div>
                   </TableCell>
                   <TableCell>
@@ -530,7 +530,7 @@ export default function TripBookingsPage() {
               <option value={0}>Select Student</option>
               {students.map(student => (
                 <option key={student.id} value={student.id}>
-                  {student.name || student.email} (ID: {student.id})
+                  {student.name} (ID: {student.id})
                 </option>
               ))}
             </select>

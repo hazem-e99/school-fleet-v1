@@ -36,7 +36,6 @@ interface StudentProfile {
   id: number;
   firstName: string;
   lastName: string;
-  email: string;
   phoneNumber: string;
   nationalId: string;
   profilePictureUrl: string;
@@ -70,7 +69,6 @@ export default function StudentProfilePage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
     phoneNumber: '',
     department: '',
     preferredArea: '',
@@ -113,7 +111,6 @@ export default function StudentProfilePage() {
           id: parseInt(response.id) || 0,
           firstName: response.firstName || '',
           lastName: response.lastName || '',
-          email: response.email || '',
           phoneNumber: response.phoneNumber || '',
           nationalId: response.nationalId || '',
           profilePictureUrl: response.profilePictureUrl || '/avatar-placeholder.svg',
@@ -132,7 +129,6 @@ export default function StudentProfilePage() {
         setFormData({
           firstName: profileData.firstName,
           lastName: profileData.lastName,
-          email: profileData.email,
           phoneNumber: profileData.phoneNumber,
           department: profileData.department || '',
           preferredArea: profileData.preferredArea || '',
@@ -178,9 +174,6 @@ export default function StudentProfilePage() {
       if (formData.lastName.trim()) {
         apiData.lastName = formData.lastName.trim();
       }
-      if (formData.email.trim()) {
-        apiData.email = formData.email.trim();
-      }
       if (formData.phoneNumber.trim()) {
         apiData.phoneNumber = formData.phoneNumber.trim();
       }
@@ -220,11 +213,6 @@ export default function StudentProfilePage() {
         return;
       }
 
-      // Validate email format
-      if (apiData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(apiData.email)) {
-        alert(t('pages.student.profile.alerts.invalidEmail', 'Please enter a valid email address.'));
-        return;
-      }
 
       // Validate year of study (allow the student's pre-existing value too, in
       // case an admin has since renamed/removed it from the active list)
@@ -299,7 +287,6 @@ export default function StudentProfilePage() {
       setFormData({
         firstName: profile.firstName,
         lastName: profile.lastName,
-        email: profile.email,
         phoneNumber: profile.phoneNumber,
         department: profile.department || '',
         preferredArea: profile.preferredArea || '',
@@ -714,32 +701,6 @@ export default function StudentProfilePage() {
                     </div>
                   </div>
 
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700">
-                      {t('pages.student.profile.email', 'Email Address')}
-                    </label>
-                    <div className="relative">
-                      <Input
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        placeholder={t('pages.student.profile.emailPlaceholder', 'Enter your email')}
-                        className={`transition-all duration-200 ${
-                          isEditing 
-                            ? 'border-green-300 focus:border-green-500 focus:ring-green-500' 
-                            : 'bg-gray-50 border-gray-200'
-                        }`}
-                      />
-                      {isEditing && (
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                          <Mail className="w-4 h-4 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
 
                   {/* Phone Number */}
                   <div className="space-y-2">

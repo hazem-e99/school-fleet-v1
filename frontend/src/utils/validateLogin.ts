@@ -1,7 +1,7 @@
-// Login Validation Utility
+// Login Validation Utility — phone number + password.
 
 export interface LoginData {
-  email: string;
+  phoneNumber: string;
   password: string;
   rememberMe?: boolean;
 }
@@ -11,44 +11,27 @@ export interface LoginValidationResult {
   errors: string[];
 }
 
+const PHONE_RE = /^01[0-2,5]{1}[0-9]{8}$/;
+
 export const validateLogin = (data: LoginData): LoginValidationResult => {
   const errors: string[] = [];
 
-  // Email validation
-  if (!data.email?.trim()) {
-    errors.push('Email is required');
-  } else if (data.email.length < 5) {
-    errors.push('Email must be at least 5 characters long');
-  } else if (data.email.length > 100) {
-    errors.push('Email must not exceed 100 characters');
-  } else if (!isValidEmail(data.email)) {
-    errors.push('Please enter a valid email address');
+  if (!data.phoneNumber?.trim()) {
+    errors.push('Phone number is required');
+  } else if (!PHONE_RE.test(data.phoneNumber.trim())) {
+    errors.push('Please enter a valid Egyptian phone number');
   }
-  
-  // Password validation
+
   if (!data.password?.trim()) {
     errors.push('Password is required');
-  } else if (data.password.length < 1) {
-    errors.push('Password must be at least 1 character long');
   }
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
-// Helper function to validate email
-const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
+export const validatePhoneNumber = (phone: string): boolean => PHONE_RE.test(phone);
 
-// Validate specific fields
-export const validateEmail = (email: string): boolean => {
-  return email.length >= 5 && email.length <= 100 && isValidEmail(email);
-};
-
-export const validatePassword = (password: string): boolean => {
-  return password.length >= 1;
-};
+export const validatePassword = (password: string): boolean => password.length >= 1;

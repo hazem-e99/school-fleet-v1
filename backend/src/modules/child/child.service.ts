@@ -55,13 +55,11 @@ export class ChildService {
       id: child.numericId,
       guardianId: child.guardianId,
       guardianName: guardian ? `${guardian.firstName} ${guardian.lastName}`.trim() : null,
-      guardianEmail: guardian?.email ?? null,
       guardianPhone: guardian?.phoneNumber ?? null,
-      firstName: child.firstName,
-      secondName: child.secondName,
-      thirdName: child.thirdName,
-      lastName: child.lastName,
-      fullName: `${child.firstName} ${child.secondName} ${child.thirdName} ${child.lastName}`.trim(),
+      name: child.name,
+      // `fullName` kept as an alias so existing UI that reads child.fullName
+      // keeps working without change.
+      fullName: child.name,
       schoolName: child.schoolName,
       pickupAreaName: child.pickupAreaName,
       gender: child.gender ?? null,

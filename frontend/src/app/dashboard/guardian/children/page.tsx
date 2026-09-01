@@ -30,10 +30,7 @@ import {
 import { GraduationCap, MapPin, Plus, Pencil, Trash2, CheckCircle } from 'lucide-react';
 
 const emptyForm: CreateChildDTO = {
-  firstName: '',
-  secondName: '',
-  thirdName: '',
-  lastName: '',
+  name: '',
   schoolName: '',
   pickupAreaName: '',
 };
@@ -105,10 +102,7 @@ export default function GuardianChildrenPage() {
   const openEdit = (child: Child) => {
     setEditingChild(child);
     setForm({
-      firstName: child.firstName,
-      secondName: child.secondName,
-      thirdName: child.thirdName,
-      lastName: child.lastName,
+      name: child.name,
       schoolName: child.schoolName,
       pickupAreaName: child.pickupAreaName,
       gender: (child.gender as any) || undefined,
@@ -117,10 +111,7 @@ export default function GuardianChildrenPage() {
   };
 
   const saveChild = async () => {
-    if (
-      !form.firstName.trim() || !form.secondName.trim() || !form.thirdName.trim() ||
-      !form.lastName.trim() || !form.schoolName || !form.pickupAreaName
-    ) {
+    if (!form.name.trim() || form.name.trim().length < 2 || !form.schoolName || !form.pickupAreaName) {
       showToast({ type: 'error', title: t('common.error', 'Error'), message: t('pages.guardian.children.fillAll', 'Please fill in all fields.') });
       return;
     }
@@ -363,12 +354,7 @@ export default function GuardianChildrenPage() {
         size="lg"
       >
         <div className="space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input placeholder={t('pages.auth.register.fields.firstName', 'First Name')} value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
-            <Input placeholder={t('pages.auth.register.fields.secondName', 'Second Name')} value={form.secondName} onChange={(e) => setForm({ ...form, secondName: e.target.value })} />
-            <Input placeholder={t('pages.auth.register.fields.thirdName', 'Third Name')} value={form.thirdName} onChange={(e) => setForm({ ...form, thirdName: e.target.value })} />
-            <Input placeholder={t('pages.auth.register.fields.lastName', 'Last Name')} value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
-          </div>
+          <Input placeholder={t('pages.auth.register.fields.childName', 'Child Name')} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} minLength={2} maxLength={60} />
           <Select value={form.schoolName} onChange={(e) => setForm({ ...form, schoolName: e.target.value })}>
             <option value="">{t('pages.auth.register.placeholders.selectSchool', 'Select school')}</option>
             {schools.map((s) => <option key={s} value={s}>{s}</option>)}

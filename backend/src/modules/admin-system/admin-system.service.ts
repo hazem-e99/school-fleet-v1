@@ -27,7 +27,7 @@ export const PURGE_CONFIRMATION_PHRASE = 'DELETE ALL DATA';
 export interface PurgeResult {
   atomic: boolean;
   deleted: Record<string, number>;
-  preservedAdmin: { id: string; email: string };
+  preservedAdmin: { id: string; phoneNumber: string };
 }
 
 @Injectable()
@@ -83,13 +83,13 @@ export class AdminSystemService {
     const { deleted, atomic } = await this.runPurge(adminId);
 
     this.logger.warn(
-      `DATABASE_PURGE executed by adminId=${adminId.toString()} email=${admin.email} atomic=${atomic} deleted=${JSON.stringify(deleted)}`,
+      `DATABASE_PURGE executed by adminId=${adminId.toString()} phone=${admin.phoneNumber} atomic=${atomic} deleted=${JSON.stringify(deleted)}`,
     );
 
     return {
       atomic,
       deleted,
-      preservedAdmin: { id: adminId.toString(), email: admin.email },
+      preservedAdmin: { id: adminId.toString(), phoneNumber: admin.phoneNumber },
     };
   }
 

@@ -43,7 +43,6 @@ export default function GuardiansOverviewPage() {
     return rows.filter(
       (r) =>
         r.fullName?.toLowerCase().includes(q) ||
-        r.email?.toLowerCase().includes(q) ||
         r.phoneNumber?.includes(q),
     );
   }, [rows, search]);
@@ -73,7 +72,7 @@ export default function GuardiansOverviewPage() {
       <Card>
         <CardContent className="pt-6">
           <Input
-            placeholder={t('pages.admin.guardiansOverview.search', 'Search by name, email or phone')}
+            placeholder={t('pages.admin.guardiansOverview.search', 'Search by name or phone')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-sm mb-4"
@@ -95,7 +94,7 @@ export default function GuardiansOverviewPage() {
                     <div>
                       <div className="font-semibold text-text-primary">{g.fullName}</div>
                       <div className="text-sm text-text-secondary">
-                        {g.email} · {g.phoneNumber || '—'} ·{' '}
+                        {g.phoneNumber || '—'} ·{' '}
                         {t('pages.admin.guardiansOverview.registered', 'registered')}{' '}
                         {g.registeredAt ? formatDate(lang, g.registeredAt) : '—'}
                       </div>

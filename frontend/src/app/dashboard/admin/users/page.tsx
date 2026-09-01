@@ -75,7 +75,6 @@ export default function UsersPage() {
   const [newUser, setNewUser] = useState({
     firstName: '',
     lastName: '',
-    email: '',
     role: 'driver' as UserRole,
     phoneNumber: '',
     nationalId: '',
@@ -111,7 +110,6 @@ export default function UsersPage() {
             name: `${student.firstName || ''} ${student.lastName || ''}`.trim(),
             firstName: student.firstName,
             lastName: student.lastName,
-            email: student.email,
             role: 'student',
             phone: student.phoneNumber,
             phoneNumber: student.phoneNumber,
@@ -143,7 +141,6 @@ export default function UsersPage() {
             name: `${student.firstName || ''} ${student.lastName || ''}`.trim(),
             firstName: student.firstName,
             lastName: student.lastName,
-            email: student.email,
             role: 'student',
             phone: student.phoneNumber,
             phoneNumber: student.phoneNumber,
@@ -211,9 +208,9 @@ export default function UsersPage() {
   // Filter users based on search and filters
   const filteredUsers = users ? users.filter(user => {
     const userName = user.name || user.firstName || '';
-    const userEmail = user.email || '';
+    const userPhone = user.phoneNumber || user.phone || '';
     const matchesSearch = userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         userEmail.toLowerCase().includes(searchTerm.toLowerCase());
+                         userPhone.includes(searchTerm);
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     
@@ -235,7 +232,6 @@ export default function UsersPage() {
       const errors: string[] = [];
       const nameMin = 2, nameMax = 20;
       const nationalIdRegex = /^\d{14}$/;
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       const egMobileRegex = /^01[0-2,5]{1}[0-9]{8}$/;
 
       if (!newUser.firstName || newUser.firstName.trim().length < nameMin || newUser.firstName.trim().length > nameMax) {
@@ -246,9 +242,6 @@ export default function UsersPage() {
       }
       if (!nationalIdRegex.test(newUser.nationalId)) {
         errors.push('National ID must be exactly 14 digits.');
-      }
-      if (!emailRegex.test(newUser.email)) {
-        errors.push('Please enter a valid email address.');
       }
       if (!egMobileRegex.test(newUser.phoneNumber)) {
         errors.push('Phone number must be a valid Egyptian mobile (e.g., 01X XXXXXXXX).');
@@ -278,7 +271,6 @@ export default function UsersPage() {
         firstName: newUser.firstName,
         lastName: newUser.lastName,
         nationalId: newUser.nationalId,
-        email: newUser.email,
         phoneNumber: newUser.phoneNumber,
         role: mappedRole as 'Admin' | 'Driver' | 'Conductor' | 'MovementManager'
       };
@@ -299,7 +291,6 @@ export default function UsersPage() {
           name: `${student.firstName || ''} ${student.lastName || ''}`.trim(),
           firstName: student.firstName,
           lastName: student.lastName,
-          email: student.email,
           role: 'student',
           phone: student.phoneNumber,
           phoneNumber: student.phoneNumber,
@@ -328,7 +319,6 @@ export default function UsersPage() {
           name: `${student.firstName || ''} ${student.lastName || ''}`.trim(),
           firstName: student.firstName,
           lastName: student.lastName,
-          email: student.email,
           role: 'student',
           phone: student.phoneNumber,
           phoneNumber: student.phoneNumber,
@@ -360,7 +350,7 @@ export default function UsersPage() {
       });
       
       setShowAddModal(false);
-      setNewUser({ firstName: '', lastName: '', email: '', role: 'driver', phoneNumber: '', nationalId: '', status: 'active' });
+      setNewUser({ firstName: '', lastName: '', role: 'driver', phoneNumber: '', nationalId: '', status: 'active' });
       setDynamicValues({});
     } catch (error) {
       console.error('Failed to add user:', error);
@@ -656,7 +646,7 @@ export default function UsersPage() {
                     </div>
                     <div>
                       <p className="font-semibold text-text-primary">{row.original.name}</p>
-                      <p className="text-sm text-text-secondary">{row.original.email}</p>
+                      <p className="text-sm text-text-secondary">{row.original.phoneNumber || row.original.phone || ''}</p>
                     </div>
                   </div>
                 ),
@@ -790,20 +780,6 @@ export default function UsersPage() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={`block text-sm font-medium text-gray-700 mb-1 ${isRTL ? 'text-right' : ''}`}>
-                  {t('pages.admin.users.addForm.fields.email', 'Email')}
-                </label>
-                <p className={`text-xs text-gray-500 mb-2 ${isRTL ? 'text-right' : ''}`}>{t('pages.admin.users.addForm.hints.emailValid', 'Valid email format required.')}</p>
-                <Input
-                  type="email"
-                  value={newUser.email}
-                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                  placeholder={t('pages.admin.users.addForm.placeholders.email', 'e.g. ahmed@example.com')}
-                  className={isRTL ? 'text-right placeholder:text-right' : undefined}
-                  required
-                />
-              </div>
               <div>
                 <label className={`block text-sm font-medium text-gray-700 mb-1 ${isRTL ? 'text-right' : ''}`}>
                   {t('pages.admin.users.addForm.fields.nationalId', 'National ID')}
@@ -1025,13 +1001,13 @@ export default function UsersPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
+                  Phone Number
                 </label>
                 <Input
-                  type="email"
-                  value={selectedUser.email}
-                  onChange={(e) => setSelectedUser({ ...selectedUser, email: e.target.value })}
-                  placeholder="Enter email"
+                  type="tel"
+                  value={selectedUser.phoneNumber || selectedUser.phone || ''}
+                  onChange={(e) => setSelectedUser({ ...selectedUser, phoneNumber: e.target.value })}
+                  placeholder="Enter phone number"
                   required
                 />
               </div>
@@ -1229,7 +1205,7 @@ export default function UsersPage() {
               </div>
               <div>
                 <h3 className="text-xl font-semibold text-text-primary">{selectedUser.name}</h3>
-                <p className="text-text-secondary">{selectedUser.email}</p>
+                <p className="text-text-secondary">{selectedUser.phoneNumber || selectedUser.phone || ''}</p>
                 <div className="flex gap-2 mt-2">
                   <Badge variant={selectedUser.role === 'admin' ? 'destructive' : 'default'}>
                     {selectedUser.role}

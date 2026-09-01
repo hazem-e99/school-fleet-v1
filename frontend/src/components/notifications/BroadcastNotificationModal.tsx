@@ -14,7 +14,7 @@ import { useI18n } from '@/contexts/LanguageContext';
 interface User {
   id: number;
   name: string;
-  email: string;
+
   role: string;
 }
 
@@ -59,7 +59,6 @@ export function BroadcastNotificationModal({
       const transformed = (response || []).map((user: any) => ({
         id: parseInt(user.id),
         name: user.name || user.fullName || '',
-        email: user.email || '',
         role: user.role || '',
       }));
       setUsers(transformed);

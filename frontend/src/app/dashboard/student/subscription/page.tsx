@@ -20,7 +20,6 @@ import { motion } from 'framer-motion';
 interface StudentProfile {
   id: string;
   name: string;
-  email: string;
   phone: string;
   year: number;
   studentId: string;
@@ -119,7 +118,6 @@ export default function StudentSubscriptionPage() {
           setProfile({
             id: user.id.toString(),
             name: user.name,
-            email: user.email,
             phone: user.phone || '',
             year: (user as any).year || 1,
             studentId: (user as any).studentId || '',
@@ -418,7 +416,6 @@ export default function StudentSubscriptionPage() {
           setProfile({
             id: user.id.toString(),
             name: user.name,
-            email: user.email,
             phone: user.phone || '',
             year: (user as any).year || 1,
             studentId: (user as any).studentId || '',

@@ -32,7 +32,6 @@ interface DriverProfile {
   id: number;
   firstName: string;
   lastName: string;
-  email: string;
   phoneNumber: string;
   nationalId: string;
   profilePictureUrl: string;
@@ -57,7 +56,6 @@ export default function DriverProfile() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
     phoneNumber: '',
     licenseNumber: ''
   });
@@ -76,7 +74,6 @@ export default function DriverProfile() {
           id: parseInt(response.id) || 0,
           firstName: response.firstName || '',
           lastName: response.lastName || '',
-          email: response.email || '',
           phoneNumber: response.phoneNumber || '',
           nationalId: response.nationalId || '',
           profilePictureUrl: response.profilePictureUrl || '/avatar-placeholder.svg',
@@ -89,7 +86,6 @@ export default function DriverProfile() {
         setFormData({
           firstName: driverData.firstName,
           lastName: driverData.lastName,
-          email: driverData.email,
           phoneNumber: driverData.phoneNumber,
           licenseNumber: driverData.licenseNumber || ''
         });
@@ -126,13 +122,12 @@ export default function DriverProfile() {
       const trimmedData = {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
-        email: formData.email.trim(),
         phoneNumber: formData.phoneNumber.trim(),
         licenseNumber: formData.licenseNumber.trim()
       };
 
       // Check if at least one field is provided
-      if (!trimmedData.firstName && !trimmedData.lastName && !trimmedData.email && !trimmedData.phoneNumber && !trimmedData.licenseNumber) {
+      if (!trimmedData.firstName && !trimmedData.lastName && !trimmedData.phoneNumber && !trimmedData.licenseNumber) {
         alert(t('pages.driver.profile.alerts.fillOne'));
         return;
       }
@@ -148,11 +143,6 @@ export default function DriverProfile() {
         return;
       }
 
-      // Validate email format
-      if (trimmedData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedData.email)) {
-        alert(t('pages.driver.profile.alerts.invalidEmail'));
-        return;
-      }
 
       // Validate license number format (8-10 digits)
       if (trimmedData.licenseNumber && !/^\d{8,10}$/.test(trimmedData.licenseNumber)) {
@@ -189,7 +179,6 @@ export default function DriverProfile() {
       setFormData({
         firstName: driver.firstName,
         lastName: driver.lastName,
-        email: driver.email,
         phoneNumber: driver.phoneNumber,
         licenseNumber: driver.licenseNumber || ''
       });
@@ -562,32 +551,6 @@ export default function DriverProfile() {
                     </div>
                   </div>
 
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700">
-                      {t('pages.driver.profile.personal.email')}
-                    </label>
-                    <div className="relative">
-                      <Input
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
-                        placeholder={t('pages.driver.profile.personal.placeholders.email')}
-                        className={`transition-all duration-200 ${
-                          isEditing 
-                            ? 'border-blue-300 focus:border-blue-500 focus:ring-blue-500' 
-                            : 'bg-gray-50 border-gray-200'
-                        }`}
-                      />
-                      {isEditing && (
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                          <Mail className="w-4 h-4 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
 
                   {/* Phone Number */}
                   <div className="space-y-2">

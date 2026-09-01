@@ -4,7 +4,6 @@ export interface StudentRegistrationData {
   firstName: string;
   lastName: string;
   nationalId: string;
-  email: string;
   phoneNumber: string;
   studentAcademicNumber: string;
   department: string;
@@ -43,12 +42,6 @@ export const validateStudentRegistration = (data: StudentRegistrationData): Vali
     errors.push('National ID is required');
   } else if (!/^\d{14}$/.test(data.nationalId)) {
     errors.push('National ID must be exactly 14 digits');
-  }
-  
-  if (!data.email?.trim()) {
-    errors.push('Email is required');
-  } else if (!isValidEmail(data.email)) {
-    errors.push('Please enter a valid email address');
   }
   
   if (!data.phoneNumber?.trim()) {
@@ -161,12 +154,6 @@ export const validateStudentEdit = (data: Omit<StudentRegistrationData, 'passwor
     errors.push('National ID is required');
   } else if (!/^\d{14}$/.test(data.nationalId)) {
     errors.push('National ID must be exactly 14 digits');
-  }
-  
-  if (!data.email?.trim()) {
-    errors.push('Email is required');
-  } else if (!isValidEmail(data.email)) {
-    errors.push('Please enter a valid email address');
   }
   
   if (!data.phoneNumber?.trim()) {

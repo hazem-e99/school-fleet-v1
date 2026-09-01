@@ -36,7 +36,7 @@ async function hashPassword(plain) {
 const COLLECTIONS = {
   users: {
     indexes: [
-      { key: { email: 1 }, options: { unique: true } },
+      { key: { phoneNumber: 1 }, options: { unique: true } },
       { key: { nationalId: 1 }, options: { unique: true, sparse: true } },
       { key: { role: 1 } },
       { key: { status: 1 } },
@@ -144,26 +144,22 @@ async function getSeedData() {
       {
         firstName: 'System',
         lastName: 'Admin',
-        email: 'admin@elrenad.com',
         password: adminPass,
         role: 'Admin',
         phoneNumber: '01000000001',
         nationalId: '12345678901234',
         status: 'Active',
-        isEmailVerified: true,
         createdAt: now,
         updatedAt: now,
       },
       {
         firstName: 'Ahmed',
         lastName: 'Hassan',
-        email: 'driver@elrenad.com',
         password: driverPass,
         role: 'Driver',
         phoneNumber: '01000000002',
         nationalId: '12345678901235',
         status: 'Active',
-        isEmailVerified: true,
         licenseNumber: 'DRV-2025-001',
         experience: 5,
         createdAt: now,
@@ -172,65 +168,55 @@ async function getSeedData() {
       {
         firstName: 'Mohamed',
         lastName: 'Ali',
-        email: 'conductor@elrenad.com',
         password: conductorPass,
         role: 'Conductor',
         phoneNumber: '01000000003',
         nationalId: '12345678901236',
         status: 'Active',
-        isEmailVerified: true,
         createdAt: now,
         updatedAt: now,
       },
       {
         firstName: 'Sara',
         lastName: 'Ibrahim',
-        email: 'manager@elrenad.com',
         password: managerPass,
         role: 'MovementManager',
         phoneNumber: '01000000004',
         nationalId: '12345678901237',
         status: 'Active',
-        isEmailVerified: true,
         createdAt: now,
         updatedAt: now,
       },
       {
         firstName: 'Omar',
         lastName: 'Khaled',
-        email: 'parent1@elrenad.com',
         password: parentPass,
         role: 'Guardian',
         phoneNumber: '01000000005',
         nationalId: '12345678901238',
         status: 'Active',
-        isEmailVerified: true,
         createdAt: now,
         updatedAt: now,
       },
       {
         firstName: 'Fatma',
         lastName: 'Mahmoud',
-        email: 'parent2@elrenad.com',
         password: parentPass,
         role: 'Guardian',
         phoneNumber: '01000000006',
         nationalId: '12345678901239',
         status: 'Active',
-        isEmailVerified: true,
         createdAt: now,
         updatedAt: now,
       },
       {
         firstName: 'Youssef',
         lastName: 'Samir',
-        email: 'driver2@elrenad.com',
         password: driverPass,
         role: 'Driver',
         phoneNumber: '01000000007',
         nationalId: '12345678901240',
         status: 'Active',
-        isEmailVerified: true,
         licenseNumber: 'DRV-2025-002',
         experience: 3,
         createdAt: now,
@@ -239,13 +225,11 @@ async function getSeedData() {
       {
         firstName: 'Khalid',
         lastName: 'Nasser',
-        email: 'conductor2@elrenad.com',
         password: conductorPass,
         role: 'Conductor',
         phoneNumber: '01000000008',
         nationalId: '12345678901241',
         status: 'Active',
-        isEmailVerified: true,
         createdAt: now,
         updatedAt: now,
       },
@@ -626,22 +610,19 @@ async function main() {
       const guardians = await db
         .collection('users')
         .find({ role: 'Guardian' })
-        .sort({ email: 1 })
+        .sort({ phoneNumber: 1 })
         .toArray();
       const schools = await db.collection('schools').find().toArray();
       const areas = await db.collection('preferredareas').find().toArray();
 
       if (guardians.length >= 2 && schools.length >= 3 && areas.length >= 3) {
-        const g1 = getNumericId(guardians[0]); // parent1@elrenad.com
-        const g2 = getNumericId(guardians[1]); // parent2@elrenad.com
+        const g1 = getNumericId(guardians[0]); // first guardian (phone 01000000005)
+        const g2 = getNumericId(guardians[1]); // second guardian (phone 01000000006)
 
         const sampleChildren = [
           {
             guardianId: g1,
-            firstName: 'يوسف',
-            secondName: 'عمر',
-            thirdName: 'خالد',
-            lastName: 'عبد الله',
+            name: 'يوسف عبد الله',
             schoolName: schools[0].name,
             pickupAreaName: areas[0].name,
             gender: 'Male',
@@ -651,10 +632,7 @@ async function main() {
           },
           {
             guardianId: g1,
-            firstName: 'ملك',
-            secondName: 'عمر',
-            thirdName: 'خالد',
-            lastName: 'عبد الله',
+            name: 'ملك عبد الله',
             schoolName: schools[1].name,
             pickupAreaName: areas[0].name,
             gender: 'Female',
@@ -664,10 +642,7 @@ async function main() {
           },
           {
             guardianId: g2,
-            firstName: 'آدم',
-            secondName: 'محمود',
-            thirdName: 'سمير',
-            lastName: 'حسن',
+            name: 'آدم حسن',
             schoolName: schools[2].name,
             pickupAreaName: areas[1].name,
             gender: 'Male',
@@ -677,10 +652,7 @@ async function main() {
           },
           {
             guardianId: g2,
-            firstName: 'سلمى',
-            secondName: 'محمود',
-            thirdName: 'سمير',
-            lastName: 'حسن',
+            name: 'سلمى حسن',
             schoolName: schools[3 % schools.length].name,
             pickupAreaName: areas[2].name,
             gender: 'Female',
@@ -744,13 +716,13 @@ async function main() {
       console.log(`  ${collName.padEnd(25)} ${count} document(s)`);
     }
 
-    console.log('\n--- Default Login Credentials ---\n');
-    console.log('  Admin:              admin@elrenad.com      / Admin@123');
-    console.log('  Driver:             driver@elrenad.com     / Driver@123');
-    console.log('  Conductor:          conductor@elrenad.com  / Conductor@123');
-    console.log('  Movement Manager:   manager@elrenad.com    / Manager@123');
-    console.log('  Guardian (Parent):  parent1@elrenad.com    / Parent@123');
-    console.log('  Guardian (Parent):  parent2@elrenad.com    / Parent@123');
+    console.log('\n--- Default Login Credentials (phone / password) ---\n');
+    console.log('  Admin:              01000000001  / Admin@123');
+    console.log('  Driver:             01000000002  / Driver@123');
+    console.log('  Conductor:          01000000003  / Conductor@123');
+    console.log('  Movement Manager:   01000000004  / Manager@123');
+    console.log('  Guardian (Parent):  01000000005  / Parent@123');
+    console.log('  Guardian (Parent):  01000000006  / Parent@123');
     console.log('');
   } catch (error) {
     console.error('\n❌ Error:', error.message);
