@@ -2,16 +2,25 @@
 # Renders and (re)installs the systemd units for backend + frontend, then
 # restarts both. Only ever touches elrenadtech-backend.service and
 # elrenadtech-frontend.service — never el-renad.com's own service units.
+#
+# SECURITY: the .template files are read from $SCRIPT_DIR (the directory
+# this running copy of deploy.sh itself lives in), NOT from $PROJECT_DIR.
+# When invoked via the CI sudo entrypoint, $SCRIPT_DIR is the root-owned
+# frozen copy (/usr/local/lib/elrenadtech-deploy) — elrenadtech-ci cannot
+# edit these templates to inject e.g. a different ExecStart/User= and have
+# it installed + started as root. A manual `sudo ./deploy/deploy.sh` run
+# from the repo itself still works identically ($SCRIPT_DIR is then the
+# repo's own deploy/ dir, where these templates also live).
 
 configure_services() {
   local node_bin
   node_bin="$(command -v node)"
 
-  _render_unit "$PROJECT_DIR/deploy/systemd/elrenadtech-backend.service.template" \
+  _render_unit "$SCRIPT_DIR/systemd/elrenadtech-backend.service.template" \
     "/etc/systemd/system/${BACKEND_SERVICE}.service" \
     "$node_bin" "$BACKEND_DIR" "$BACKEND_DIR/dist/main.js"
 
-  _render_unit "$PROJECT_DIR/deploy/systemd/elrenadtech-frontend.service.template" \
+  _render_unit "$SCRIPT_DIR/systemd/elrenadtech-frontend.service.template" \
     "/etc/systemd/system/${FRONTEND_SERVICE}.service" \
     "$node_bin" "$FRONTEND_DIR" "$FRONTEND_DIR/node_modules/next/dist/bin/next"
 

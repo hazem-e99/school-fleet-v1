@@ -11,6 +11,11 @@
 # read, or written by this script. `nginx -t` is always run before reload,
 # and if it fails NOTHING is reloaded — the previously-working config
 # (including el-renad.com's site) keeps serving traffic untouched.
+#
+# SECURITY: the .template is read from $SCRIPT_DIR (see the same note in
+# lib/services.sh) — the root-owned frozen copy when run via the CI sudo
+# entrypoint, not the elrenadtech-ci-writable repo — so CI cannot inject
+# arbitrary Nginx directives that get installed and reloaded as root.
 
 configure_nginx() {
   local site_file="/etc/nginx/sites-available/${APP_NAME}"
@@ -25,7 +30,7 @@ configure_nginx() {
       -e "s#@@DOMAIN_WWW@@#${DOMAIN_WWW}#g" \
       -e "s#@@BACKEND_PORT@@#${BACKEND_PORT}#g" \
       -e "s#@@FRONTEND_PORT@@#${FRONTEND_PORT}#g" \
-      "$PROJECT_DIR/deploy/nginx/elrenad-tech.conf.template" > "$site_file"
+      "$SCRIPT_DIR/nginx/elrenad-tech.conf.template" > "$site_file"
   fi
 
   ln -sf "$site_file" "/etc/nginx/sites-enabled/${APP_NAME}"
