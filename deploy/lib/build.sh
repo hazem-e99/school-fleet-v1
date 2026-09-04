@@ -36,13 +36,28 @@ _as_build_user() {
     bash -c "$1"
 }
 
+# build_*_compile chowns dist/.next to root afterward (so the running
+# service, which only has group-read, can't tamper with its own compiled
+# code) — but that means the NEXT build's unprivileged npm ci/next build
+# can't recreate/rm -rf a root-owned node_modules or .next left over from a
+# previous build. Hand each one back to $BUILD_USER right before touching
+# it; this is a plain chown of a fixed path, not code execution, so it's
+# safe for root to do directly. A no-op once everything has cycled through
+# at least one build under this scheme.
+_reclaim_for_build_user() {
+  local path="$1"
+  [ -e "$path" ] && chown -R "$BUILD_USER:$APP_GROUP" "$path"
+}
+
 build_backend_install() {
+  _reclaim_for_build_user "$BACKEND_DIR/node_modules"
   log_info "backend: npm ci (as $BUILD_USER, not root)"
   _as_build_user "cd '$BACKEND_DIR' && npm ci"
   log_ok "Backend dependencies installed."
 }
 
 build_backend_compile() {
+  _reclaim_for_build_user "$BACKEND_DIR/dist"
   log_info "backend: npm run build (nest build) (as $BUILD_USER, not root)"
   _as_build_user "cd '$BACKEND_DIR' && npm run build"
   chown -R "root:$APP_GROUP" "$BACKEND_DIR/dist"
@@ -51,12 +66,14 @@ build_backend_compile() {
 }
 
 build_frontend_install() {
+  _reclaim_for_build_user "$FRONTEND_DIR/node_modules"
   log_info "frontend: npm ci (as $BUILD_USER, not root)"
   _as_build_user "cd '$FRONTEND_DIR' && npm ci"
   log_ok "Frontend dependencies installed."
 }
 
 build_frontend_compile() {
+  _reclaim_for_build_user "$FRONTEND_DIR/.next"
   log_info "frontend: npm run build (next build) (as $BUILD_USER, not root)"
   _as_build_user "cd '$FRONTEND_DIR' && rm -rf .next && npm run build"
   chown -R "root:$APP_GROUP" "$FRONTEND_DIR/.next"
