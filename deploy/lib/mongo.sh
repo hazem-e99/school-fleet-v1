@@ -150,37 +150,61 @@ _mongo_ensure_users() {
     return
   fi
 
-  # Brand-new, empty instance: MongoDB's "localhost exception" allows one
-  # unauthenticated local connection to create the very first user(s) before
-  # authorization actually takes effect for future connections. We use that
-  # single connection to create BOTH the admin user (for future maintenance
-  # — mongorestore, ad-hoc ops) and the least-privilege app user, so this
-  # only ever needs to run once, on first deploy.
-  log_info "First run on this instance — creating admin + app MongoDB users via the localhost exception..."
-  mongosh --quiet --port "$MONGO_PORT" --eval "
-    const admin = db.getSiblingDB('admin');
-    if (!admin.getUser('${MONGO_ADMIN_USER}')) {
-      admin.createUser({
-        user: '${MONGO_ADMIN_USER}',
-        pwd: '${MONGO_ADMIN_PASSWORD}',
-        roles: [{ role: 'userAdminAnyDatabase', db: 'admin' }, { role: 'readWriteAnyDatabase', db: 'admin' }]
-      });
-      print('admin user created');
-    } else {
-      print('admin user already existed');
-    }
-    const appdb = db.getSiblingDB('${DB_NAME}');
-    if (!appdb.getUser('${MONGO_APP_USER}')) {
-      appdb.createUser({
-        user: '${MONGO_APP_USER}',
-        pwd: '${MONGO_APP_PASSWORD}',
-        roles: [{ role: 'readWrite', db: '${DB_NAME}' }]
-      });
-      print('app user created');
-    } else {
-      print('app user already existed');
-    }
-  "
+  # Not yet provisioned as the app user. Two possible states:
+  #  (a) Truly brand-new instance — neither user exists yet. The "localhost
+  #      exception" allows one unauthenticated local connection to create
+  #      the very first user(s) before authorization takes effect.
+  #  (b) A previous run got interrupted after creating the admin user (which
+  #      consumes the localhost exception) but before creating the app user
+  #      — e.g. an SSH session dropping mid-deploy. Re-running deploy.sh must
+  #      still recover cleanly, so: if the admin user already authenticates,
+  #      use ITS credentials (our own, generated for this instance only) to
+  #      create the app user instead of relying on the exception again.
+  if mongosh --quiet --port "$MONGO_PORT" \
+      "mongodb://${MONGO_ADMIN_USER}:${MONGO_ADMIN_PASSWORD}@127.0.0.1:${MONGO_PORT}/admin" \
+      --eval 'db.runCommand({ ping: 1 })' >/dev/null 2>&1; then
+    log_info "Admin user already exists (from an earlier, interrupted run) — using it to create the app user."
+    mongosh --quiet --port "$MONGO_PORT" \
+      "mongodb://${MONGO_ADMIN_USER}:${MONGO_ADMIN_PASSWORD}@127.0.0.1:${MONGO_PORT}/admin" --eval "
+      const appdb = db.getSiblingDB('${DB_NAME}');
+      if (!appdb.getUser('${MONGO_APP_USER}')) {
+        appdb.createUser({
+          user: '${MONGO_APP_USER}',
+          pwd: '${MONGO_APP_PASSWORD}',
+          roles: [{ role: 'readWrite', db: '${DB_NAME}' }]
+        });
+        print('app user created');
+      } else {
+        print('app user already existed');
+      }
+    "
+  else
+    log_info "First run on this instance — creating admin + app MongoDB users via the localhost exception..."
+    mongosh --quiet --port "$MONGO_PORT" --eval "
+      const admin = db.getSiblingDB('admin');
+      if (!admin.getUser('${MONGO_ADMIN_USER}')) {
+        admin.createUser({
+          user: '${MONGO_ADMIN_USER}',
+          pwd: '${MONGO_ADMIN_PASSWORD}',
+          roles: [{ role: 'userAdminAnyDatabase', db: 'admin' }, { role: 'readWriteAnyDatabase', db: 'admin' }]
+        });
+        print('admin user created');
+      } else {
+        print('admin user already existed');
+      }
+      const appdb = db.getSiblingDB('${DB_NAME}');
+      if (!appdb.getUser('${MONGO_APP_USER}')) {
+        appdb.createUser({
+          user: '${MONGO_APP_USER}',
+          pwd: '${MONGO_APP_PASSWORD}',
+          roles: [{ role: 'readWrite', db: '${DB_NAME}' }]
+        });
+        print('app user created');
+      } else {
+        print('app user already existed');
+      }
+    "
+  fi
 
   if mongosh --quiet --port "$MONGO_PORT" \
       "mongodb://${MONGO_APP_USER}:${MONGO_APP_PASSWORD}@127.0.0.1:${MONGO_PORT}/${DB_NAME}?authSource=${DB_NAME}" \
