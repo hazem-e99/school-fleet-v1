@@ -6,13 +6,16 @@
  * password goes through the exact same bcrypt hashing the login flow
  * expects (see src/modules/authentication/authentication.service.ts).
  *
+ * Auth is phone-only (see user.schema.ts) — the account is looked up and
+ * created by `phoneNumber`, not email.
+ *
  * - If the account already exists, its password is never touched — only
- *   its role/status/verification flags are repaired if needed.
+ *   its role/status flags are repaired if needed.
  * - The plaintext password is read from the environment and is never
  *   logged or written anywhere by this script.
  *
  * Usage:
- *   MONGODB_URI=... ADMIN_EMAIL=... ADMIN_PASSWORD=... node scripts/bootstrap-admin.js
+ *   MONGODB_URI=... ADMIN_PHONE=... ADMIN_PASSWORD=... node scripts/bootstrap-admin.js
  *
  * Requires the backend to be built first (`npm run build`), since it loads
  * the compiled schema from dist/.
@@ -24,11 +27,18 @@ const path = require('path');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/school';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@elrenad.com';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/school_fleet_prod';
+const ADMIN_PHONE = process.env.ADMIN_PHONE;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_FIRST_NAME = process.env.ADMIN_FIRST_NAME || 'System';
+const ADMIN_LAST_NAME = process.env.ADMIN_LAST_NAME || 'Admin';
 
 async function main() {
+  if (!ADMIN_PHONE) {
+    console.error('ADMIN_PHONE environment variable is required.');
+    process.exitCode = 1;
+    return;
+  }
   if (!ADMIN_PASSWORD) {
     console.error('ADMIN_PASSWORD environment variable is required.');
     process.exitCode = 1;
@@ -50,34 +60,32 @@ async function main() {
 
   try {
     const User = mongoose.models.User || mongoose.model('User', UserSchema, 'users');
-    const existing = await User.findOne({ email: ADMIN_EMAIL });
+    const existing = await User.findOne({ phoneNumber: ADMIN_PHONE });
 
     if (existing) {
       let changed = false;
       if (existing.role !== 'Admin') { existing.role = 'Admin'; changed = true; }
       if (existing.status !== 'Active') { existing.status = 'Active'; changed = true; }
-      if (!existing.isEmailVerified) { existing.isEmailVerified = true; changed = true; }
 
       if (changed) {
         await existing.save();
-        console.log(`Admin account "${ADMIN_EMAIL}" already existed — permissions repaired.`);
+        console.log(`Admin account "${ADMIN_PHONE}" already existed — permissions repaired.`);
       } else {
-        console.log(`Admin account "${ADMIN_EMAIL}" already exists — nothing to do.`);
+        console.log(`Admin account "${ADMIN_PHONE}" already exists — nothing to do.`);
       }
       return;
     }
 
     const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 10);
     await User.create({
-      firstName: 'System',
-      lastName: 'Admin',
-      email: ADMIN_EMAIL,
+      firstName: ADMIN_FIRST_NAME,
+      lastName: ADMIN_LAST_NAME,
+      phoneNumber: ADMIN_PHONE,
       password: hashedPassword,
       role: 'Admin',
       status: 'Active',
-      isEmailVerified: true,
     });
-    console.log(`Admin account "${ADMIN_EMAIL}" created.`);
+    console.log(`Admin account "${ADMIN_PHONE}" created.`);
   } finally {
     await mongoose.disconnect();
   }
