@@ -1,0 +1,19 @@
+[Unit]
+Description=elrenad.tech (School Fleet) - Backend (NestJS)
+After=network.target mongod.service
+Wants=mongod.service
+
+[Service]
+Type=simple
+User=__APP_USER__
+Group=__APP_GROUP__
+WorkingDirectory=__WORKDIR__
+ExecStart=__NODE_BIN__ __ENTRY__
+Restart=on-failure
+RestartSec=5
+Environment=NODE_ENV=production
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

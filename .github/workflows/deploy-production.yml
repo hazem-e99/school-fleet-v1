@@ -1,0 +1,107 @@
+name: Deploy elrenad.tech to production
+
+# Push to main -> validate (install/lint/build for both apps) -> SSH to the
+# VPS as the restricted "elrenadtech-ci" user (see deploy/setup-ci-deploy-user.sh)
+# -> git pull to the pushed commit -> sudo deploy/deploy.sh (build + restart +
+# health check, scoped only to elrenad.tech) -> verify the public site.
+#
+# This never touches el-renad.com: the CI deploy user's sudo rule allows
+# exactly one command (this repo's own deploy/deploy.sh), nothing else.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions),
+# ideally under a "production" Environment:
+#   VPS_HOST        e.g. 203.0.113.10 (no protocol, no trailing slash)
+#   VPS_SSH_KEY      private key matching the public key registered for the
+#                    "elrenadtech-ci" user via deploy/setup-ci-deploy-user.sh
+# No VPS_USER secret needed — it's always "elrenadtech-ci".
+#
+# No test script exists yet in backend/package.json or frontend/package.json
+# (Jest is configured for e2e specs but not wired to an npm script) — this
+# workflow does not invent one; it validates via lint + build only, per the
+# scripts that actually exist.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Backend - npm ci
+        working-directory: backend
+        run: npm ci
+
+      - name: Backend - lint
+        working-directory: backend
+        run: npm run lint
+
+      - name: Backend - build
+        working-directory: backend
+        run: npm run build
+
+      - name: Frontend - npm ci
+        working-directory: frontend
+        run: npm ci
+
+      - name: Frontend - lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Frontend - build
+        working-directory: frontend
+        env:
+          # Placeholder build-time values only — the VPS build (deploy.sh)
+          # uses the server's real frontend/.env, this is just so `next
+          # build` has something syntactically valid to inline in CI.
+          NEXT_PUBLIC_APP_URL: https://elrenad.tech
+          NEXT_PUBLIC_API_BASE_URL: https://elrenad.tech/api
+          NEXT_PUBLIC_BACKEND_ORIGIN: https://elrenad.tech
+        run: npm run build
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: elrenadtech-ci
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd /opt/elrenad-tech
+            git fetch origin main
+            git checkout main
+            git reset --hard "${{ github.sha }}"
+            sudo /opt/elrenad-tech/deploy/deploy.sh
+
+      - name: Verify public site
+        run: |
+          for i in 1 2 3 4 5 6; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://elrenad.tech/api/Settings/maintenance-mode || echo 000)
+            echo "attempt $i -> HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "elrenad.tech is up"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "elrenad.tech did not return 200 after deploy — check deploy/logs.sh on the server"
+          exit 1
