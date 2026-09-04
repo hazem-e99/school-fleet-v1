@@ -60,6 +60,21 @@ chmod 600 "$AUTH_KEYS"
 chown -R "$CI_USER:$CI_USER" "$PROJECT_DIR"
 sudo -u "$CI_USER" git config --global --add safe.directory "$PROJECT_DIR" 2>/dev/null || true
 
+# BUT: backend/.env is gitignored (never touched by git, so the chown -R
+# above is the only thing that ever reassigns it) and MUST stay readable by
+# the elrenadtech service user (deploy/lib/env.sh sets it to root:elrenadtech,
+# mode 640, specifically so ONLY root and the elrenadtech group can read it).
+# Leaving it owned by elrenadtech-ci:elrenadtech-ci — a user/group the
+# elrenadtech service user isn't a member of — makes it unreadable to the
+# running backend, which only surfaces the next time the service restarts
+# (EACCES on backend/.env), not immediately. Restore it every time this
+# script runs, idempotently.
+ENV_FILE="$BACKEND_DIR/.env"
+if [ -f "$ENV_FILE" ]; then
+  chown "root:$APP_GROUP" "$ENV_FILE"
+  chmod 640 "$ENV_FILE"
+fi
+
 SUDOERS_FILE="/etc/sudoers.d/${CI_USER}"
 cat > "$SUDOERS_FILE" <<EOF
 # Managed by deploy/setup-ci-deploy-user.sh — do not edit by hand.
