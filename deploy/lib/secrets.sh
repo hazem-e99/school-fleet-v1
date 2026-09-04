@@ -27,6 +27,12 @@ ensure_secrets() {
     log_info "Generated a new MongoDB application-user password."
   fi
 
+  if [ -z "${MONGO_ADMIN_PASSWORD:-}" ]; then
+    MONGO_ADMIN_PASSWORD="$(openssl rand -hex 24)"
+    changed=1
+    log_info "Generated a new MongoDB admin-user password (dedicated elrenad.tech instance only)."
+  fi
+
   if [ -z "${ADMIN_BOOTSTRAP_PASSWORD:-}" ]; then
     # Initial admin password for this deployment. This is the one place it
     # is allowed to exist in plaintext: a root-only (chmod 600) file outside
@@ -46,11 +52,12 @@ ensure_secrets() {
 # previously issued login token).
 JWT_SECRET=$JWT_SECRET
 MONGO_APP_PASSWORD=$MONGO_APP_PASSWORD
+MONGO_ADMIN_PASSWORD=$MONGO_ADMIN_PASSWORD
 ADMIN_BOOTSTRAP_PASSWORD=$ADMIN_BOOTSTRAP_PASSWORD
 EOF
     chmod 600 "$SECRETS_FILE"
   fi
 
-  export JWT_SECRET MONGO_APP_PASSWORD ADMIN_BOOTSTRAP_PASSWORD
+  export JWT_SECRET MONGO_APP_PASSWORD MONGO_ADMIN_PASSWORD ADMIN_BOOTSTRAP_PASSWORD
   log_ok "Secrets ready at $SECRETS_FILE (mode 600, root-only)."
 }

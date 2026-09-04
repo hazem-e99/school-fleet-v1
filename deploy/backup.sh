@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Backs up the elrenad.tech MongoDB database and env files into a timestamped
 # folder under /var/backups/elrenadtech. Read-only against the live
-# database — mongodump never modifies data. Only ever touches the
-# "school_fleet_prod" database via the least-privilege "elrenadtech_app"
-# user — el-renad.com's "bus-system" database is never read or referenced.
-# Uploaded files (profile pictures) live in MongoDB GridFS inside this same
-# database, so the mongodump below already includes them — no separate
+# database — mongodump never modifies data. Talks only to the dedicated
+# elrenad.tech mongod instance (port ${MONGO_PORT}) via the least-privilege
+# "elrenadtech_app" user — el-renad.com's mongod (port 27017, "bus-system"
+# database) is a completely separate process and is never read or connected
+# to. Uploaded files (profile pictures) live in MongoDB GridFS inside this
+# same database, so the mongodump below already includes them — no separate
 # uploads directory to archive.
 #
 # Usage: sudo ./deploy/backup.sh
@@ -42,7 +43,7 @@ echo "Backing up to $DEST ..."
 
 if command -v mongodump >/dev/null 2>&1; then
   mongodump \
-    --uri="mongodb://${MONGO_APP_USER}:${MONGO_APP_PASSWORD}@127.0.0.1:27017/${DB_NAME}?authSource=${DB_NAME}" \
+    --uri="mongodb://${MONGO_APP_USER}:${MONGO_APP_PASSWORD}@127.0.0.1:${MONGO_PORT}/${DB_NAME}?authSource=${DB_NAME}" \
     --out="$DEST/mongodb"
   echo "  MongoDB dumped (includes GridFS-stored uploads)."
 else

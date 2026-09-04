@@ -6,7 +6,7 @@
 run_health_checks() {
   local ok=1
 
-  _check_service mongod "MongoDB (shared)" || ok=0
+  _check_service "$MONGO_SERVICE" "MongoDB (dedicated elrenad.tech instance)" || ok=0
   _check_service nginx "Nginx (shared)" || ok=0
   _check_service "$BACKEND_SERVICE" "Backend service" || ok=0
   _check_service "$FRONTEND_SERVICE" "Frontend service" || ok=0

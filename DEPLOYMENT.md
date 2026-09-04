@@ -2,9 +2,15 @@
 
 This app runs on the **same VPS as el-renad.com** (a separate, existing
 production app — see `../production2026/DEPLOY_VPS_AR.md`), fully isolated
-from it: its own system user, ports, systemd services, Nginx site, and
-MongoDB database. Nothing here reads, writes, or restarts anything that
-belongs to el-renad.com.
+from it: its own system user, ports, systemd services, Nginx site, and its
+own dedicated MongoDB **instance** (not just a separate database — see
+"Why a dedicated MongoDB instance" below). Nothing here reads, writes, or
+restarts anything that belongs to el-renad.com.
+
+This document reflects a real read-only audit of the VPS performed on
+2026-09-04 (`ss -lntup`, `systemctl`, `nginx -T`/site files, `mongod.conf`,
+`ufw status`, `certbot certificates`, etc.) — every value below is verified
+against the live server, not assumed from el-renad.com's own docs.
 
 ## Architecture
 
@@ -12,7 +18,7 @@ belongs to el-renad.com.
 |---|---|
 | Frontend | Next.js 15 (SSR), `next start` on internal port **3001** |
 | Backend | NestJS 10 + Mongoose, `node dist/main.js` on internal port **7226** |
-| Database | MongoDB — **same mongod process as el-renad.com**, separate database `school_fleet_prod` |
+| Database | **Dedicated MongoDB instance** (`mongod-elrenadtech`, port **27018**) — a separate process from el-renad.com's mongod, not just a separate database on the same one |
 | Uploads | Stored in MongoDB GridFS (same database) — no local uploads directory |
 | Domain | `https://elrenad.tech` (frontend + `/api` + `/socket.io`) |
 | `www.elrenad.tech` | 301 redirect to `elrenad.tech` |
@@ -22,22 +28,66 @@ belongs to el-renad.com.
 
 ## Isolation from el-renad.com
 
-| Resource | el-renad.com | elrenad.tech |
+| Resource | el-renad.com (audited) | elrenad.tech |
 |---|---|---|
 | System user | `elrenad` | `elrenadtech` |
 | Backend port | 127.0.0.1:7126 | 127.0.0.1:7226 |
 | Frontend port | 127.0.0.1:3000 | 127.0.0.1:3001 |
+| MongoDB process | `mongod` (port 27017) | `mongod-elrenadtech` (port **27018**, dedicated instance) |
 | MongoDB database | `bus-system` | `school_fleet_prod` |
 | MongoDB app user | `elrenad_app` | `elrenadtech_app` |
+| MongoDB admin user | (none exists — see below) | `elrenadtech_dba` |
+| MongoDB data dir | `/var/lib/mongodb` | `/var/lib/mongodb-elrenadtech` |
 | Secrets file | `/etc/elrenad/secrets.env` | `/etc/elrenadtech/secrets.env` |
 | Backups | `/var/backups/elrenad` | `/var/backups/elrenadtech` |
 | Nginx site | `/etc/nginx/sites-available/elrenad` | `/etc/nginx/sites-available/elrenadtech` |
 | systemd services | `elrenad-backend`, `elrenad-frontend` | `elrenadtech-backend`, `elrenadtech-frontend` |
 
-MongoDB and Nginx are the only two processes shared between the two apps
-(same VPS, same install). Every `deploy/*.sh` script in this repo only ever
-touches `elrenadtech`-prefixed names/files and never opens or edits
-el-renad.com's config, service units, or database.
+**Nginx is now the only process shared** between the two apps (same VPS,
+same install) — Nginx config changes always go through `nginx -t` then
+`systemctl reload` (never `restart`), so el-renad.com's connections are
+never dropped. Every `deploy/*.sh` script in this repo only ever touches
+`elrenadtech`-prefixed names/files/processes and never opens, edits, or
+restarts anything belonging to el-renad.com.
+
+### Why a dedicated MongoDB instance (not just a separate database)
+
+The original plan (like most of this codebase's own docs anticipate) was to
+reuse el-renad.com's existing `mongod` with just a second, isolated
+database. The 2026-09-04 audit found that doesn't cleanly apply here:
+
+- `el-renad.com`'s `mongod` has `security.authorization: enabled` (confirmed
+  in `/etc/mongod.conf` and by testing that an unauthenticated
+  `listDatabases` is rejected).
+- **No admin-capable MongoDB user exists anywhere on this server** —
+  confirmed by searching for stored admin/root credentials on disk (none
+  found) and because el-renad.com's own deploy docs explicitly describe
+  creating only a scoped `elrenad_app` user (readWrite on `bus-system`),
+  never a superadmin account.
+- MongoDB's "localhost exception" (which allows one unauthenticated
+  connection to bootstrap the very first user) only applies until a
+  deployment's first-ever user is created — that already happened for
+  `elrenad_app` long ago, so it no longer applies to el-renad.com's
+  instance.
+
+That leaves two ways to add a new user to that shared instance: supply
+credentials for an admin account that doesn't exist, or briefly toggle
+`security.authorization` off/on on the live shared process to bootstrap
+one. The latter is a global MongoDB auth change on a process el-renad.com
+depends on — explicitly out of bounds for this deployment, restart or not.
+
+Instead, `deploy/lib/mongo.sh` provisions a **second, fully independent
+MongoDB instance** for elrenad.tech: same `mongod` binary (already
+installed), its own config (`/etc/mongod-elrenadtech.conf`), its own
+systemd unit (`mongod-elrenadtech.service`), its own data/log directories,
+bound to `127.0.0.1` only, on port `27018`. Because this instance starts
+completely empty, its *own* localhost exception is used exactly once (on
+first deploy) to create both `elrenadtech_app` (least-privilege, scoped to
+`school_fleet_prod`) and `elrenadtech_dba` (admin, for future maintenance)
+— after which authorization is already enabled and stays enabled. This
+never starts, stops, restarts, or reconfigures el-renad.com's `mongod` in
+any way, and costs a modest amount of extra RAM (el-renad.com's `mongod`
+uses ~235 MB RSS; the VPS had 6.7 GB available at audit time).
 
 ## First deploy on the VPS
 
@@ -60,9 +110,10 @@ sudo ./deploy/deploy.sh
 4. Ensures Node.js 22 is present (reuses el-renad.com's install if the
    major version matches; only installs if missing/different).
 5. Generates random secrets into `/etc/elrenadtech/secrets.env` (mode 600):
-   `JWT_SECRET`, `MONGO_APP_PASSWORD`, `ADMIN_BOOTSTRAP_PASSWORD`.
-6. **Provisions the MongoDB database** — see "MongoDB provisioning" below;
-   this is the one step that may require a manual decision on first deploy.
+   `JWT_SECRET`, `MONGO_APP_PASSWORD`, `MONGO_ADMIN_PASSWORD`, `ADMIN_BOOTSTRAP_PASSWORD`.
+6. **Provisions the dedicated `mongod-elrenadtech` instance** (installs its
+   config + systemd unit on first run, starts it, creates its two MongoDB
+   users) — see "Why a dedicated MongoDB instance" above.
 7. Creates `backend/.env` / `frontend/.env` on first run only (never
    overwritten afterwards — this is what preserves secrets across deploys).
 8. `npm ci && npm run build` for both apps.
@@ -80,31 +131,6 @@ sudo ./deploy/deploy.sh
     (el-renad.com's certificate is never touched).
 14. Runs health checks (services up, backend/frontend responding locally,
     Nginx serving the domain, HTTPS reachable once issued).
-
-### MongoDB provisioning
-
-`deploy/lib/mongo.sh` never installs MongoDB, never edits `/etc/mongod.conf`,
-and never restarts `mongod` — el-renad.com depends on that same process
-staying up. It only tries to create the `elrenadtech_app` user on the new
-`school_fleet_prod` database:
-
-- **If MongoDB authentication is currently disabled** server-wide: it
-  creates the user directly (no admin credentials needed) — safe, since the
-  instance is already only reachable from `127.0.0.1`.
-- **If MongoDB authentication is already enabled** (this is what
-  el-renad.com's own deploy docs say it does): creating a brand-new user
-  requires an existing admin-capable MongoDB account. MongoDB's "localhost
-  exception" only works until the deployment's very first user was ever
-  created, which already happened for el-renad.com's `elrenad_app`. So:
-  - If such an admin account exists, run once:
-    `MONGO_ADMIN_URI='mongodb://<admin>:<pass>@127.0.0.1:27017/admin' sudo -E ./deploy/deploy.sh`
-  - If no such account exists anywhere on the server, the script stops with
-    a clear error rather than automatically disabling/re-enabling MongoDB
-    authentication to work around it — that would be a global auth change
-    touching el-renad.com's live database, which is out of scope for an
-    automated script. Resolve this deliberately and manually (e.g. a single
-    supervised `mongod` restart with `--noauth` to bootstrap one admin user),
-    confirm el-renad.com is unaffected, then re-run `deploy.sh`.
 
 ### DNS
 
@@ -126,10 +152,10 @@ time you re-run it after DNS resolves.
 sudo ./deploy/status.sh          # services, disk, memory, ports, TLS expiry
 ./deploy/logs.sh backend         # journalctl -f for the backend service
 ./deploy/logs.sh frontend
-./deploy/logs.sh nginx           # shared with el-renad.com
-./deploy/logs.sh mongo           # shared with el-renad.com
+./deploy/logs.sh nginx           # shared process with el-renad.com (both apps' access logs interleave)
+./deploy/logs.sh mongo           # mongod-elrenadtech only — el-renad.com's mongod is a separate process/log
 sudo ./deploy/restart.sh         # restarts only elrenadtech-backend/frontend
-sudo ./deploy/restart.sh --all   # also restarts nginx + mongod (affects el-renad.com too)
+sudo ./deploy/restart.sh --all   # also reloads (not restarts) nginx + restarts elrenad.tech's own mongod — el-renad.com unaffected either way
 sudo ./deploy/backup.sh          # mongodump + env files -> /var/backups/elrenadtech/<timestamp>
 sudo ./deploy/rollback.sh [sha]  # git reset --hard to a previous commit + redeploy (defaults to HEAD~1)
 ```
@@ -212,16 +238,17 @@ the `school_fleet_prod` database — not on local disk. They are therefore:
 ```bash
 systemctl is-enabled elrenadtech-backend
 systemctl is-enabled elrenadtech-frontend
-systemctl is-enabled mongod       # shared
-systemctl is-enabled nginx        # shared
+systemctl is-enabled mongod-elrenadtech   # dedicated instance, not shared
+systemctl is-enabled nginx                # shared
 ```
 `deploy.sh` runs `systemctl enable` for both app services on every deploy.
 
 ## Operational notes
 
-- This deployment never installs a second MongoDB, Nginx, or Node.js
-  instance — it reuses what's already on the VPS for el-renad.com wherever
-  compatible, and only creates elrenad.tech-specific config/data alongside it.
+- This deployment reuses el-renad.com's existing Nginx and Node.js
+  installs (same binaries, no second install), but runs its own dedicated
+  MongoDB **instance** rather than a second database on the shared one —
+  see "Why a dedicated MongoDB instance" above for the audited reasoning.
 - `backend/.env` and `frontend/.env` are created once and never overwritten
   by later deploys — edit them by hand on the server for anything beyond
   what `deploy/lib/env.sh` generates (e.g. `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN`),

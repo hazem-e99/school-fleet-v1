@@ -19,7 +19,7 @@ echo "================================================================"
 
 printf "%-12s %s\n" "Backend:"  "$(svc_status "$BACKEND_SERVICE")"
 printf "%-12s %s\n" "Frontend:" "$(svc_status "$FRONTEND_SERVICE")"
-printf "%-12s %s\n" "MongoDB:"  "$(svc_status mongod)  (shared with el-renad.com)"
+printf "%-12s %s\n" "MongoDB:"  "$(svc_status "$MONGO_SERVICE")  (dedicated instance, port ${MONGO_PORT})"
 printf "%-12s %s\n" "Nginx:"    "$(svc_status nginx)  (shared with el-renad.com)"
 
 echo
@@ -31,9 +31,9 @@ echo "-- Memory --"
 free -h 2>/dev/null || true
 
 echo
-echo "-- Listening ports (80, 443, ${FRONTEND_PORT}, ${BACKEND_PORT}, 27017) --"
+echo "-- Listening ports (80, 443, ${FRONTEND_PORT}, ${BACKEND_PORT}, ${MONGO_PORT}) --"
 if command -v ss >/dev/null 2>&1; then
-  ss -ltnp 2>/dev/null | grep -E ":(80|443|${FRONTEND_PORT}|${BACKEND_PORT}|27017)\b" \
+  ss -ltnp 2>/dev/null | grep -E ":(80|443|${FRONTEND_PORT}|${BACKEND_PORT}|${MONGO_PORT})\b" \
     || echo "(nothing listening on the expected ports — see logs)"
 else
   echo "ss not available"

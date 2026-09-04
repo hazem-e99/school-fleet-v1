@@ -5,9 +5,10 @@
 #
 # This app shares the VPS with the existing el-renad.com deployment (see
 # ../../../production2026/deploy). Every name/path/port below is deliberately
-# distinct from that app's config.sh so the two can never collide:
-#   el-renad.com   -> APP_NAME=elrenad,     user "elrenad",     ports 3000/7126
-#   elrenad.tech   -> APP_NAME=elrenadtech, user "elrenadtech", ports 3001/7226
+# distinct from that app's config.sh so the two can never collide. Verified
+# against the real VPS on 2026-09-04 (all free, no assumptions):
+#   el-renad.com   -> APP_NAME=elrenad,     user "elrenad",     app ports 3000/7126, mongod 27017
+#   elrenad.tech   -> APP_NAME=elrenadtech, user "elrenadtech", app ports 3001/7226, mongod-elrenadtech 27018
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BACKEND_DIR="$PROJECT_DIR/backend"
@@ -28,12 +29,28 @@ FRONTEND_PORT=3001
 # script never installs a second Node.js version, it reuses the system one.
 NODE_MAJOR=22
 
-# MongoDB is NOT installed by this app — it reuses the mongod already running
-# for el-renad.com on the same VPS, in a completely separate database. See
-# deploy/lib/mongo.sh for how the new database + dedicated user are
-# provisioned without touching el-renad's data or its MongoDB user.
+# MongoDB: a SECOND, fully separate mongod instance dedicated to elrenad.tech
+# — not the one running for el-renad.com. Verified on the real VPS
+# (2026-09-04 audit) that el-renad.com's mongod has `security.authorization:
+# enabled` and NO admin-capable user exists anywhere on the server (only
+# el-renad's own `elrenad_app`, scoped to readWrite on `bus-system`). Adding
+# a new database user to that instance would require either an admin
+# account that doesn't exist, or a global authorization change on the
+# shared process — both explicitly out of bounds. A second local instance,
+# bound to 127.0.0.1 only, sidesteps that entirely: el-renad.com's mongod is
+# never started, stopped, restarted, or reconfigured by anything here. See
+# deploy/lib/mongo.sh.
 DB_NAME="school_fleet_prod"
 MONGO_APP_USER="elrenadtech_app"
+MONGO_ADMIN_USER="elrenadtech_dba"
+
+MONGO_PORT=27018
+MONGO_SERVICE="mongod-elrenadtech"
+MONGO_CONF_FILE="/etc/mongod-elrenadtech.conf"
+MONGO_DBPATH="/var/lib/mongodb-elrenadtech"
+MONGO_LOGDIR="/var/log/mongodb-elrenadtech"
+MONGO_SYSTEM_USER="mongodb"
+MONGO_SYSTEM_GROUP="mongodb"
 
 SECRETS_DIR="/etc/${APP_NAME}"
 SECRETS_FILE="$SECRETS_DIR/secrets.env"

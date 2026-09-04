@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Tail logs for a given elrenad.tech component (mongo/nginx logs are shared
-# with el-renad.com since both use the same mongod/nginx processes).
+# Tail logs for a given elrenad.tech component. Nginx logs are shared with
+# el-renad.com (same process); MongoDB is a dedicated instance for
+# elrenad.tech only (mongod-elrenadtech) and never shows el-renad.com data.
 #
 # Usage: ./deploy/logs.sh {backend|frontend|nginx|mongo} [lines]
 
@@ -24,7 +25,7 @@ case "$TARGET" in
     exec journalctl -u nginx -n "$LINES" -f
     ;;
   mongo|mongodb)
-    exec journalctl -u mongod -n "$LINES" -f
+    exec journalctl -u "$MONGO_SERVICE" -n "$LINES" -f
     ;;
   *)
     echo "Usage: $0 {backend|frontend|nginx|mongo} [lines]"
