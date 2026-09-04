@@ -143,7 +143,7 @@ _mongo_ensure_users() {
 
   # Already provisioned? Verify with the app user's own least-privilege
   # credentials (never uses admin credentials just to check).
-  if mongosh --quiet --port "$MONGO_PORT" \
+  if mongosh --quiet \
       "mongodb://${MONGO_APP_USER}:${MONGO_APP_PASSWORD}@127.0.0.1:${MONGO_PORT}/${DB_NAME}?authSource=${DB_NAME}" \
       --eval 'db.runCommand({ ping: 1 })' >/dev/null 2>&1; then
     log_ok "MongoDB user '${MONGO_APP_USER}' already exists and can reach '${DB_NAME}' on the dedicated instance."
@@ -160,7 +160,7 @@ _mongo_ensure_users() {
   #      still recover cleanly, so: if the admin user already authenticates,
   #      use ITS credentials (our own, generated for this instance only) to
   #      create the app user instead of relying on the exception again.
-  if mongosh --quiet --port "$MONGO_PORT" \
+  if mongosh --quiet \
       "mongodb://${MONGO_ADMIN_USER}:${MONGO_ADMIN_PASSWORD}@127.0.0.1:${MONGO_PORT}/admin" \
       --eval 'db.runCommand({ ping: 1 })' >/dev/null 2>&1; then
     log_info "Admin user already exists (from an earlier, interrupted run) — using it to create the app user."
@@ -168,7 +168,7 @@ _mongo_ensure_users() {
     # fine, but createUser itself already throws a clear "user already
     # exists" error we can just ignore — try/catch is simpler and correct
     # either way, so use the same pattern as the branch below.
-    mongosh --quiet --port "$MONGO_PORT" \
+    mongosh --quiet \
       "mongodb://${MONGO_ADMIN_USER}:${MONGO_ADMIN_PASSWORD}@127.0.0.1:${MONGO_PORT}/admin" --eval "
       const appdb = db.getSiblingDB('${DB_NAME}');
       try {
@@ -218,7 +218,7 @@ _mongo_ensure_users() {
     "
   fi
 
-  if mongosh --quiet --port "$MONGO_PORT" \
+  if mongosh --quiet \
       "mongodb://${MONGO_APP_USER}:${MONGO_APP_PASSWORD}@127.0.0.1:${MONGO_PORT}/${DB_NAME}?authSource=${DB_NAME}" \
       --eval 'db.runCommand({ ping: 1 })' >/dev/null 2>&1; then
     log_ok "MongoDB user '${MONGO_APP_USER}' verified — can reach '${DB_NAME}' on the dedicated instance."
