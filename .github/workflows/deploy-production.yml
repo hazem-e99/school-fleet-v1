@@ -6,7 +6,11 @@ name: Deploy elrenad.tech to production
 # health check, scoped only to elrenad.tech) -> verify the public site.
 #
 # This never touches el-renad.com: the CI deploy user's sudo rule allows
-# exactly one command (this repo's own deploy/deploy.sh), nothing else.
+# exactly one command, /usr/local/sbin/deploy-elrenadtech — a root-owned
+# entrypoint living OUTSIDE this repo (see deploy/setup-ci-deploy-user.sh).
+# elrenadtech-ci owns this repo's working tree (needed for git pull) but has
+# no write access to that entrypoint or the frozen deploy logic it runs, so
+# it cannot rewrite what sudo executes as root.
 #
 # Required repository secrets (Settings -> Secrets and variables -> Actions),
 # ideally under a "production" Environment:
@@ -96,7 +100,7 @@ jobs:
             git fetch origin main
             git checkout main
             git reset --hard "${{ github.sha }}"
-            sudo /opt/elrenad-tech/deploy/deploy.sh
+            sudo /usr/local/sbin/deploy-elrenadtech
 
       - name: Verify public site
         run: |

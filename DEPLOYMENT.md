@@ -185,20 +185,47 @@ since that backup.
 
 Workflow: `.github/workflows/deploy-production.yml`. On every push to
 `main`: installs + lints + builds both apps, then SSHes into the VPS as a
-**restricted** deploy user and runs this repo's own `deploy/deploy.sh`.
+**restricted** deploy user and runs a root-owned deploy entrypoint.
 
-### One-time server setup for CI
+### Privilege boundary: why CI doesn't sudo the repo's own deploy.sh
+
+`elrenadtech-ci` owns this repo's working tree on the VPS (it needs to
+`git pull`/`checkout` before triggering a deploy) — which means it owns
+`deploy/deploy.sh` and `deploy/lib/*.sh` too. Sudo-whitelisting that path
+directly would be equivalent to unrestricted root access: CI could rewrite
+`deploy.sh`, then `sudo` its own code as root.
+
+Instead, `deploy/setup-ci-deploy-user.sh` copies the current `deploy/` tree
+into a **root-owned** location outside the repo
+(`/usr/local/lib/elrenadtech-deploy`, mode 700, owned `root:root`) and
+installs a root-owned wrapper at `/usr/local/sbin/deploy-elrenadtech` that
+runs that frozen copy. The sudoers rule for `elrenadtech-ci` allows
+**only** `sudo /usr/local/sbin/deploy-elrenadtech`, with no arguments —
+`elrenadtech-ci` cannot read, write, or replace either the entrypoint or
+the frozen copy (verified: every write/read/delete attempt as that user
+returns `Permission denied`).
+
+**Consequence:** editing `deploy/deploy.sh` or `deploy/lib/*.sh` in this
+repo does **not** change what CI-triggered deploys actually run, until a
+human reviews the diff and re-runs `setup-ci-deploy-user.sh` as root to
+re-sync the frozen copy. This friction is deliberate — it's the actual line
+between "CI can ship application code changes" and "CI can run arbitrary
+code as root".
+
+### One-time (or after a deploy/ script change) server setup for CI
 
 1. Generate a dedicated keypair for GitHub Actions (not your personal key):
    ```bash
    ssh-keygen -t ed25519 -f github-actions-elrenadtech -C "github-actions-elrenadtech" -N ""
    ```
-2. On the VPS, as root, register the **public** key and create the
-   restricted CI user (this also narrows its `sudo` rights to exactly one
-   command — this repo's own `deploy/deploy.sh`, nothing else):
+2. On the VPS, as root, register the **public** key, create the restricted
+   CI user, and (re-)sync the root-owned deploy entrypoint from the
+   repo's current `deploy/` tree:
    ```bash
    sudo /opt/elrenad-tech/deploy/setup-ci-deploy-user.sh "$(cat github-actions-elrenadtech.pub)"
    ```
+   Re-run this any time `deploy/deploy.sh` or `deploy/lib/*.sh` changes and
+   you want that change to take effect for CI deploys — after reviewing it.
 3. In the GitHub repo (Settings -> Secrets and variables -> Actions),
    ideally under a `production` Environment, add:
    - `VPS_HOST` — the VPS's public IP or hostname
@@ -209,8 +236,9 @@ Workflow: `.github/workflows/deploy-production.yml`. On every push to
    run) and watch the Actions tab.
 
 The CI user cannot read `/etc/elrenad/secrets.env`, cannot restart
-el-renad.com's services, and cannot run any command besides this one
-`deploy.sh` script under sudo.
+el-renad.com's services, cannot modify `/usr/local/sbin/deploy-elrenadtech`
+or `/usr/local/lib/elrenadtech-deploy`, and cannot run any sudo command
+besides that one entrypoint.
 
 ## Health endpoint
 
@@ -256,3 +284,23 @@ systemctl is-enabled nginx                # shared
 - `git clean`/`git reset --hard` inside `/opt/elrenad-tech` never touches
   `/opt/bus-production` (el-renad.com) — they are entirely separate
   directories/repos.
+
+## Security hardening (2026-09-05 audit)
+
+- **CI sudo privilege escalation, fixed** — `elrenadtech-ci` owned
+  `deploy/deploy.sh` (mode 755) while sudo was whitelisted for that exact
+  path, so CI could rewrite it and gain root. Fixed by moving the actual
+  privileged entrypoint to a root-owned location outside the repo; see
+  "Privilege boundary" under CI/CD above. Verified: every write/read/delete
+  attempt against `/usr/local/sbin/deploy-elrenadtech` or
+  `/usr/local/lib/elrenadtech-deploy` as `elrenadtech-ci` returns
+  `Permission denied`.
+- **`bus-system` pre-deployment backup** — a verified `mongodump` now exists
+  at `/var/backups/elrenad-production/<UTC-timestamp>/bus-system/` (root-only,
+  mode 700), 17 collections, taken read-only without restarting `mongod`.
+- **Root SSH password login disabled** — `PermitRootLogin prohibit-password`
+  and `PasswordAuthentication no` (a stale `sshd_config.d/50-cloud-init.conf`
+  drop-in re-enabling password auth was fixed in place). Root access is now
+  key-only; verified with a fresh connection before AND after the change,
+  and confirmed password auth is now protocol-rejected. Do this only after
+  confirming a working admin SSH key — never disable password auth first.

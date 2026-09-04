@@ -5,15 +5,33 @@
 # your root SSH key.
 #
 # The user can log in over SSH (key-only) and, via a narrow NOPASSWD sudoers
-# rule, run ONLY this repo's deploy/deploy.sh as root — nothing else. It
-# cannot read el-renad.com's secrets, files, or run arbitrary root commands.
+# rule, run ONLY a root-owned entrypoint (/usr/local/sbin/deploy-elrenadtech)
+# as root — nothing else, and nothing it can itself modify.
+#
+# SECURITY NOTE: this user owns the git working tree at $PROJECT_DIR (it
+# needs to git pull/checkout before triggering a deploy), which means it
+# owns deploy/deploy.sh and deploy/lib/*.sh too. Sudo-whitelisting that
+# CI-writable path directly would be equivalent to unrestricted root access
+# (CI could rewrite deploy.sh, then sudo-execute its own code as root). To
+# avoid that, this script instead copies the current deploy/ tree into a
+# ROOT-OWNED location outside the repo (/usr/local/lib/elrenadtech-deploy)
+# and points the sudoers rule at a root-owned wrapper
+# (/usr/local/sbin/deploy-elrenadtech) that runs the frozen copy — never
+# the repo's own copy.
+#
+# Consequence: changes to deploy/deploy.sh or deploy/lib/*.sh do NOT take
+# effect for CI-triggered deploys until a human reviews them and re-runs
+# this script as root, which re-syncs the frozen copy. This is deliberate —
+# it's the actual privilege boundary between "CI can ship app code changes"
+# and "CI can run arbitrary code as root".
 #
 # Usage (on the VPS, as root):
 #   ./deploy/setup-ci-deploy-user.sh "ssh-ed25519 AAAA... github-actions"
 #
 # The argument is the PUBLIC key GitHub Actions will authenticate with (the
 # matching private key goes into the VPS_SSH_KEY GitHub secret — never onto
-# this server).
+# this server). Safe to re-run any time (e.g. after reviewing a deploy/
+# script change) — every step here is idempotent.
 
 set -Eeuo pipefail
 
@@ -23,6 +41,9 @@ source "$SCRIPT_DIR/lib/config.sh"
 
 CI_USER="elrenadtech-ci"
 PUB_KEY="${1:-}"
+
+FROZEN_DIR="/usr/local/lib/elrenadtech-deploy"
+ENTRYPOINT="/usr/local/sbin/deploy-elrenadtech"
 
 if [ "$(id -u)" -ne 0 ]; then
   echo "Run as root: sudo ./deploy/setup-ci-deploy-user.sh '<public-key>'" >&2
@@ -53,10 +74,10 @@ grep -qxF "$PUB_KEY" "$AUTH_KEYS" 2>/dev/null || echo "$PUB_KEY" >> "$AUTH_KEYS"
 chown "$CI_USER:$CI_USER" "$AUTH_KEYS"
 chmod 600 "$AUTH_KEYS"
 
-# The CI user needs to `git pull` the repo before invoking sudo deploy.sh,
-# so it needs ownership of the working tree. deploy.sh itself always runs as
-# root (via sudo below) regardless of who owns the source files, and it
-# already chowns build output (dist/.next) to root:$APP_GROUP.
+# The CI user needs to `git pull` the repo before triggering a deploy, so it
+# needs ownership of the working tree. This is safe precisely because the
+# code that actually RUNS AS ROOT (below) is a separate, frozen, root-owned
+# copy that this chown never touches.
 chown -R "$CI_USER:$CI_USER" "$PROJECT_DIR"
 sudo -u "$CI_USER" git config --global --add safe.directory "$PROJECT_DIR" 2>/dev/null || true
 
@@ -75,15 +96,48 @@ if [ -f "$ENV_FILE" ]; then
   chmod 640 "$ENV_FILE"
 fi
 
+# --- Sync the frozen, root-owned deploy copy -------------------------------
+echo "Syncing frozen deploy copy: $PROJECT_DIR/deploy -> $FROZEN_DIR"
+mkdir -p "$FROZEN_DIR"
+rsync -a --delete "$PROJECT_DIR/deploy/" "$FROZEN_DIR/" 2>/dev/null || cp -a "$PROJECT_DIR/deploy/." "$FROZEN_DIR/"
+chown -R root:root "$FROZEN_DIR"
+find "$FROZEN_DIR" -type d -exec chmod 700 {} \;
+find "$FROZEN_DIR" -type f -exec chmod 600 {} \;
+chmod 700 "$FROZEN_DIR/deploy.sh"
+
+cat > "$ENTRYPOINT" <<EOF
+#!/usr/bin/env bash
+# Root-owned CI deployment entrypoint for elrenad.tech.
+# NOT part of the git repository at $PROJECT_DIR — $CI_USER owns that repo
+# working tree for git pull/checkout purposes, but has no write access to
+# this file or to $FROZEN_DIR. This is the actual privilege boundary; see
+# deploy/setup-ci-deploy-user.sh for why.
+#
+# To intentionally update the deployment logic this runs: review the change
+# in $PROJECT_DIR/deploy/, then re-run (as root):
+#   sudo $PROJECT_DIR/deploy/setup-ci-deploy-user.sh "<ci-pubkey>"
+set -Eeuo pipefail
+export ELRENADTECH_PROJECT_DIR="$PROJECT_DIR"
+exec "$FROZEN_DIR/deploy.sh"
+EOF
+chown root:root "$ENTRYPOINT"
+chmod 700 "$ENTRYPOINT"
+bash -n "$ENTRYPOINT"
+bash -n "$FROZEN_DIR/deploy.sh"
+
 SUDOERS_FILE="/etc/sudoers.d/${CI_USER}"
 cat > "$SUDOERS_FILE" <<EOF
 # Managed by deploy/setup-ci-deploy-user.sh — do not edit by hand.
-# Allows ONLY: sudo $PROJECT_DIR/deploy/deploy.sh (no arguments, no other command).
-${CI_USER} ALL=(root) NOPASSWD: ${PROJECT_DIR}/deploy/deploy.sh
+# Allows ONLY: sudo $ENTRYPOINT, with NO arguments.
+# $ENTRYPOINT and $FROZEN_DIR are root-owned and outside the
+# git-controlled $PROJECT_DIR working tree, so $CI_USER (which owns that
+# working tree) cannot modify what this sudo rule actually executes as root.
+${CI_USER} ALL=(root) NOPASSWD: ${ENTRYPOINT} ""
 EOF
 chmod 440 "$SUDOERS_FILE"
 visudo -c -f "$SUDOERS_FILE"
 
 echo "OK. '$CI_USER' can SSH in with the supplied key and run:"
-echo "  ssh $CI_USER@<this-server> 'cd $PROJECT_DIR && git pull && sudo $PROJECT_DIR/deploy/deploy.sh'"
-echo "Nothing else — no other sudo command, no access to /etc/elrenad (el-renad.com's secrets) or el-renad's files."
+echo "  ssh $CI_USER@<this-server> 'cd $PROJECT_DIR && git pull && sudo $ENTRYPOINT'"
+echo "Nothing else — no other sudo command, no write access to $ENTRYPOINT or $FROZEN_DIR,"
+echo "no access to /etc/elrenad (el-renad.com's secrets) or el-renad's files."

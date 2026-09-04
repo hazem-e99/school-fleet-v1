@@ -10,7 +10,11 @@
 #   el-renad.com   -> APP_NAME=elrenad,     user "elrenad",     app ports 3000/7126, mongod 27017
 #   elrenad.tech   -> APP_NAME=elrenadtech, user "elrenadtech", app ports 3001/7226, mongod-elrenadtech 27018
 
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# Overridable so a root-owned copy of this script tree, run from outside
+# this git working tree (see setup-ci-deploy-user.sh / the CI sudo
+# entrypoint), still resolves paths against the real app checkout instead
+# of its own on-disk location.
+PROJECT_DIR="${ELRENADTECH_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 BACKEND_DIR="$PROJECT_DIR/backend"
 FRONTEND_DIR="$PROJECT_DIR/frontend"
 
