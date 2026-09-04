@@ -74,7 +74,7 @@ jobs:
   deploy:
     needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     environment: production
     steps:
       - name: Deploy over SSH
@@ -84,6 +84,12 @@ jobs:
           username: elrenadtech-ci
           key: ${{ secrets.VPS_SSH_KEY }}
           script_stop: true
+          # deploy.sh runs full npm ci + npm run build for both apps on the
+          # VPS itself (not a fast CI runner) — the frontend's `next build`
+          # alone has taken well over 10 minutes there, so the ssh-action's
+          # default 10m command_timeout is too tight and kills a healthy,
+          # still-running deploy.
+          command_timeout: 25m
           script: |
             set -e
             cd /opt/elrenad-tech
