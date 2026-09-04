@@ -35,9 +35,15 @@ fi
 
 if ! id -u "$CI_USER" >/dev/null 2>&1; then
   echo "Creating CI deploy user '$CI_USER'..."
-  useradd --create-home --shell /usr/sbin/nologin "$CI_USER"
+  useradd --create-home --shell /bin/bash "$CI_USER"
 else
   echo "User '$CI_USER' already exists."
+  # /usr/sbin/nologin refuses ALL command execution, including a single
+  # non-interactive `ssh user@host cmd` — not just interactive logins. If an
+  # earlier run of this script set that shell, fix it so CI can actually run
+  # its one allowed command. The security boundary here is the sudoers rule
+  # below (and this user's own low privilege), not the login shell.
+  usermod --shell /bin/bash "$CI_USER"
 fi
 
 install -d -m 700 -o "$CI_USER" -g "$CI_USER" "/home/$CI_USER/.ssh"
@@ -47,12 +53,6 @@ grep -qxF "$PUB_KEY" "$AUTH_KEYS" 2>/dev/null || echo "$PUB_KEY" >> "$AUTH_KEYS"
 chown "$CI_USER:$CI_USER" "$AUTH_KEYS"
 chmod 600 "$AUTH_KEYS"
 
-# /usr/sbin/nologin blocks interactive shells but SSH can still run a single
-# forced command through it fine for our purposes (we only ever run one
-# fixed sudo command below) — switch to /bin/bash with a restricted
-# authorized_keys command= prefix would be more airtight, but this sudoers
-# rule is already scoped to exactly one script path, so it's the practical
-# floor of privilege for a CI deploy user.
 # The CI user needs to `git pull` the repo before invoking sudo deploy.sh,
 # so it needs ownership of the working tree. deploy.sh itself always runs as
 # root (via sudo below) regardless of who owns the source files, and it
