@@ -164,44 +164,56 @@ _mongo_ensure_users() {
       "mongodb://${MONGO_ADMIN_USER}:${MONGO_ADMIN_PASSWORD}@127.0.0.1:${MONGO_PORT}/admin" \
       --eval 'db.runCommand({ ping: 1 })' >/dev/null 2>&1; then
     log_info "Admin user already exists (from an earlier, interrupted run) — using it to create the app user."
+    # Under real authentication (not the localhost exception) getUser() works
+    # fine, but createUser itself already throws a clear "user already
+    # exists" error we can just ignore — try/catch is simpler and correct
+    # either way, so use the same pattern as the branch below.
     mongosh --quiet --port "$MONGO_PORT" \
       "mongodb://${MONGO_ADMIN_USER}:${MONGO_ADMIN_PASSWORD}@127.0.0.1:${MONGO_PORT}/admin" --eval "
       const appdb = db.getSiblingDB('${DB_NAME}');
-      if (!appdb.getUser('${MONGO_APP_USER}')) {
+      try {
         appdb.createUser({
           user: '${MONGO_APP_USER}',
           pwd: '${MONGO_APP_PASSWORD}',
           roles: [{ role: 'readWrite', db: '${DB_NAME}' }]
         });
         print('app user created');
-      } else {
-        print('app user already existed');
+      } catch (e) {
+        if (String(e).includes('already exists')) { print('app user already existed'); }
+        else { throw e; }
       }
     "
   else
     log_info "First run on this instance — creating admin + app MongoDB users via the localhost exception..."
+    # IMPORTANT: the localhost exception permits createUser but NOT read
+    # commands like getUser()/usersInfo — an existence check via getUser()
+    # would itself throw "not authorized" even though we're allowed to
+    # create the user. So create directly and treat "already exists" (from
+    # a partially-completed earlier run) as success instead of pre-checking.
     mongosh --quiet --port "$MONGO_PORT" --eval "
       const admin = db.getSiblingDB('admin');
-      if (!admin.getUser('${MONGO_ADMIN_USER}')) {
+      try {
         admin.createUser({
           user: '${MONGO_ADMIN_USER}',
           pwd: '${MONGO_ADMIN_PASSWORD}',
           roles: [{ role: 'userAdminAnyDatabase', db: 'admin' }, { role: 'readWriteAnyDatabase', db: 'admin' }]
         });
         print('admin user created');
-      } else {
-        print('admin user already existed');
+      } catch (e) {
+        if (String(e).includes('already exists')) { print('admin user already existed'); }
+        else { throw e; }
       }
       const appdb = db.getSiblingDB('${DB_NAME}');
-      if (!appdb.getUser('${MONGO_APP_USER}')) {
+      try {
         appdb.createUser({
           user: '${MONGO_APP_USER}',
           pwd: '${MONGO_APP_PASSWORD}',
           roles: [{ role: 'readWrite', db: '${DB_NAME}' }]
         });
         print('app user created');
-      } else {
-        print('app user already existed');
+      } catch (e) {
+        if (String(e).includes('already exists')) { print('app user already existed'); }
+        else { throw e; }
       }
     "
   fi
