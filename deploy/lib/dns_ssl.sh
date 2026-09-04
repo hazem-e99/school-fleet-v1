@@ -62,8 +62,9 @@ configure_ssl() {
   fi
 
   local cert_file="/etc/letsencrypt/live/${DOMAIN_PRIMARY}/fullchain.pem"
+  local just_issued=0
   if [ -f "$cert_file" ]; then
-    log_ok "Certificate already installed for ${DOMAIN_PRIMARY} — verifying renewal is wired up."
+    log_ok "Certificate already installed for ${DOMAIN_PRIMARY}."
   else
     log_info "Requesting Let's Encrypt certificate for ${DOMAIN_PRIMARY} and ${DOMAIN_WWW}..."
     certbot --nginx \
@@ -71,6 +72,7 @@ configure_ssl() {
       --redirect --non-interactive --agree-tos \
       -m "admin@${DOMAIN_PRIMARY}" --no-eff-email
     log_ok "Certificate issued and HTTPS redirect configured."
+    just_issued=1
   fi
 
   if systemctl list-unit-files 2>/dev/null | grep -q '^certbot.timer'; then
@@ -80,11 +82,22 @@ configure_ssl() {
       || log_warn "Could not confirm certbot.timer is enabled — check manually with 'systemctl status certbot.timer'."
   fi
 
-  log_info "Testing renewal (dry run, does not change any live certificate)..."
-  if certbot renew --dry-run >/tmp/certbot-dry-run-elrenadtech.log 2>&1; then
-    log_ok "Certbot renewal dry run succeeded."
-  else
-    log_warn "Certbot renewal dry run failed — see /tmp/certbot-dry-run-elrenadtech.log"
+  # Only exercise the renewal dry run once, right after first issuance — it's
+  # a real network round-trip against Let's Encrypt for BOTH this cert and
+  # el-renad.com's (certbot renew processes every cert on the box), which
+  # has repeatedly pushed elrenad.tech's CI deploy step past its command
+  # timeout on this VPS. certbot.timer (enabled above) already re-verifies
+  # renewal on every one of its periodic runs — re-running the same dry run
+  # on every future `deploy.sh` invocation is redundant, not a real safety
+  # check, and el-renad.com's own deploy scripts don't do it on every deploy
+  # either.
+  if [ "$just_issued" = "1" ]; then
+    log_info "Testing renewal (dry run, does not change any live certificate)..."
+    if certbot renew --dry-run >/tmp/certbot-dry-run-elrenadtech.log 2>&1; then
+      log_ok "Certbot renewal dry run succeeded."
+    else
+      log_warn "Certbot renewal dry run failed — see /tmp/certbot-dry-run-elrenadtech.log"
+    fi
   fi
 }
 
