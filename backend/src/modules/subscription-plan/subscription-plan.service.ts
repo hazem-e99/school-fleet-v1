@@ -22,6 +22,8 @@ export class SubscriptionPlanService {
       price: plan.price,
       maxNumberOfRides: plan.maxNumberOfRides,
       durationInDays: plan.durationInDays,
+      // Legacy plans predate this field — they are rolling monthly plans.
+      subscriptionType: plan.subscriptionType ?? 'Monthly',
       isActive: plan.isActive,
     };
   }

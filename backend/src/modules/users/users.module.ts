@@ -7,6 +7,9 @@ import { StudentSubscription, StudentSubscriptionSchema } from '../student-subsc
 import { Payment, PaymentSchema } from '../payment/payment.schema';
 import { SubscriptionPlan, SubscriptionPlanSchema } from '../subscription-plan/subscription-plan.schema';
 import { Child, ChildSchema } from '../child/child.schema';
+import { TripRoute, TripRouteSchema } from '../routes/route.schema';
+import { Bus, BusSchema } from '../buses/bus.schema';
+import { GradeLevel, GradeLevelSchema } from '../grade-level/grade-level.schema';
 import { FilesModule } from '../files/files.module';
 
 @Module({
@@ -17,6 +20,9 @@ import { FilesModule } from '../files/files.module';
       { name: Payment.name, schema: PaymentSchema },
       { name: SubscriptionPlan.name, schema: SubscriptionPlanSchema },
       { name: Child.name, schema: ChildSchema },
+      { name: TripRoute.name, schema: TripRouteSchema },
+      { name: Bus.name, schema: BusSchema },
+      { name: GradeLevel.name, schema: GradeLevelSchema },
     ]),
     FilesModule,
   ],

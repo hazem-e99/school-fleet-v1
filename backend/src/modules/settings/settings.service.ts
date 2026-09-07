@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Setting, SettingDocument } from './setting.schema';
+import { UpdateSettingsDto } from './dto/settings.dto';
 
 @Injectable()
 export class SettingsService {
@@ -18,17 +19,25 @@ export class SettingsService {
         maintenanceMode: false,
       });
     }
+    // maintenanceMode and language were missing from this response, so the
+    // settings page read them back as false/'en' after every save and the
+    // toggle appeared to reset itself.
     return {
       systemName: settings.systemName,
       logo: settings.logo,
       primaryColor: settings.primaryColor,
       secondaryColor: settings.secondaryColor,
+      maintenanceMode: settings.maintenanceMode ?? false,
+      maintenanceMessage: settings.maintenanceMessage ?? null,
+      language: settings.language ?? 'en',
     };
   }
 
-  async update(payload: any) {
+  async update(payload: UpdateSettingsDto) {
+    // Upsert with an empty filter so the single settings document is created
+    // on first save rather than silently doing nothing on a fresh database.
     await this.settingModel.findOneAndUpdate({}, { $set: payload }, { upsert: true });
-    return { success: true };
+    return { success: true, message: 'Settings saved.' };
   }
 
   async getMaintenanceMode() {

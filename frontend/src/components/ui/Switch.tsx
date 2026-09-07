@@ -35,8 +35,12 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
         >
           <div
             className={cn(
-              'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-all duration-200 ease-in-out shadow-md',
-              checked ? 'translate-x-5 shadow-lg' : 'translate-x-0'
+              // `start-0.5` and an RTL-flipped translate: with the physical
+              // `left-0.5` + `translate-x-5` the knob started on the left and
+              // travelled right in Arabic too, so the switch animated the wrong
+              // way and sat outside its track when on.
+              'absolute top-0.5 start-0.5 w-5 h-5 bg-white rounded-full transition-all duration-200 ease-in-out shadow-md',
+              checked ? 'translate-x-5 rtl:-translate-x-5 shadow-lg' : 'translate-x-0'
             )}
           />
         </div>

@@ -10,6 +10,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { createApiResponse, ApiResponse } from '../../common/interfaces/api-response.interface';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCodes } from '../../common/exceptions/error-codes';
+import { resolveSubscriptionPrice } from '../../common/pricing/snapshot-price';
 import { RequestCancellationDto, ReviewCancellationDto } from './dto/cancellation.dto';
 
 @Injectable()
@@ -64,7 +65,24 @@ export class StudentSubscriptionService {
       studentName: rider.name,
       subscriptionPlanId: sub.subscriptionPlanId,
       subscriptionPlanName: plan?.name || null,
-      subscriptionPlanPrice: plan?.price || 0,
+      subscriptionPlanPrice: resolveSubscriptionPrice(sub, plan),
+      // The full frozen breakdown, so the guardian's subscriptions page can
+      // show what was charged and why without recomputing anything.
+      basePrice: sub.basePrice ?? null,
+      discountAmount: sub.discountAmount ?? 0,
+      finalPrice: sub.finalPrice ?? null,
+      pricingRuleName: sub.pricingRuleName ?? null,
+      gradeLevelName: sub.gradeLevelName ?? null,
+      gradeGroupName: sub.gradeGroupName ?? null,
+      termName: sub.termName ?? null,
+      siblingPosition: sub.siblingPosition ?? null,
+      // Instalment state. Null on a one-shot subscription, which has no
+      // schedule rows at all.
+      installmentPlanId: sub.installmentPlanId ?? null,
+      paidAmount: sub.paidAmount ?? null,
+      remainingAmount: sub.remainingAmount ?? null,
+      nextDueDate: sub.nextDueDate?.toISOString() ?? null,
+      paymentState: sub.paymentState ?? null,
       durationInDays: plan?.durationInDays || 0,
       startDate: sub.startDate?.toISOString(),
       endDate: sub.endDate?.toISOString(),
@@ -523,7 +541,7 @@ export class StudentSubscriptionService {
         studentName: student ? `${student.firstName} ${student.lastName}` : null,
         subscriptionPlanId: sub.subscriptionPlanId,
         subscriptionPlanName: plan?.name || null,
-        subscriptionPlanPrice: plan?.price || 0,
+        subscriptionPlanPrice: resolveSubscriptionPrice(sub, plan),
         startDate: sub.startDate?.toISOString() || null,
         endDate: sub.endDate?.toISOString() || null,
         status: sub.status,

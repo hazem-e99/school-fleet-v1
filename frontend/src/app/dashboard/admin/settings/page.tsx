@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardTitle, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { Switch } from '@/components/ui/Switch';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
@@ -24,7 +23,8 @@ import {
   Trash2,
   Lock,
   GraduationCap,
-
+  Layers,
+  CalendarRange,
   MapPin
 } from 'lucide-react';
 import { settingsAPI, adminSystemAPI, PurgeDatabaseResponseData } from '@/lib/api';
@@ -32,6 +32,9 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { ApiError, getApiErrorMessage } from '@/lib/apiError';
 import SchoolsPanel from '@/components/admin/SchoolsPanel';
 import PreferredAreasPanel from '@/components/admin/PreferredAreasPanel';
+import GradeLevelsPanel from '@/components/admin/GradeLevelsPanel';
+import GradeGroupsPanel from '@/components/admin/GradeGroupsPanel';
+import AcademicTermsPanel from '@/components/admin/AcademicTermsPanel';
 
 const PURGE_CONFIRMATION_PHRASE = 'DELETE ALL DATA';
 
@@ -63,7 +66,24 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
   const { t, language: currentLanguage, isRTL } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'maintenance' | 'schools' | 'preferredAreas' | 'danger'>('general');
+  const [activeTab, setActiveTab] = useState<
+    | 'general'
+    | 'appearance'
+    | 'maintenance'
+    | 'schools'
+    | 'preferredAreas'
+    | 'grades'
+    | 'gradeGroups'
+    | 'terms'
+    | 'danger'
+  >('general');
+
+  /**
+   * Tabs whose panel renders its own full hero/card layout, so they render
+   * standalone instead of nested inside the "Settings Content" card below.
+   */
+  const STANDALONE_PANEL_TABS = ['schools', 'preferredAreas', 'grades', 'gradeGroups', 'terms'] as const;
+  const isStandalonePanel = (STANDALONE_PANEL_TABS as readonly string[]).includes(activeTab);
 
   // Danger Zone: purge-all-data state
   const [showPurgeModal, setShowPurgeModal] = useState(false);
@@ -143,7 +163,16 @@ export default function SettingsPage() {
         updatedAt: new Date().toISOString()
       };
 
-      await settingsAPI.update(updatedSettings);
+      // `id` and `updatedAt` are local bookkeeping, not stored fields — the
+      // endpoint now validates its body, so sending them would be a 422.
+      await settingsAPI.update({
+        systemName: settings.systemName,
+        logo: settings.logo,
+        primaryColor: settings.primaryColor,
+        secondaryColor: settings.secondaryColor,
+        maintenanceMode: settings.maintenanceMode,
+        language: settings.language,
+      });
       setSettings(updatedSettings);
       
       setSaved(true);
@@ -188,7 +217,14 @@ export default function SettingsPage() {
         updatedAt: new Date().toISOString()
       };
 
-      await settingsAPI.update(defaultSettings as unknown as Record<string, unknown>);
+      await settingsAPI.update({
+        systemName: defaultSettings.systemName,
+        logo: defaultSettings.logo,
+        primaryColor: defaultSettings.primaryColor,
+        secondaryColor: defaultSettings.secondaryColor,
+        maintenanceMode: defaultSettings.maintenanceMode,
+        language: defaultSettings.language,
+      });
       setSettings(defaultSettings);
       
       // Apply default colors and persist
@@ -316,16 +352,16 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{t('systemSettings')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('systemSettings')}</h1>
           <p className="text-gray-600">Configure system preferences and appearance</p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {saved && (
-            <div className="flex items-center space-x-2 text-green-600">
+            <div className="flex items-center gap-2 text-green-600">
               <CheckCircle className="w-5 h-5" />
               <span className="text-sm font-medium">Settings saved!</span>
             </div>
@@ -353,20 +389,29 @@ export default function SettingsPage() {
       {/* Tabs */}
       <div className="rounded-xl border border-gray-200 bg-white p-2">
         <div className="flex flex-wrap gap-2">
-          <Button variant={activeTab === 'general' ? 'default' : 'outline'} onClick={() => setActiveTab('general')} size="sm">
+          <Button variant={activeTab === 'general' ? 'default' : 'outline'} onClick={() => setActiveTab('general')} size="sm" className="min-h-11">
             <Building2 className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> General
           </Button>
-          <Button variant={activeTab === 'appearance' ? 'default' : 'outline'} onClick={() => setActiveTab('appearance')} size="sm">
+          <Button variant={activeTab === 'appearance' ? 'default' : 'outline'} onClick={() => setActiveTab('appearance')} size="sm" className="min-h-11">
             <Palette className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> Appearance
           </Button>
-          <Button variant={activeTab === 'maintenance' ? 'default' : 'outline'} onClick={() => setActiveTab('maintenance')} size="sm">
+          <Button variant={activeTab === 'maintenance' ? 'default' : 'outline'} onClick={() => setActiveTab('maintenance')} size="sm" className="min-h-11">
             <Wrench className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> Maintenance
           </Button>
-          <Button variant={activeTab === 'schools' ? 'default' : 'outline'} onClick={() => setActiveTab('schools')} size="sm">
+          <Button variant={activeTab === 'schools' ? 'default' : 'outline'} onClick={() => setActiveTab('schools')} size="sm" className="min-h-11">
             <GraduationCap className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> Schools
           </Button>
-          <Button variant={activeTab === 'preferredAreas' ? 'default' : 'outline'} onClick={() => setActiveTab('preferredAreas')} size="sm">
+          <Button variant={activeTab === 'preferredAreas' ? 'default' : 'outline'} onClick={() => setActiveTab('preferredAreas')} size="sm" className="min-h-11">
             <MapPin className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> Pickup Areas
+          </Button>
+          <Button variant={activeTab === 'grades' ? 'default' : 'outline'} onClick={() => setActiveTab('grades')} size="sm" className="min-h-11">
+            <GraduationCap className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> Grades
+          </Button>
+          <Button variant={activeTab === 'gradeGroups' ? 'default' : 'outline'} onClick={() => setActiveTab('gradeGroups')} size="sm" className="min-h-11">
+            <Layers className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> Grade Groups
+          </Button>
+          <Button variant={activeTab === 'terms' ? 'default' : 'outline'} onClick={() => setActiveTab('terms')} size="sm" className="min-h-11">
+            <CalendarRange className={cn('w-4 h-4', isRTL ? 'ml-2' : 'mr-2')} /> Academic Terms
           </Button>
           <Button
             variant={activeTab === 'danger' ? 'destructive' : 'outline'}
@@ -385,8 +430,11 @@ export default function SettingsPage() {
           former standalone /dashboard/admin/... routes). */}
       {activeTab === 'schools' && <SchoolsPanel />}
       {activeTab === 'preferredAreas' && <PreferredAreasPanel />}
+      {activeTab === 'grades' && <GradeLevelsPanel />}
+      {activeTab === 'gradeGroups' && <GradeGroupsPanel />}
+      {activeTab === 'terms' && <AcademicTermsPanel />}
 
-      {activeTab !== 'schools' && activeTab !== 'preferredAreas' && (
+      {!isStandalonePanel && (
         <>
       {/* Settings Content */}
       <Card className="max-w-screen-2xl mx-auto">
@@ -431,7 +479,7 @@ export default function SettingsPage() {
                     {t('logo')} {t('settings')}
                   </h3>
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                       <div className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden">
                         {settings.logo ? (
                           <Image src={settings.logo} alt="System Logo" width={40} height={40} className="w-full h-full object-contain" />
@@ -470,7 +518,7 @@ export default function SettingsPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       {t('primaryColor')}
                     </label>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center gap-3">
                       <Input
                         type="color"
                         value={settings.primaryColor || '#3B82F6'}
@@ -492,7 +540,7 @@ export default function SettingsPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Secondary Color
                     </label>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center gap-3">
                       <Input
                         type="color"
                         value={settings.secondaryColor || '#10B981'}
@@ -521,7 +569,7 @@ export default function SettingsPage() {
                   {t('maintenanceMode')} {t('settings')}
                 </h3>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="flex items-center justify-between gap-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
                     <div>
                       <label className="text-sm font-medium text-gray-700">{t('maintenanceMode')}</label>
                       <p className="text-sm text-gray-500">
@@ -535,7 +583,7 @@ export default function SettingsPage() {
                   </div>
                   {settings.maintenanceMode && (
                     <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-                      <div className="flex items-center space-x-2 text-red-700">
+                      <div className="flex items-center gap-2 text-red-700">
                         <AlertTriangle className="w-5 h-5" />
                         <span className="font-medium">Warning:</span>
                       </div>
@@ -703,7 +751,7 @@ export default function SettingsPage() {
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={closePurgeModal} disabled={isPurging}>
               {t('cancel')}
             </Button>

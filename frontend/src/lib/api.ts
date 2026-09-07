@@ -63,6 +63,67 @@ import {
   UpdateYearOfStudyDTO,
 } from "@/types/yearOfStudy";
 import {
+  GradeLevelViewModel,
+  GradeLevelViewModelApiResponse,
+  GradeLevelViewModelIEnumerableApiResponse,
+  CreateGradeLevelDTO,
+  UpdateGradeLevelDTO,
+  GradeGroupViewModel,
+  GradeGroupViewModelApiResponse,
+  GradeGroupViewModelIEnumerableApiResponse,
+  CreateGradeGroupDTO,
+  UpdateGradeGroupDTO,
+} from "@/types/grade";
+import type {
+  PricingRuleViewModel,
+  PricingRuleViewModelApiResponse,
+  PricingRuleViewModelIEnumerableApiResponse,
+  CreatePricingRuleDTO,
+  UpdatePricingRuleDTO,
+  QuoteViewModel,
+  QuoteViewModelApiResponse,
+} from "@/types/pricing";
+import type {
+  DiscountRuleViewModel,
+  DiscountRuleViewModelApiResponse,
+  DiscountRuleViewModelIEnumerableApiResponse,
+  CreateDiscountRuleDTO,
+  UpdateDiscountRuleDTO,
+} from "@/types/discount";
+import type {
+  InstallmentPlanViewModel,
+  InstallmentPlanViewModelApiResponse,
+  InstallmentPlanViewModelIEnumerableApiResponse,
+  CreateInstallmentPlanDTO,
+  UpdateInstallmentPlanDTO,
+  StudentInstallmentViewModel,
+  StudentInstallmentViewModelIEnumerableApiResponse,
+} from "@/types/installment";
+import type {
+  RouteChangeRequestViewModel,
+  RouteChangeRequestViewModelIEnumerableApiResponse,
+  EligibleBusViewModel,
+  EligibleBusViewModelIEnumerableApiResponse,
+  CreateRouteChangeRequestDTO,
+  ReviewRouteChangeRequestDTO,
+} from "@/types/routeChangeRequest";
+import type {
+  AuditLogViewModel,
+  AuditLogViewModelIEnumerableApiResponse,
+  StringIEnumerableApiResponse,
+} from "@/types/audit";
+import type {
+  ChildDetailViewModel,
+  ChildDetailViewModelApiResponse,
+} from "@/types/childDetail";
+import {
+  AcademicTermViewModel,
+  AcademicTermViewModelApiResponse,
+  AcademicTermViewModelIEnumerableApiResponse,
+  CreateAcademicTermDTO,
+  UpdateAcademicTermDTO,
+} from "@/types/academicTerm";
+import {
   TripBookingViewModel,
   CreateTripBookingDTO,
   ChangePickupTripBookingDTO,
@@ -601,6 +662,32 @@ export const userAPI = {
 
 // Bus-related API calls - use global endpoints
 export const busAPI = {
+  /**
+   * Assigns the bus to a route, or clears it with `routeId: null`.
+   * 409s when the bus still carries students on its current route.
+   */
+  assignRoute: (id: string | number, routeId: number | null): Promise<any> =>
+    apiRequest<any>(`/Buses/${id}/route`, {
+      method: "PUT",
+      body: JSON.stringify({ routeId }),
+    }),
+
+  /** Server-paginated students riding a bus. `total` is the full count. */
+  getStudents: async (
+    id: string | number,
+    params?: { page?: number; pageSize?: number; search?: string },
+  ): Promise<{ data: any[]; total: number }> => {
+    const qs = new URLSearchParams();
+    if (params?.page) qs.set("page", String(params.page));
+    if (params?.pageSize) qs.set("pageSize", String(params.pageSize));
+    if (params?.search) qs.set("search", params.search);
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    const resp = await apiRequest<{ data: any[] | null; count?: number | null }>(
+      `/Buses/${id}/students${suffix}`,
+    );
+    return { data: resp?.data ?? [], total: resp?.count ?? 0 };
+  },
+
   // Get all buses with filters & pagination (GET with JSON body as per API)
   getAll: (params?: Partial<BusListParams>) => {
     const defaultParams: BusListParams = {
@@ -1195,6 +1282,53 @@ export const childrenAPI = {
     const resp = await apiRequest<{ data: any[] }>("/Child/my-children");
     return resp?.data ?? [];
   },
+  /**
+   * Admin assigns a child to a route and/or bus. `null` clears an assignment;
+   * clearing the route also clears the bus.
+   *
+   * 409s when the bus is full, does not serve the selected route, is not
+   * Active, or when moving a child onto a disabled route. Pass
+   * `allowOverCapacity: true` to deliberately exceed capacity — that override
+   * is recorded in the audit log.
+   */
+  /**
+   * Admin edit of any child's details, not scoped to one family. `email: ''`
+   * clears the address — the server unsets it rather than storing an empty
+   * string. The change is written to the audit log.
+   */
+  /**
+   * Everything the admin child detail page shows, assembled server-side.
+   * Deliberately one call: the client-side equivalent would be 6+N requests,
+   * one of which downloads the whole route-change-request queue.
+   */
+  getDetail: async (id: number | string): Promise<ChildDetailViewModel | null> => {
+    const resp = await apiRequest<ChildDetailViewModelApiResponse>(`/Child/${id}/detail`);
+    return resp?.data ?? null;
+  },
+  adminUpdate: (
+    id: number | string,
+    payload: {
+      name?: string;
+      email?: string | null;
+      schoolName?: string;
+      pickupAreaName?: string;
+      gender?: string;
+      dateOfBirth?: string;
+      gradeLevelId?: number;
+    },
+  ): Promise<{ data: any; success: boolean; message?: string | null }> =>
+    apiRequest<{ data: any; success: boolean; message?: string | null }>(
+      `/Child/${id}/admin`,
+      { method: "PUT", body: JSON.stringify(payload) },
+    ),
+  assign: (
+    id: number | string,
+    payload: { routeId?: number | null; busId?: number | null; allowOverCapacity?: boolean },
+  ): Promise<{ data: any; success: boolean; message?: string | null }> =>
+    apiRequest<{ data: any; success: boolean; message?: string | null }>(
+      `/Child/${id}/assignment`,
+      { method: "PUT", body: JSON.stringify(payload) },
+    ),
   create: (data: Record<string, unknown>): Promise<{ data: any; success: boolean }> =>
     apiRequest<{ data: any; success: boolean }>("/Child", {
       method: "POST",
@@ -1270,6 +1404,317 @@ export const yearsOfStudyAPI = {
     apiRequest<BooleanApiResponse>(`/YearOfStudy/${id}/deactivate`, {
       method: "PUT",
     }),
+};
+
+// Grade catalog — admin-managed list of school grades. Referenced by
+// Child.gradeLevelId and grouped by GradeGroup for pricing.
+export const gradeLevelsAPI = {
+  // GET /api/GradeLevel (Admin-only)
+  getAll: async (): Promise<GradeLevelViewModel[]> => {
+    const resp = await apiRequest<GradeLevelViewModelIEnumerableApiResponse>("/GradeLevel");
+    return resp?.data ?? [];
+  },
+  // GET /api/GradeLevel/active (Admin + Guardian — the child form's dropdown)
+  getActive: async (): Promise<GradeLevelViewModel[]> => {
+    const resp = await apiRequest<GradeLevelViewModelIEnumerableApiResponse>("/GradeLevel/active");
+    return resp?.data ?? [];
+  },
+  getById: async (id: number | string): Promise<GradeLevelViewModel | null> => {
+    const resp = await apiRequest<GradeLevelViewModelApiResponse>(`/GradeLevel/${id}`);
+    return resp?.data ?? null;
+  },
+  create: (data: CreateGradeLevelDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>("/GradeLevel", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: number | string, data: UpdateGradeLevelDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/GradeLevel/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  // Returns 409 when a child or grade group still references the grade —
+  // deactivate instead of deleting in that case.
+  delete: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/GradeLevel/${id}`, { method: "DELETE" }),
+  activate: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/GradeLevel/${id}/activate`, { method: "PUT" }),
+  deactivate: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/GradeLevel/${id}/deactivate`, { method: "PUT" }),
+};
+
+// Grade groups — pricing bands over the grade catalog ("KG1 → Grade 2").
+export const gradeGroupsAPI = {
+  getAll: async (): Promise<GradeGroupViewModel[]> => {
+    const resp = await apiRequest<GradeGroupViewModelIEnumerableApiResponse>("/GradeGroup");
+    return resp?.data ?? [];
+  },
+  getActive: async (): Promise<GradeGroupViewModel[]> => {
+    const resp = await apiRequest<GradeGroupViewModelIEnumerableApiResponse>("/GradeGroup/active");
+    return resp?.data ?? [];
+  },
+  getById: async (id: number | string): Promise<GradeGroupViewModel | null> => {
+    const resp = await apiRequest<GradeGroupViewModelApiResponse>(`/GradeGroup/${id}`);
+    return resp?.data ?? null;
+  },
+  create: (data: CreateGradeGroupDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>("/GradeGroup", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: number | string, data: UpdateGradeGroupDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/GradeGroup/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  delete: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/GradeGroup/${id}`, { method: "DELETE" }),
+  activate: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/GradeGroup/${id}/activate`, { method: "PUT" }),
+  deactivate: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/GradeGroup/${id}/deactivate`, { method: "PUT" }),
+};
+
+// Academic terms — the school calendar that Term/Annual plans date themselves
+// from. Monthly plans never bind to a term.
+export const academicTermsAPI = {
+  getAll: async (): Promise<AcademicTermViewModel[]> => {
+    const resp = await apiRequest<AcademicTermViewModelIEnumerableApiResponse>("/AcademicTerm");
+    return resp?.data ?? [];
+  },
+  getActive: async (): Promise<AcademicTermViewModel[]> => {
+    const resp = await apiRequest<AcademicTermViewModelIEnumerableApiResponse>("/AcademicTerm/active");
+    return resp?.data ?? [];
+  },
+  getById: async (id: number | string): Promise<AcademicTermViewModel | null> => {
+    const resp = await apiRequest<AcademicTermViewModelApiResponse>(`/AcademicTerm/${id}`);
+    return resp?.data ?? null;
+  },
+  create: (data: CreateAcademicTermDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>("/AcademicTerm", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: number | string, data: UpdateAcademicTermDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/AcademicTerm/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  delete: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/AcademicTerm/${id}`, { method: "DELETE" }),
+  activate: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/AcademicTerm/${id}/activate`, { method: "PUT" }),
+  deactivate: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/AcademicTerm/${id}/deactivate`, { method: "PUT" }),
+};
+
+/**
+ * The admin pricing matrix. Admin-only on the server — a guardian never reads
+ * rules, only the total that POST /Pricing/quote returns.
+ */
+export const pricingRulesAPI = {
+  getAll: async (params?: { subscriptionPlanId?: number; isActive?: boolean }): Promise<PricingRuleViewModel[]> => {
+    const qs = new URLSearchParams();
+    if (params?.subscriptionPlanId !== undefined) qs.set("subscriptionPlanId", String(params.subscriptionPlanId));
+    if (params?.isActive !== undefined) qs.set("isActive", String(params.isActive));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    const resp = await apiRequest<PricingRuleViewModelIEnumerableApiResponse>(`/PricingRule${suffix}`);
+    return resp?.data ?? [];
+  },
+  getActive: async (): Promise<PricingRuleViewModel[]> => {
+    const resp = await apiRequest<PricingRuleViewModelIEnumerableApiResponse>("/PricingRule/active");
+    return resp?.data ?? [];
+  },
+  getById: async (id: number | string): Promise<PricingRuleViewModel | null> => {
+    const resp = await apiRequest<PricingRuleViewModelApiResponse>(`/PricingRule/${id}`);
+    return resp?.data ?? null;
+  },
+  create: (data: CreatePricingRuleDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>("/PricingRule", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: number | string, data: UpdatePricingRuleDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/PricingRule/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  delete: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/PricingRule/${id}`, { method: "DELETE" }),
+  activate: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/PricingRule/${id}/activate`, { method: "PUT" }),
+  deactivate: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/PricingRule/${id}/deactivate`, { method: "PUT" }),
+};
+
+/**
+ * The single source of any price this app displays.
+ *
+ * Nothing on the client multiplies, discounts or totals anything: it asks the
+ * server what a basket costs and renders the answer. Returns null on failure so
+ * a caller shows "unavailable" rather than a number it invented.
+ */
+export const pricingAPI = {
+  quote: async (
+    subscriptionPlanId: number,
+    childIds: number[],
+    installmentPlanId?: number,
+  ): Promise<QuoteViewModel | null> => {
+    const resp = await apiRequest<QuoteViewModelApiResponse>("/Pricing/quote", {
+      method: "POST",
+      body: JSON.stringify({
+        subscriptionPlanId,
+        childIds,
+        ...(installmentPlanId !== undefined ? { installmentPlanId } : {}),
+      }),
+    });
+    return resp?.data ?? null;
+  },
+};
+
+/** Sibling discount rules. Admin-only on the server, like pricing rules. */
+export const discountRulesAPI = {
+  getAll: async (): Promise<DiscountRuleViewModel[]> => {
+    const resp = await apiRequest<DiscountRuleViewModelIEnumerableApiResponse>("/DiscountRule");
+    return resp?.data ?? [];
+  },
+  getActive: async (): Promise<DiscountRuleViewModel[]> => {
+    const resp = await apiRequest<DiscountRuleViewModelIEnumerableApiResponse>("/DiscountRule/active");
+    return resp?.data ?? [];
+  },
+  getById: async (id: number | string): Promise<DiscountRuleViewModel | null> => {
+    const resp = await apiRequest<DiscountRuleViewModelApiResponse>(`/DiscountRule/${id}`);
+    return resp?.data ?? null;
+  },
+  create: (data: CreateDiscountRuleDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>("/DiscountRule", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: number | string, data: UpdateDiscountRuleDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/DiscountRule/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  delete: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/DiscountRule/${id}`, { method: "DELETE" }),
+  activate: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/DiscountRule/${id}/activate`, { method: "PUT" }),
+  deactivate: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/DiscountRule/${id}/deactivate`, { method: "PUT" }),
+};
+
+/**
+ * Instalment plan templates. `getActive` is readable by a guardian too — they
+ * have to see which schedules are offered before choosing one at checkout.
+ */
+export const installmentPlansAPI = {
+  getAll: async (): Promise<InstallmentPlanViewModel[]> => {
+    const resp = await apiRequest<InstallmentPlanViewModelIEnumerableApiResponse>("/InstallmentPlan");
+    return resp?.data ?? [];
+  },
+  getActive: async (subscriptionPlanId?: number): Promise<InstallmentPlanViewModel[]> => {
+    const suffix = subscriptionPlanId !== undefined ? `?subscriptionPlanId=${subscriptionPlanId}` : "";
+    const resp = await apiRequest<InstallmentPlanViewModelIEnumerableApiResponse>(`/InstallmentPlan/active${suffix}`);
+    return resp?.data ?? [];
+  },
+  getById: async (id: number | string): Promise<InstallmentPlanViewModel | null> => {
+    const resp = await apiRequest<InstallmentPlanViewModelApiResponse>(`/InstallmentPlan/${id}`);
+    return resp?.data ?? null;
+  },
+  create: (data: CreateInstallmentPlanDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>("/InstallmentPlan", { method: "POST", body: JSON.stringify(data) }),
+  update: (id: number | string, data: UpdateInstallmentPlanDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/InstallmentPlan/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  delete: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/InstallmentPlan/${id}`, { method: "DELETE" }),
+  activate: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/InstallmentPlan/${id}/activate`, { method: "PUT" }),
+  deactivate: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/InstallmentPlan/${id}/deactivate`, { method: "PUT" }),
+};
+
+/** A child's actual payment schedule. */
+export const installmentsAPI = {
+  forSubscription: async (subscriptionId: number | string): Promise<StudentInstallmentViewModel[]> => {
+    const resp = await apiRequest<StudentInstallmentViewModelIEnumerableApiResponse>(
+      `/Installment/subscription/${subscriptionId}`,
+    );
+    return resp?.data ?? [];
+  },
+  myOutstanding: async (): Promise<StudentInstallmentViewModel[]> => {
+    const resp = await apiRequest<StudentInstallmentViewModelIEnumerableApiResponse>("/Installment/my-outstanding");
+    return resp?.data ?? [];
+  },
+  forChild: async (childId: number | string, onlyOutstanding = false): Promise<StudentInstallmentViewModel[]> => {
+    const suffix = onlyOutstanding ? "?onlyOutstanding=true" : "";
+    const resp = await apiRequest<StudentInstallmentViewModelIEnumerableApiResponse>(
+      `/Installment/child/${childId}${suffix}`,
+    );
+    return resp?.data ?? [];
+  },
+};
+
+/**
+ * Route change requests. Guardians raise and withdraw; admins review. There is
+ * deliberately no guardian-facing "assign" call — that is the point of the
+ * workflow.
+ */
+export const routeChangeRequestAPI = {
+  getAll: async (params?: { status?: string; page?: number; pageSize?: number }): Promise<RouteChangeRequestViewModel[]> => {
+    const qs = new URLSearchParams();
+    if (params?.status) qs.set("status", params.status);
+    if (params?.page !== undefined) qs.set("page", String(params.page));
+    if (params?.pageSize !== undefined) qs.set("pageSize", String(params.pageSize));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    const resp = await apiRequest<RouteChangeRequestViewModelIEnumerableApiResponse>(`/RouteChangeRequest${suffix}`);
+    return resp?.data ?? [];
+  },
+  getMyRequests: async (): Promise<RouteChangeRequestViewModel[]> => {
+    const resp = await apiRequest<RouteChangeRequestViewModelIEnumerableApiResponse>("/RouteChangeRequest/my-requests");
+    return resp?.data ?? [];
+  },
+  getEligibleBuses: async (id: number | string): Promise<EligibleBusViewModel[]> => {
+    const resp = await apiRequest<EligibleBusViewModelIEnumerableApiResponse>(`/RouteChangeRequest/${id}/eligible-buses`);
+    return resp?.data ?? [];
+  },
+  create: (data: CreateRouteChangeRequestDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>("/RouteChangeRequest", { method: "POST", body: JSON.stringify(data) }),
+  review: (id: number | string, data: ReviewRouteChangeRequestDTO): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/RouteChangeRequest/${id}/review`, { method: "PUT", body: JSON.stringify(data) }),
+  cancel: (id: number | string): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/RouteChangeRequest/${id}/cancel`, { method: "PUT" }),
+};
+
+/**
+ * The audit trail. Admin-only, read-only — entries are written by the actions
+ * they record and are never edited or deleted through the API.
+ */
+export const auditAPI = {
+  search: async (params?: {
+    entityType?: string;
+    entityId?: number;
+    action?: string;
+    actorId?: number;
+    page?: number;
+    pageSize?: number;
+  }): Promise<{ rows: AuditLogViewModel[]; total: number }> => {
+    const qs = new URLSearchParams();
+    if (params?.entityType) qs.set("entityType", params.entityType);
+    if (params?.entityId !== undefined) qs.set("entityId", String(params.entityId));
+    if (params?.action) qs.set("action", params.action);
+    if (params?.actorId !== undefined) qs.set("actorId", String(params.actorId));
+    if (params?.page !== undefined) qs.set("page", String(params.page));
+    if (params?.pageSize !== undefined) qs.set("pageSize", String(params.pageSize));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    const resp = await apiRequest<AuditLogViewModelIEnumerableApiResponse>(`/AuditLog${suffix}`);
+    // `count` is the total across all pages, not the length of this page.
+    return { rows: resp?.data ?? [], total: resp?.count ?? 0 };
+  },
+  getActions: async (): Promise<string[]> => {
+    const resp = await apiRequest<StringIEnumerableApiResponse>("/AuditLog/actions");
+    return resp?.data ?? [];
+  },
 };
 
 // TripBooking API - use global endpoints
@@ -1401,22 +1846,58 @@ export const attendanceAPI = {
 };
 
 // Settings API - use global endpoints
+export interface SystemSettingsResponse {
+  systemName: string;
+  logo: string;
+  primaryColor: string;
+  secondaryColor: string;
+  maintenanceMode: boolean;
+  maintenanceMessage: string | null;
+  language: "en" | "ar";
+}
+
+/** Only fields the server actually stores. */
+export interface UpdateSettingsPayload {
+  systemName?: string;
+  logo?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  maintenanceMode?: boolean;
+  maintenanceMessage?: string;
+  language?: "en" | "ar";
+}
+
+/**
+ * These three were stubs: `get` returned a hardcoded object, `update` was a
+ * no-op that reported success, and `getMaintenanceMode` always answered
+ * `false`. The admin Settings page therefore appeared to save and never did,
+ * and the maintenance-mode login block in useAuth could never fire.
+ *
+ * `getMaintenanceMode` is called from the login page before authenticating, so
+ * it must not throw on a network failure — a settings lookup failing is not a
+ * reason to lock everyone out. `get` is defensive for the same reason: the
+ * dashboard reads branding from it on every load.
+ */
 export const settingsAPI = {
-  // Return safe defaults locally to avoid 404s if backend Settings endpoints don't exist
-  get: async (): Promise<any> => {
-    return {
-      systemName: "El Renad",
-      logo: "/logo2.png",
-      primaryColor: "#4F46E5",
-      secondaryColor: "#0EA5E9",
-    };
+  get: async (): Promise<SystemSettingsResponse | null> => {
+    try {
+      return await apiRequest<SystemSettingsResponse>("/Settings");
+    } catch {
+      return null;
+    }
   },
-  update: async (_settingsData: Record<string, unknown>): Promise<unknown> => {
-    // No-op; assume success
-    return { success: true } as unknown;
-  },
-  getMaintenanceMode: async (): Promise<any> => {
-    return { maintenanceMode: false };
+  update: (settingsData: UpdateSettingsPayload): Promise<{ success: boolean; message?: string }> =>
+    apiRequest<{ success: boolean; message?: string }>("/Settings", {
+      method: "PUT",
+      body: JSON.stringify(settingsData),
+    }),
+  getMaintenanceMode: async (): Promise<{ maintenanceMode: boolean }> => {
+    try {
+      return await apiRequest<{ maintenanceMode: boolean }>("/Settings/maintenance-mode");
+    } catch {
+      // Fail open: an unreachable settings endpoint must not block sign-in.
+      return { maintenanceMode: false };
+    }
   },
 };
 
@@ -1498,32 +1979,82 @@ export const studentDashboardAPI = {
 };
 
 
+// Routes.
+//
+// The backend now returns the standard ApiResponse envelope from every route
+// endpoint (it previously returned bare arrays/objects from this one service,
+// inconsistently with the rest of the API). These helpers unwrap `.data`, so
+// callers keep receiving plain routes and route arrays as before.
 export const routeAPI = {
-  // Get all routes
-  getAll: () => apiRequest<any[]>("/Routes"),
+  getAll: async (params?: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    isActive?: boolean;
+  }): Promise<any[]> => {
+    const qs = new URLSearchParams();
+    if (params?.page) qs.set("page", String(params.page));
+    if (params?.pageSize) qs.set("pageSize", String(params.pageSize));
+    if (params?.search) qs.set("search", params.search);
+    if (params?.isActive !== undefined) qs.set("isActive", String(params.isActive));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    const resp = await apiRequest<{ data: any[] | null }>(`/Routes${suffix}`);
+    return resp?.data ?? [];
+  },
 
-  // Get route by ID
-  getById: (id: string | number) => apiRequest<any>(`/Routes/${id}`),
+  getById: async (id: string | number): Promise<any> => {
+    const resp = await apiRequest<{ data: any }>(`/Routes/${id}`);
+    return resp?.data ?? null;
+  },
 
-  // Create new route
-  create: (routeData: Record<string, unknown>) =>
-    apiRequest<any>("/Routes", {
+  create: async (routeData: Record<string, unknown>): Promise<any> => {
+    const resp = await apiRequest<{ data: any }>("/Routes", {
       method: "POST",
       body: JSON.stringify(routeData),
-    }),
+    });
+    return resp?.data ?? null;
+  },
 
-  // Update route
-  update: (id: string | number, routeData: Record<string, unknown>) =>
-    apiRequest<any>(`/Routes/${id}`, {
+  update: async (id: string | number, routeData: Record<string, unknown>): Promise<any> => {
+    const resp = await apiRequest<{ data: any }>(`/Routes/${id}`, {
       method: "PUT",
       body: JSON.stringify(routeData),
-    }),
+    });
+    return resp?.data ?? null;
+  },
 
-  // Delete route
-  delete: (id: string | number) =>
-    apiRequest<any>(`/Routes/${id}`, {
-      method: "DELETE",
-    }),
+  // 409s when any bus or student still references the route — deactivate instead.
+  delete: (id: string | number): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/Routes/${id}`, { method: "DELETE" }),
+
+  activate: (id: string | number): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/Routes/${id}/activate`, { method: "PUT" }),
+
+  deactivate: (id: string | number): Promise<BooleanApiResponse> =>
+    apiRequest<BooleanApiResponse>(`/Routes/${id}/deactivate`, { method: "PUT" }),
+
+  /** Buses serving a route, each with occupancy vs capacity. */
+  getBuses: async (id: string | number): Promise<any[]> => {
+    const resp = await apiRequest<{ data: any[] | null }>(`/Routes/${id}/buses`);
+    return resp?.data ?? [];
+  },
+
+  /** Server-paginated students on a route. `count` is the TOTAL, not the page. */
+  getStudents: async (
+    id: string | number,
+    params?: { page?: number; pageSize?: number; search?: string; busId?: number },
+  ): Promise<{ data: any[]; total: number }> => {
+    const qs = new URLSearchParams();
+    if (params?.page) qs.set("page", String(params.page));
+    if (params?.pageSize) qs.set("pageSize", String(params.pageSize));
+    if (params?.search) qs.set("search", params.search);
+    if (params?.busId !== undefined) qs.set("busId", String(params.busId));
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    const resp = await apiRequest<{ data: any[] | null; count?: number | null }>(
+      `/Routes/${id}/students${suffix}`,
+    );
+    return { data: resp?.data ?? [], total: resp?.count ?? 0 };
+  },
 };
 
 // Student Subscription API - use global endpoints

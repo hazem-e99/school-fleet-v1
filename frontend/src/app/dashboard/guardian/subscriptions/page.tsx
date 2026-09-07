@@ -9,9 +9,10 @@ import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { useI18n } from '@/contexts/LanguageContext';
 import { getApiErrorMessage } from '@/lib/apiError';
-import { studentSubscriptionAPI } from '@/lib/api';
+import { studentSubscriptionAPI, installmentsAPI } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import type { StudentSubscriptionViewModel } from '@/types/subscription';
+import type { StudentInstallmentViewModel } from '@/types/installment';
 
 export default function GuardianSubscriptionsPage() {
   const { t, lang } = useI18n();
@@ -22,6 +23,31 @@ export default function GuardianSubscriptionsPage() {
   const [cancelTarget, setCancelTarget] = useState<StudentSubscriptionViewModel | null>(null);
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Schedules are fetched only for the subscription the guardian expands —
+  // loading every schedule up front would be N requests for data most people
+  // never open.
+  const [openSchedule, setOpenSchedule] = useState<number | null>(null);
+  const [schedule, setSchedule] = useState<StudentInstallmentViewModel[]>([]);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+
+  const toggleSchedule = async (subscriptionId: number) => {
+    if (openSchedule === subscriptionId) {
+      setOpenSchedule(null);
+      return;
+    }
+    setOpenSchedule(subscriptionId);
+    setSchedule([]);
+    setScheduleLoading(true);
+    try {
+      setSchedule(await installmentsAPI.forSubscription(subscriptionId));
+    } catch (err) {
+      showToast({ type: 'error', title: t('common.error', 'Error'), message: getApiErrorMessage(err) });
+      setOpenSchedule(null);
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -78,14 +104,31 @@ export default function GuardianSubscriptionsPage() {
           ) : (
             <div className="space-y-3">
               {subs.map((s) => (
-                <div key={s.id} className="rounded-xl border border-border p-4 flex flex-wrap items-center justify-between gap-3">
+                <div key={s.id} className="rounded-xl border border-border p-4">
+                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <div className="font-semibold text-text-primary">{s.childName || s.studentName}</div>
                     <div className="text-sm text-text-secondary">
+                      {/* The price shown is the one frozen at purchase, so a
+                          later plan-price change never rewrites this row. */}
                       {s.subscriptionPlanName} · {formatCurrency(lang, s.subscriptionPlanPrice)} ·{' '}
                       {t('pages.guardian.subscriptions.until', 'until')}{' '}
                       {s.endDate ? new Date(s.endDate).toLocaleDateString() : '—'}
                     </div>
+                    {(s.gradeLevelName || s.termName || (s.discountAmount ?? 0) > 0) && (
+                      <div className="text-xs text-text-muted mt-0.5">
+                        {s.gradeLevelName}
+                        {s.gradeLevelName && s.termName ? ' · ' : ''}
+                        {s.termName}
+                        {(s.discountAmount ?? 0) > 0 && (
+                          <span className="text-green-700">
+                            {(s.gradeLevelName || s.termName) ? ' · ' : ''}
+                            {t('pages.guardian.subscriptions.discountApplied', 'Discount')}{' '}
+                            -{formatCurrency(lang, s.discountAmount ?? 0)}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant={s.status === 'Active' ? 'default' : 'secondary'}>{s.status}</Badge>
@@ -99,6 +142,71 @@ export default function GuardianSubscriptionsPage() {
                       )
                     )}
                   </div>
+                 </div>
+
+                 {/* Instalment state, shown only for a subscription that has a
+                     schedule. paidAmount / remaining / nextDue are rolled up
+                     server-side from the rows, never computed here. */}
+                 {s.paymentState && (
+                   <div className="mt-3 border-t border-border pt-3 text-sm">
+                     <div className="flex flex-wrap items-center justify-between gap-2">
+                       <div className="flex flex-wrap items-center gap-3">
+                         <Badge variant={s.paymentState === 'Overdue' ? 'destructive' : s.paymentState === 'Paid' ? 'default' : 'secondary'}>
+                           {t(`pages.guardian.subscriptions.paymentState.${s.paymentState.toLowerCase()}`, s.paymentState)}
+                         </Badge>
+                         <span className="text-text-secondary">
+                           {t('pages.guardian.subscriptions.paid', 'Paid')}: {formatCurrency(lang, s.paidAmount ?? 0)}
+                           {(s.remainingAmount ?? 0) > 0 && (
+                             <>
+                               {' · '}
+                               {t('pages.guardian.subscriptions.remaining', 'Remaining')}:{' '}
+                               {formatCurrency(lang, s.remainingAmount ?? 0)}
+                             </>
+                           )}
+                         </span>
+                         {s.nextDueDate && (
+                           <span className="text-text-secondary">
+                             {t('pages.guardian.subscriptions.nextDue', 'Next due')}:{' '}
+                             {new Date(s.nextDueDate).toLocaleDateString()}
+                           </span>
+                         )}
+                       </div>
+                       <Button variant="outline" className="h-8 rounded-lg" onClick={() => toggleSchedule(s.id)}>
+                         {openSchedule === s.id
+                           ? t('pages.guardian.subscriptions.hideSchedule', 'Hide schedule')
+                           : t('pages.guardian.subscriptions.showSchedule', 'View schedule')}
+                       </Button>
+                     </div>
+
+                     {openSchedule === s.id && (
+                       <div className="mt-3 space-y-1">
+                         {scheduleLoading ? (
+                           <p className="text-text-muted">{t('common.loading', 'Loading...')}</p>
+                         ) : schedule.length === 0 ? (
+                           <p className="text-text-muted">
+                             {t('pages.guardian.subscriptions.noSchedule', 'No instalments recorded for this subscription.')}
+                           </p>
+                         ) : (
+                           schedule.map((row) => (
+                             <div key={row.id} className="flex flex-wrap items-baseline justify-between gap-2 rounded-lg bg-surface-muted px-3 py-2">
+                               <span className="text-text-secondary">
+                                 {t('pages.guardian.subscriptions.installment', 'Instalment')} {row.index}
+                                 {' · '}
+                                 {row.dueDate ? new Date(row.dueDate).toLocaleDateString() : '—'}
+                               </span>
+                               <span className="flex items-center gap-2">
+                                 <span>{formatCurrency(lang, row.amount)}</span>
+                                 <Badge variant={row.isOverdue ? 'destructive' : row.status === 'Paid' ? 'default' : 'secondary'}>
+                                   {t(`pages.guardian.subscriptions.installmentStatus.${String(row.status).toLowerCase()}`, row.status)}
+                                 </Badge>
+                               </span>
+                             </div>
+                           ))
+                         )}
+                       </div>
+                     )}
+                   </div>
+                 )}
                 </div>
               ))}
             </div>

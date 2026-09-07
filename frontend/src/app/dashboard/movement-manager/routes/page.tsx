@@ -227,13 +227,17 @@ export default function MovementManagerRoutesPage() {
         return;
       }
       
+      // Field names must match the TripRoute schema. This previously sent
+      // startPoint/endPoint/estimatedDuration/stops, none of which exist on
+      // the schema, so every route created here was saved without its start,
+      // end, duration or stops.
       const routeData = {
         name,
-        startPoint,
-        endPoint,
+        startLocation: startPoint,
+        endLocation: endPoint,
         distance,
-        estimatedDuration: estimatedMinutes,
-        stops: (newRoute.stops || []).map(s => ({ stopName: s.stopName })),
+        estimatedTime: `${estimatedMinutes} min`,
+        stopLocations: (newRoute.stops || []).map(s => s.stopName).filter(Boolean),
       };
       const createdRoute = await routeAPI.create(routeData);
       const ui = mapFromLegacy(createdRoute);
@@ -275,24 +279,22 @@ export default function MovementManagerRoutesPage() {
       if (!isFinite(distance) || distance <= 0) distance = 0.1;
       if (distance > 1000) distance = 1000;
 
+      // Schema field names. `id` is deliberately not sent — it is in the URL,
+      // and the validated backend DTO rejects unknown properties.
       const payload: {
-        id: string;
         name: string;
-        startPoint: string;
-        endPoint: string;
+        startLocation: string;
+        endLocation: string;
         distance: number;
-        estimatedDuration: number;
-        stops: { stopName: string }[];
+        estimatedTime: string;
+        stopLocations: string[];
       } = {
-        id: selectedRoute.id,
         name,
-        startPoint,
-        endPoint,
+        startLocation: startPoint,
+        endLocation: endPoint,
         distance,
-        // estimatedDuration (minutes) handled by routeAPI.update → estimatedTime
-        estimatedDuration: selectedRoute.estimatedDuration,
-        // include stops so backend receives stopLocations
-        stops: (selectedRoute.stops || []).map((s) => ({ stopName: s.stopName }))
+        estimatedTime: `${selectedRoute.estimatedDuration} min`,
+        stopLocations: (selectedRoute.stops || []).map((s) => s.stopName).filter(Boolean),
       };
 
       const updated = await routeAPI.update(selectedRoute.id, payload);

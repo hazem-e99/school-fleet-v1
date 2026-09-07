@@ -18,16 +18,25 @@ import {
   preferredAreasAPI,
   subscriptionPlansAPI,
   paymentAPI,
+  gradeLevelsAPI,
+  pricingAPI,
+  installmentPlansAPI,
+  routeAPI,
+  routeChangeRequestAPI,
 } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import type { Child, CreateChildDTO } from '@/types/user';
+import type { GradeLevelViewModel } from '@/types/grade';
+import type { QuoteViewModel } from '@/types/pricing';
+import type { InstallmentPlanViewModel } from '@/types/installment';
+import type { RouteChangeRequestViewModel } from '@/types/routeChangeRequest';
 import {
   PaymentMethod,
   PaymentChannel,
   type CreatePaymentDTO,
   type SubscriptionPlanViewModel,
 } from '@/types/subscription';
-import { GraduationCap, MapPin, Plus, Pencil, Trash2, CheckCircle } from 'lucide-react';
+import { GraduationCap, MapPin, Plus, Pencil, Trash2, CheckCircle, Route as RouteIcon } from 'lucide-react';
 
 const emptyForm: CreateChildDTO = {
   name: '',
@@ -43,6 +52,7 @@ export default function GuardianChildrenPage() {
   const [plans, setPlans] = useState<SubscriptionPlanViewModel[]>([]);
   const [schools, setSchools] = useState<string[]>([]);
   const [areas, setAreas] = useState<string[]>([]);
+  const [grades, setGrades] = useState<GradeLevelViewModel[]>([]);
   const [loading, setLoading] = useState(true);
 
   // add / edit child modal
@@ -67,16 +77,20 @@ export default function GuardianChildrenPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const [kids, activePlans, schoolList, areaList] = await Promise.all([
+      const [kids, activePlans, schoolList, areaList, gradeList] = await Promise.all([
         childrenAPI.getMyChildren(),
         subscriptionPlansAPI.getActive().catch(() => []),
         schoolsAPI.getActive().catch(() => []),
         preferredAreasAPI.getActive().catch(() => []),
+        // Grades are optional for a child, so an empty list must not block the
+        // page — same defensive .catch as the other lookups.
+        gradeLevelsAPI.getActive().catch(() => []),
       ]);
       setChildren(kids as Child[]);
       setPlans(activePlans as SubscriptionPlanViewModel[]);
       setSchools((schoolList as any[]).map((s) => s.name).filter(Boolean));
       setAreas((areaList as any[]).map((a) => a.name).filter(Boolean));
+      setGrades(gradeList as GradeLevelViewModel[]);
     } catch (err) {
       showToast({ type: 'error', title: t('common.error', 'Error'), message: getApiErrorMessage(err) });
     } finally {
@@ -86,6 +100,7 @@ export default function GuardianChildrenPage() {
 
   useEffect(() => {
     load();
+    loadRouteData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -103,9 +118,11 @@ export default function GuardianChildrenPage() {
     setEditingChild(child);
     setForm({
       name: child.name,
+      email: child.email ?? '',
       schoolName: child.schoolName,
       pickupAreaName: child.pickupAreaName,
       gender: (child.gender as any) || undefined,
+      gradeLevelId: child.gradeLevelId ?? undefined,
     });
     setChildModalOpen(true);
   };
@@ -153,9 +170,107 @@ export default function GuardianChildrenPage() {
     setSelectedChildIds((prev) => (prev.length === ids.length ? [] : ids));
   };
 
-  const total = selectedPlan ? (selectedPlan.price || 0) * selectedChildIds.length : 0;
+  // No price is computed here any more. The server's pricing engine owns every
+  // figure — grade-based rules (and, from the next phase, sibling discounts)
+  // mean a client-side `price * childCount` would show a number the guardian
+  // will not actually be charged.
+  const [quote, setQuote] = useState<QuoteViewModel | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState('');
 
-  const openMethodModal = (plan: SubscriptionPlanViewModel) => {
+  // Instalment schedules offered for the chosen plan. Empty is the normal
+  // state until an admin creates one, in which case the selector is hidden
+  // entirely rather than shown with a single "pay in full" option.
+  const [installmentPlans, setInstallmentPlans] = useState<InstallmentPlanViewModel[]>([]);
+  const [selectedInstallmentPlanId, setSelectedInstallmentPlanId] = useState<string>('');
+
+  // Route change requests. A guardian asks for a ROUTE only; the admin picks
+  // the bus at approval, which is why there is no bus picker here — bus
+  // occupancy is fleet information guardians have no need to see.
+  const [routes, setRoutes] = useState<Array<{ id: number; name: string | null }>>([]);
+  const [myRequests, setMyRequests] = useState<RouteChangeRequestViewModel[]>([]);
+  const [routeTarget, setRouteTarget] = useState<Child | null>(null);
+  const [routeForm, setRouteForm] = useState<{ requestedRouteId: string; reason: string }>({ requestedRouteId: '', reason: '' });
+  const [routeSubmitting, setRouteSubmitting] = useState(false);
+
+  const pendingRequestFor = (childId: number) =>
+    myRequests.find((r) => r.childId === childId && r.status === 'Pending') ?? null;
+
+  const loadRouteData = async () => {
+    try {
+      const [routeList, requests] = await Promise.all([
+        routeAPI.getAll({ isActive: true }),
+        routeChangeRequestAPI.getMyRequests(),
+      ]);
+      setRoutes(routeList);
+      setMyRequests(requests);
+    } catch {
+      // Non-fatal: the rest of the page works without the route section.
+    }
+  };
+
+  const openRouteRequest = (child: Child) => {
+    setRouteTarget(child);
+    setRouteForm({ requestedRouteId: '', reason: '' });
+  };
+
+  const submitRouteRequest = async () => {
+    if (!routeTarget || !routeForm.requestedRouteId) return;
+    setRouteSubmitting(true);
+    try {
+      const res = await routeChangeRequestAPI.create({
+        childId: routeTarget.id,
+        requestedRouteId: Number(routeForm.requestedRouteId),
+        reason: routeForm.reason.trim() || undefined,
+      });
+      if (!res?.success) throw new Error(res?.message || 'Failed');
+      setRouteTarget(null);
+      await loadRouteData();
+      showToast({
+        type: 'success',
+        title: t('pages.guardian.children.requestSent', 'Request sent'),
+        message: res.message || '',
+      });
+    } catch (err: unknown) {
+      showToast({ type: 'error', title: t('common.error', 'Error'), message: getApiErrorMessage(err) });
+    } finally {
+      setRouteSubmitting(false);
+    }
+  };
+
+  const withdrawRequest = async (requestId: number) => {
+    try {
+      const res = await routeChangeRequestAPI.cancel(requestId);
+      if (!res?.success) throw new Error(res?.message || 'Failed');
+      await loadRouteData();
+      showToast({ type: 'success', title: t('common.done', 'Done'), message: res.message || '' });
+    } catch (err: unknown) {
+      showToast({ type: 'error', title: t('common.error', 'Error'), message: getApiErrorMessage(err) });
+    }
+  };
+
+  /** Always re-asks the server; the client never derives an amount itself. */
+  const refreshQuote = async (planId: number, installmentPlanId?: number) => {
+    setQuoteError('');
+    setQuoteLoading(true);
+    try {
+      const result = await pricingAPI.quote(planId, selectedChildIds, installmentPlanId);
+      if (!result) throw new Error('No quote returned');
+      setQuote(result);
+    } catch (err: unknown) {
+      setQuoteError(getApiErrorMessage(err));
+      setQuote(null);
+    } finally {
+      setQuoteLoading(false);
+    }
+  };
+
+  const onInstallmentPlanChange = async (value: string) => {
+    setSelectedInstallmentPlanId(value);
+    if (selectedPlan) await refreshQuote(selectedPlan.id, value ? Number(value) : undefined);
+  };
+
+  const openMethodModal = async (plan: SubscriptionPlanViewModel) => {
     if (selectedChildIds.length === 0) {
       showToast({ type: 'error', title: t('common.error', 'Error'), message: t('pages.guardian.children.pickChild', 'Select at least one child first.') });
       return;
@@ -163,6 +278,30 @@ export default function GuardianChildrenPage() {
     setSelectedPlan(plan);
     setPaymentRef('');
     setMethodModalOpen(true);
+
+    setQuote(null);
+    setQuoteError('');
+    setQuoteLoading(true);
+    setInstallmentPlans([]);
+    setSelectedInstallmentPlanId('');
+    try {
+      const [result, schedules] = await Promise.all([
+        pricingAPI.quote(plan.id, selectedChildIds),
+        // A failure here must not block checkout — the guardian can still pay
+        // in full, which is what an empty list means.
+        installmentPlansAPI.getActive(plan.id).catch(() => []),
+      ]);
+      if (!result) throw new Error('No quote returned');
+      setQuote(result);
+      setInstallmentPlans(schedules);
+    } catch (err: unknown) {
+      // Show the failure rather than a locally invented total: submitting
+      // would still price correctly server-side, but the guardian must not be
+      // asked to confirm an amount this page made up.
+      setQuoteError(getApiErrorMessage(err));
+    } finally {
+      setQuoteLoading(false);
+    }
   };
 
   const submitSubscription = async () => {
@@ -181,6 +320,9 @@ export default function GuardianChildrenPage() {
       const payload: CreatePaymentDTO = {
         subscriptionPlanId: selectedPlan.id,
         childIds: selectedChildIds,
+        // Omitted when paying in full: the server treats an absent plan as a
+        // one-shot payment, exactly as before instalments existed.
+        ...(selectedInstallmentPlanId ? { installmentPlanId: Number(selectedInstallmentPlanId) } : {}),
         paymentMethod,
         paymentChannel: resolvedChannel,
         paymentReferenceCode:
@@ -253,6 +395,41 @@ export default function GuardianChildrenPage() {
                           : '—'}
                       </div>
                     )}
+                    {/* Assignment is read-only here by design: a guardian asks,
+                        an admin applies. */}
+                    <div className="text-sm text-text-secondary flex items-center gap-1">
+                      <RouteIcon className="h-4 w-4" />
+                      {child.routeName ?? t('pages.guardian.children.noRoute', 'No route assigned')}
+                      {child.busNumber && <span className="text-text-muted">· {child.busNumber}</span>}
+                    </div>
+
+                    {pendingRequestFor(child.id) ? (
+                      <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                        <div>
+                          {t('pages.guardian.children.requestPending', 'Awaiting approval to move to')}{' '}
+                          <span className="font-medium">{pendingRequestFor(child.id)?.requestedRouteName}</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="mt-1 underline"
+                          onClick={() => withdrawRequest(pendingRequestFor(child.id)!.id)}
+                        >
+                          {t('pages.guardian.children.withdrawRequest', 'Withdraw request')}
+                        </button>
+                      </div>
+                    ) : (
+                      routes.length > 0 && (
+                        <Button
+                          variant="outline"
+                          className="h-8 rounded-lg w-full"
+                          onClick={() => openRouteRequest(child)}
+                        >
+                          <RouteIcon className="h-3.5 w-3.5 mr-1" />
+                          {t('pages.guardian.children.requestRouteChange', 'Request route change')}
+                        </Button>
+                      )
+                    )}
+
                     <div className="flex gap-2 pt-1">
                       <Button variant="outline" className="h-8 rounded-lg flex-1" onClick={() => openEdit(child)}>
                         <Pencil className="h-3.5 w-3.5 mr-1" /> {t('common.edit', 'Edit')}
@@ -330,8 +507,10 @@ export default function GuardianChildrenPage() {
                       </div>
                       {selectedChildIds.length > 0 && (
                         <div className="text-sm text-text-secondary mt-1">
-                          {t('pages.guardian.children.total', 'Total')}: {formatCurrency(lang, (plan.price || 0) * selectedChildIds.length)}{' '}
-                          ({selectedChildIds.length} × {formatCurrency(lang, plan.price)})
+                          {t(
+                            'pages.guardian.children.totalAtCheckout',
+                            'Your total is confirmed on the next step — it can differ from the list price by grade.',
+                          )}
                         </div>
                       )}
                       <Button className="mt-3 h-9 rounded-lg" onClick={() => openMethodModal(plan)}>
@@ -355,6 +534,15 @@ export default function GuardianChildrenPage() {
       >
         <div className="space-y-3">
           <Input placeholder={t('pages.auth.register.fields.childName', 'Child Name')} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} minLength={2} maxLength={60} />
+          {/* Optional contact address. Sign-in is by phone, so this creates no
+              credential, and siblings may share one — it is not unique. */}
+          <Input
+            type="email"
+            placeholder={t('pages.guardian.children.emailOptional', 'Email (optional)')}
+            value={form.email ?? ''}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            maxLength={120}
+          />
           <Select value={form.schoolName} onChange={(e) => setForm({ ...form, schoolName: e.target.value })}>
             <option value="">{t('pages.auth.register.placeholders.selectSchool', 'Select school')}</option>
             {schools.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -363,6 +551,17 @@ export default function GuardianChildrenPage() {
             <option value="">{t('pages.auth.register.placeholders.selectPickupArea', 'Select pickup area')}</option>
             {areas.map((a) => <option key={a} value={a}>{a}</option>)}
           </Select>
+          {grades.length > 0 && (
+            <Select
+              value={form.gradeLevelId != null ? String(form.gradeLevelId) : ''}
+              onChange={(e) =>
+                setForm({ ...form, gradeLevelId: e.target.value ? Number(e.target.value) : undefined })
+              }
+            >
+              <option value="">{t('pages.guardian.children.selectGrade', 'Select grade (optional)')}</option>
+              {grades.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </Select>
+          )}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setChildModalOpen(false)}>{t('common.cancel', 'Cancel')}</Button>
             <Button onClick={saveChild} disabled={savingChild}>
@@ -380,10 +579,101 @@ export default function GuardianChildrenPage() {
         size="lg"
       >
         <div className="space-y-4">
-          <div className="text-sm text-text-secondary">
-            {selectedPlan?.name} · {selectedChildIds.length} {t('pages.guardian.children.childrenWord', 'child(ren)')} ·{' '}
-            <span className="font-semibold text-primary">{formatCurrency(lang, total)}</span>
+          {/* Every figure below comes from POST /Pricing/quote. */}
+          <div className="rounded-xl border border-border p-3 text-sm">
+            <div className="text-text-secondary">
+              {selectedPlan?.name} · {selectedChildIds.length}{' '}
+              {t('pages.guardian.children.childrenWord', 'child(ren)')}
+            </div>
+
+            {quoteLoading ? (
+              <div className="mt-2 text-text-muted">{t('pages.guardian.children.pricing', 'Calculating your total...')}</div>
+            ) : quoteError ? (
+              <div className="mt-2 text-red-600">{quoteError}</div>
+            ) : quote ? (
+              <>
+                <div className="mt-2 space-y-1">
+                  {quote.lines.map((line) => (
+                    <div key={line.childId} className="flex items-baseline justify-between gap-3">
+                      <span className="text-text-secondary">
+                        {line.childName}
+                        {line.gradeLevelName && (
+                          <span className="text-text-muted"> · {line.gradeLevelName}</span>
+                        )}
+                      </span>
+                      <span className="text-text-primary">
+                        {line.discountAmount > 0 && (
+                          <span className="text-text-muted line-through me-2">
+                            {formatCurrency(lang, line.basePrice)}
+                          </span>
+                        )}
+                        {formatCurrency(lang, line.finalPrice)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {quote.totals.discount > 0 && (
+                  <div className="mt-2 flex items-baseline justify-between gap-3 text-green-700">
+                    <span>{t('pages.guardian.children.discount', 'Discount')}</span>
+                    <span>-{formatCurrency(lang, quote.totals.discount)}</span>
+                  </div>
+                )}
+                <div className="mt-2 flex items-baseline justify-between gap-3 border-t border-border pt-2">
+                  <span className="font-medium">{t('pages.guardian.children.total', 'Total')}</span>
+                  <span className={quote.installment ? 'text-text-secondary' : 'font-semibold text-primary'}>
+                    {formatCurrency(lang, quote.totals.final)}
+                  </span>
+                </div>
+                {/* On a schedule the headline figure is what is due NOW, not
+                    the full price — the guardian is about to be charged this. */}
+                {quote.installment && (
+                  <div className="mt-1 flex items-baseline justify-between gap-3">
+                    <span className="font-medium">
+                      {t('pages.guardian.children.dueNow', 'Due now')}
+                      <span className="text-text-muted font-normal">
+                        {' '}({t('pages.guardian.children.firstOf', 'instalment 1 of')} {quote.installment.installmentCount})
+                      </span>
+                    </span>
+                    <span className="font-semibold text-primary">
+                      {formatCurrency(lang, quote.installment.amountDueNow)}
+                    </span>
+                  </div>
+                )}
+              </>
+            ) : null}
           </div>
+
+          {/* Hidden entirely when no schedules are configured, rather than
+              shown as a selector with only "pay in full" in it. */}
+          {quote && installmentPlans.length > 0 && (
+            <div className="rounded-xl border border-border p-3 text-sm">
+              <label className="block font-medium mb-1">
+                {t('pages.guardian.children.howToPay', 'How would you like to pay?')}
+              </label>
+              <select
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+                value={selectedInstallmentPlanId}
+                onChange={(e) => onInstallmentPlanChange(e.target.value)}
+                disabled={quoteLoading}
+              >
+                <option value="">{t('pages.guardian.children.payInFull', 'Pay in full now')}</option>
+                {installmentPlans.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} · {p.installmentCount}{' '}
+                    {t('pages.guardian.children.installments', 'instalments')}
+                  </option>
+                ))}
+              </select>
+              {selectedInstallmentPlanId && (
+                <p className="mt-2 text-text-muted text-xs">
+                  {t(
+                    'pages.guardian.children.installmentNote',
+                    'You pay the first instalment now. The remaining schedule is set up for each child once your payment is approved, and you can see it on your subscriptions page.',
+                  )}
+                </p>
+              )}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2">
             {([
               ['online-instapay', PaymentMethod.Online, 'instapay', 'InstaPay'],
@@ -424,8 +714,70 @@ export default function GuardianChildrenPage() {
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setMethodModalOpen(false)}>{t('common.cancel', 'Cancel')}</Button>
-            <Button onClick={submitSubscription} disabled={submitting}>
+            <Button onClick={submitSubscription} disabled={submitting || quoteLoading || !quote}>
               {submitting ? t('common.submitting', 'Submitting...') : t('pages.guardian.children.submitPayment', 'Submit payment')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!routeTarget}
+        onClose={() => setRouteTarget(null)}
+        title={t('pages.guardian.children.requestRouteChange', 'Request route change')}
+      >
+        <div className="space-y-4">
+          <div className="text-sm text-text-secondary">
+            {routeTarget?.fullName} ·{' '}
+            {routeTarget?.routeName ?? t('pages.guardian.children.noRoute', 'No route assigned')}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              {t('pages.guardian.children.moveTo', 'Move to route')}
+            </label>
+            <select
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+              value={routeForm.requestedRouteId}
+              onChange={(e) => setRouteForm({ ...routeForm, requestedRouteId: e.target.value })}
+            >
+              <option value="">{t('common.select', 'Select...')}</option>
+              {routes
+                .filter((r) => r.id !== routeTarget?.routeId)
+                .map((r) => (
+                  <option key={r.id} value={r.id}>{r.name}</option>
+                ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              {t('pages.guardian.children.requestReason', 'Reason (optional)')}
+            </label>
+            <textarea
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+              rows={3}
+              maxLength={500}
+              value={routeForm.reason}
+              onChange={(e) => setRouteForm({ ...routeForm, reason: e.target.value })}
+            />
+          </div>
+
+          {/* Set expectations: nothing changes until an admin acts, and they
+              choose the bus. */}
+          <p className="text-xs text-text-muted">
+            {t(
+              'pages.guardian.children.requestNote',
+              'An administrator will review your request and place your child on a suitable bus for that route. Nothing changes until it is approved.',
+            )}
+          </p>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setRouteTarget(null)}>
+              {t('common.cancel', 'Cancel')}
+            </Button>
+            <Button onClick={submitRouteRequest} disabled={routeSubmitting || !routeForm.requestedRouteId}>
+              {routeSubmitting ? t('common.submitting', 'Submitting...') : t('common.submit', 'Submit')}
             </Button>
           </div>
         </div>

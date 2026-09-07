@@ -22,6 +22,7 @@ import {
   Bus
 } from 'lucide-react';
 import { routeAPI } from '@/lib/api';
+import { getApiErrorMessage } from '@/lib/apiError';
 import { TripRoute as RouteType } from '@/types/tripRoute';
 import { TripRouteFilterDTO } from '@/types/tripRoute';
 import { formatDate } from '@/utils/formatDate';
@@ -71,6 +72,20 @@ export default function RoutesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  // Buses + students on the route being viewed. Students are server-paginated:
+  // a busy route can carry hundreds, and the old admin lists all loaded whole
+  // collections into the browser.
+  const [routeBuses, setRouteBuses] = useState<Array<{
+    id: number; busNumber: string; capacity: number; status: string;
+    assignedStudents: number; availableSeats: number;
+  }>>([]);
+  const [routeStudents, setRouteStudents] = useState<Array<{
+    id: number; name: string; schoolName: string; pickupAreaName: string; busNumber: string | null;
+  }>>([]);
+  const [routeStudentsTotal, setRouteStudentsTotal] = useState(0);
+  const [routeStudentsPage, setRouteStudentsPage] = useState(1);
+  const [routeDetailsLoading, setRouteDetailsLoading] = useState(false);
+  const ROUTE_STUDENTS_PAGE_SIZE = 10;
   const [selectedRoute, setSelectedRoute] = useState<RouteType | null>(null);
   const [routes, setRoutes] = useState<RouteType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -194,25 +209,21 @@ export default function RoutesPage() {
       setIsLoading(true);
       setError('');
       
-      // Create route data with proper structure
+      // Field names must match the TripRoute schema exactly. This previously
+      // sent startPoint/endPoint/estimatedDuration plus schedule/status/
+      // assignedBuses/assignedSupervisors — none of which exist on the schema,
+      // so all of them were silently discarded and every route created here
+      // was saved without its start, end or duration. The backend now
+      // validates the body, so unknown fields are rejected rather than lost.
       const routeData = {
         name: newRoute.name,
-        startPoint: newRoute.startPoint,
-        endPoint: newRoute.endPoint,
+        startLocation: newRoute.startPoint,
+        endLocation: newRoute.endPoint,
         distance: newRoute.distance,
-        estimatedDuration: newRoute.estimatedDuration,
-        schedule: {
-          frequency: newRoute.schedule.frequency,
-          days: newRoute.schedule.frequency === 'daily' 
-            ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            : newRoute.schedule.frequency === 'weekdays'
-            ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-            : ['Saturday', 'Sunday']
-        },
-        status: 'active',
-        stops: (newRoute.stops || []).map(s => ({ stopName: s.stopName })),
-        assignedBuses: [],
-        assignedSupervisors: []
+        // The schema stores estimated time as free text ("45 min"); the form
+        // collects minutes.
+        estimatedTime: `${newRoute.estimatedDuration} min`,
+        stopLocations: (newRoute.stops || []).map(s => s.stopName).filter(Boolean),
       };
 
       // Create route via API
@@ -293,6 +304,25 @@ export default function RoutesPage() {
     }));
   };
 
+  /** Loads the buses and one page of students for the route being viewed. */
+  const loadRouteDetails = async (routeId: number | string, page: number) => {
+    setRouteDetailsLoading(true);
+    try {
+      const [buses, students] = await Promise.all([
+        routeAPI.getBuses(routeId).catch(() => []),
+        routeAPI
+          .getStudents(routeId, { page, pageSize: ROUTE_STUDENTS_PAGE_SIZE })
+          .catch(() => ({ data: [], total: 0 })),
+      ]);
+      setRouteBuses(buses);
+      setRouteStudents(students.data);
+      setRouteStudentsTotal(students.total);
+      setRouteStudentsPage(page);
+    } finally {
+      setRouteDetailsLoading(false);
+    }
+  };
+
   const handleDeleteRoute = async (routeId: string) => {
     try {
       setIsLoading(true);
@@ -300,10 +330,14 @@ export default function RoutesPage() {
       await routeAPI.delete(routeId);
       setRoutes(prev => prev.filter(r => r.id !== Number(routeId)));
       showToast({ type: 'success', title: 'Route deleted', message: 'Route removed.' });
-    } catch {
-      console.error('Error deleting route:', Error);
-      setError('Failed to delete route');
-      showToast({ type: 'error', title: 'Delete failed', message: 'Failed to delete route.' });
+    } catch (err: unknown) {
+      // The server refuses (409) when buses or students still reference the
+      // route, and its message names the counts and suggests deactivating
+      // instead — far more useful than a generic failure string.
+      const message = getApiErrorMessage(err);
+      console.error('Error deleting route:', err);
+      setError(message);
+      showToast({ type: 'error', title: 'Delete failed', message });
     } finally {
       setIsLoading(false);
     }
@@ -464,14 +498,14 @@ export default function RoutesPage() {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">{route.name}</p>
-                        <p className="text-sm text-gray-500">{route.startLocation} → {route.endLocation}</p>
+                        <p className="text-sm text-gray-500">{route.startLocation || '—'} → {route.endLocation || '—'}</p>
                       </div>
                     </div>
                   </TableCell>
                   
                   <TableCell>
                     <div className="text-sm">
-                      <p className="font-medium">{route.distance} km</p>
+                      <p className="font-medium">{route.distance ? `${route.distance} km` : '—'}</p>
                     </div>
                   </TableCell>
 
@@ -506,11 +540,15 @@ export default function RoutesPage() {
                         onClick={async () => {
                           try {
                             setSelectedRoute(route);
+                            setRouteBuses([]);
+                            setRouteStudents([]);
+                            setRouteStudentsTotal(0);
                             setShowViewModal(true);
                             const full = await routeAPI.getById(route.id);
                             if (full) {
                               setSelectedRoute(full);
                             }
+                            await loadRouteDetails(route.id, 1);
                           } catch (error: unknown) {
                             console.error('Failed to load full route details:', error);
                           }
@@ -690,7 +728,7 @@ export default function RoutesPage() {
                   Start Point
                 </label>
                 <Input
-                  value={selectedRoute.startLocation}
+                  value={selectedRoute.startLocation ?? ''}
                   onChange={(e) => setSelectedRoute({ ...selectedRoute, startLocation: e.target.value })}
                   placeholder="Enter start point"
                   required
@@ -701,7 +739,7 @@ export default function RoutesPage() {
                   End Point
                 </label>
                 <Input
-                  value={selectedRoute.endLocation}
+                  value={selectedRoute.endLocation ?? ''}
                   onChange={(e) => setSelectedRoute({ ...selectedRoute, endLocation: e.target.value })}
                   placeholder="Enter end point"
                   required
@@ -716,7 +754,7 @@ export default function RoutesPage() {
                 </label>
                 <Input
                   type="number"
-                  value={selectedRoute.distance}
+                  value={selectedRoute.distance ?? ''}
                   onChange={(e) => setSelectedRoute({ ...selectedRoute, distance: Number(e.target.value) })}
                   placeholder="Enter distance"
                   min="0"
@@ -730,7 +768,7 @@ export default function RoutesPage() {
                 </label>
                 <Input
                   type="number"
-                  value={selectedRoute.estimatedTime}
+                  value={selectedRoute.estimatedTime ?? ''}
                   onChange={(e) => setSelectedRoute({ ...selectedRoute, estimatedTime: e.target.value })}
                   placeholder="Enter duration"
                   min="0"
@@ -820,15 +858,15 @@ export default function RoutesPage() {
             <div className="grid grid-cols-2 gap-4 text-sm">
                              <div>
                  <span className="text-gray-500">Start Point:</span>
-                 <p className="font-medium">{selectedRoute.startLocation}</p>
+                 <p className="font-medium">{selectedRoute.startLocation || '—'}</p>
                </div>
                <div>
                  <span className="text-gray-500">End Point:</span>
-                 <p className="font-medium">{selectedRoute.endLocation}</p>
+                 <p className="font-medium">{selectedRoute.endLocation || '—'}</p>
                </div>
               <div>
                 <span className="text-gray-500">Distance:</span>
-                <p className="font-medium">{selectedRoute.distance} km</p>
+                <p className="font-medium">{selectedRoute.distance ? `${selectedRoute.distance} km` : '—'}</p>
               </div>
                              <div>
                  <span className="text-gray-500">Duration:</span>
@@ -871,7 +909,7 @@ export default function RoutesPage() {
                 <span className="text-gray-500 text-sm">Stops:</span>
                 <div className="mt-2 space-y-1">
                   {(selectedRoute as RouteWithStops).stops.map((stop: Stop, index) => (
-                    <div key={index} className="flex items-center space-x-2 text-sm">
+                    <div key={index} className="flex items-center gap-2 text-sm">
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                       <span>{stop.stopName || stop.name}{stop.stopTime ? ` - ${stop.stopTime}` : ''}</span>
                     </div>
@@ -879,6 +917,83 @@ export default function RoutesPage() {
                 </div>
               </div>
             )}
+
+            {/* Buses serving this route, with live occupancy against capacity. */}
+            <div className="border-t pt-4">
+              <span className="text-gray-500 text-sm">Buses on this route:</span>
+              {routeDetailsLoading && routeBuses.length === 0 ? (
+                <p className="text-sm text-gray-500 mt-2">Loading…</p>
+              ) : routeBuses.length === 0 ? (
+                <p className="text-sm text-gray-500 mt-2">No buses assigned yet.</p>
+              ) : (
+                <div className="mt-2 space-y-2">
+                  {routeBuses.map(bus => (
+                    <div key={bus.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-2 text-sm">
+                      <span className="font-medium">Bus {bus.busNumber}</span>
+                      <span className="text-gray-600">
+                        {bus.assignedStudents}/{bus.capacity} seats
+                        {bus.availableSeats === 0 && (
+                          <span className="ms-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">Full</span>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Students on this route — paginated server-side. */}
+            <div className="border-t pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-gray-500 text-sm">
+                  Students on this route{routeStudentsTotal > 0 ? ` (${routeStudentsTotal})` : ''}:
+                </span>
+                {routeStudentsTotal > ROUTE_STUDENTS_PAGE_SIZE && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={routeStudentsPage <= 1 || routeDetailsLoading}
+                      onClick={() => selectedRoute && loadRouteDetails(selectedRoute.id, routeStudentsPage - 1)}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-xs text-gray-500">
+                      {routeStudentsPage} / {Math.ceil(routeStudentsTotal / ROUTE_STUDENTS_PAGE_SIZE)}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={
+                        routeStudentsPage >= Math.ceil(routeStudentsTotal / ROUTE_STUDENTS_PAGE_SIZE) ||
+                        routeDetailsLoading
+                      }
+                      onClick={() => selectedRoute && loadRouteDetails(selectedRoute.id, routeStudentsPage + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {routeDetailsLoading && routeStudents.length === 0 ? (
+                <p className="text-sm text-gray-500 mt-2">Loading…</p>
+              ) : routeStudents.length === 0 ? (
+                <p className="text-sm text-gray-500 mt-2">No students assigned to this route yet.</p>
+              ) : (
+                <div className="mt-2 space-y-1">
+                  {routeStudents.map(student => (
+                    <div key={student.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                      <span className="font-medium">{student.name}</span>
+                      <span className="text-gray-500">
+                        {student.schoolName}
+                        {student.busNumber ? ` · Bus ${student.busNumber}` : ' · No bus'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </Modal>

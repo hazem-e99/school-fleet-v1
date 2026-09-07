@@ -7,6 +7,9 @@ import { Child, ChildDocument } from '../child/child.schema';
 import { StudentSubscription, StudentSubscriptionDocument } from '../student-subscription/student-subscription.schema';
 import { Payment, PaymentDocument } from '../payment/payment.schema';
 import { SubscriptionPlan, SubscriptionPlanDocument } from '../subscription-plan/subscription-plan.schema';
+import { TripRoute, TripRouteDocument } from '../routes/route.schema';
+import { Bus, BusDocument } from '../buses/bus.schema';
+import { GradeLevel, GradeLevelDocument } from '../grade-level/grade-level.schema';
 import { createApiResponse, ApiResponse } from '../../common/interfaces/api-response.interface';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCodes } from '../../common/exceptions/error-codes';
@@ -20,6 +23,9 @@ export class UsersService {
     @InjectModel(StudentSubscription.name) private subModel: Model<StudentSubscriptionDocument>,
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
     @InjectModel(SubscriptionPlan.name) private planModel: Model<SubscriptionPlanDocument>,
+    @InjectModel(TripRoute.name) private routeModel: Model<TripRouteDocument>,
+    @InjectModel(Bus.name) private busModel: Model<BusDocument>,
+    @InjectModel(GradeLevel.name) private gradeModel: Model<GradeLevelDocument>,
     private readonly filesService: FilesService,
   ) {}
 
@@ -301,16 +307,22 @@ export class UsersService {
    * over the `children` collection.
    */
   async getChildrenOverview(): Promise<ApiResponse<any[]>> {
-    const [children, guardians, subs, payments, plans] = await Promise.all([
+    const [children, guardians, subs, payments, plans, routes, buses, grades] = await Promise.all([
       this.childModel.find({ status: 'Active' }).sort({ createdAt: -1 }).exec(),
       this.userModel.find({ role: 'Guardian' }).select('-password').exec(),
       this.subModel.find().sort({ createdAt: -1 }).exec(),
       this.paymentModel.find().sort({ createdAt: -1 }).exec(),
       this.planModel.find().exec(),
+      this.routeModel.find().exec(),
+      this.busModel.find().exec(),
+      this.gradeModel.find().exec(),
     ]);
 
     const guardianMap = new Map<number, any>(guardians.map((g) => [g.numericId, g]));
     const planMap = new Map<number, any>(plans.map((p) => [p.numericId, p]));
+    const routeMap = new Map<number, any>(routes.map((r) => [r.numericId, r]));
+    const busMap = new Map<number, any>(buses.map((b) => [b.numericId, b]));
+    const gradeMap = new Map<number, any>(grades.map((g) => [g.numericId, g]));
 
     const subsByRider = new Map<number, typeof subs>();
     for (const s of subs) {
@@ -338,6 +350,9 @@ export class UsersService {
         id,
         name: child.name,
         fullName: child.name,
+        // The StudentOverviewRow type has carried an `email` field since before
+        // the backend had one — this is the first time it is populated.
+        email: child.email ?? null,
         schoolName: child.schoolName,
         pickupAreaName: child.pickupAreaName,
         gender: child.gender || null,
@@ -348,6 +363,13 @@ export class UsersService {
         guardianId: child.guardianId,
         guardianName: guardian ? `${guardian.firstName} ${guardian.lastName}`.trim() : null,
         guardianPhone: guardian?.phoneNumber || null,
+
+        gradeLevelId: child.gradeLevelId ?? null,
+        gradeLevelName: child.gradeLevelId ? gradeMap.get(child.gradeLevelId)?.name ?? null : null,
+        routeId: child.routeId ?? null,
+        routeName: child.routeId ? routeMap.get(child.routeId)?.name ?? null : null,
+        busId: child.busId ?? null,
+        busNumber: child.busId ? busMap.get(child.busId)?.busNumber ?? null : null,
 
         subscriptionId: currentSub?.numericId ?? null,
         subscriptionPlanId: currentSub?.subscriptionPlanId ?? null,

@@ -11,6 +11,15 @@ export interface Bus {
   status: 'Active' | 'Inactive' | 'UnderMaintenance' | 'OutOfService';
   fuelLevel?: number;
   location?: Location;
+  /**
+   * numericId of the route this bus serves. Null when unassigned.
+   *
+   * Deliberately absent from BusRequest: route assignment goes through
+   * `PUT /Buses/:id/route` (busAPI.assignRoute), because it has its own rules
+   * — the route must be active, and a bus still carrying students cannot be
+   * moved off its route.
+   */
+  routeId?: number | null;
   updatedAt?: string;
 }
 

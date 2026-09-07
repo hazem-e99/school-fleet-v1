@@ -23,6 +23,14 @@ export class Bus {
   @Prop({ type: { lat: Number, lng: Number } })
   location: { lat: number; lng: number };
 
+  /**
+   * numericId of the TripRoute this bus serves. One route has many buses; the
+   * many side holds the key. Null/absent = unassigned, which is what every
+   * existing bus reads as.
+   */
+  @Prop({ index: true })
+  routeId: number;
+
   @Prop({ unique: true, index: true })
   numericId: number;
 }

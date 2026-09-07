@@ -16,6 +16,8 @@ import { TripRoute, TripRouteSchema } from '../routes/route.schema';
 import { Attendance, AttendanceSchema } from '../attendance/attendance.schema';
 import { VotingSurvey, VotingSurveySchema, VoteResponse, VoteResponseSchema } from '../voting/voting.schema';
 import { BusLocation, BusLocationSchema } from '../bus-tracking/bus-location.schema';
+import { StudentInstallment, StudentInstallmentSchema } from '../installment/student-installment.schema';
+import { RouteChangeRequest, RouteChangeRequestSchema } from '../route-change-request/route-change-request.schema';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { BusLocation, BusLocationSchema } from '../bus-tracking/bus-location.sch
       { name: VotingSurvey.name, schema: VotingSurveySchema },
       { name: VoteResponse.name, schema: VoteResponseSchema },
       { name: BusLocation.name, schema: BusLocationSchema },
+      { name: StudentInstallment.name, schema: StudentInstallmentSchema },
+      { name: RouteChangeRequest.name, schema: RouteChangeRequestSchema },
     ]),
   ],
   controllers: [AdminSystemController],

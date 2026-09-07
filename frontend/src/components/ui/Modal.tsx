@@ -49,7 +49,10 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }: ModalProps) =>
             >
               <Dialog.Panel
                 className={cn(
-                  'w-full transform overflow-hidden rounded-xl bg-white border border-border p-6 text-left align-middle shadow-xl transition-all max-h-[90vh] overflow-y-auto',
+                  // text-start / end-4 rather than text-left / right-4: the physical
+                  // properties put modal text and the close button on the wrong
+                  // side in Arabic. This affects every modal in the app.
+                  'w-full transform overflow-hidden rounded-xl bg-white border border-border p-6 text-start align-middle shadow-xl transition-all max-h-[90vh] overflow-y-auto',
                   sizeClasses[size]
                 )}
               >
@@ -64,7 +67,7 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }: ModalProps) =>
                 
                 <button
                   onClick={onClose}
-                  className="absolute top-4 right-4 rounded-full p-2 hover:bg-card-hover transition-colors duration-200"
+                  className="absolute top-4 end-4 rounded-full p-2 hover:bg-card-hover transition-colors duration-200"
                 >
                   <X className="h-5 w-5 text-text-muted" />
                 </button>

@@ -5,16 +5,25 @@ import { useI18n } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardDescription, CardTitle, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
 import { Plus, Edit, Trash2, Power, PowerOff } from 'lucide-react';
 import { subscriptionPlansAPI } from '@/lib/api';
 import { useToast } from '@/components/ui/Toast';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { SubscriptionPlanViewModel, CreateSubscriptionPlanDTO, UpdateSubscriptionPlanDTO } from '@/types/subscription';
+import { formatCurrency } from '@/lib/format';
+import Link from 'next/link';
+import {
+  SubscriptionPlanViewModel,
+  CreateSubscriptionPlanDTO,
+  UpdateSubscriptionPlanDTO,
+  SubscriptionType,
+  SUBSCRIPTION_TYPES,
+} from '@/types/subscription';
 
 export default function PlansPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [plans, setPlans] = useState<SubscriptionPlanViewModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -66,6 +75,7 @@ export default function PlansPage() {
       price: 0,
       maxNumberOfRides: 1,
       durationInDays: 1,
+      subscriptionType: 'Monthly',
       isActive: true
     });
     setShowModal(true);
@@ -83,6 +93,8 @@ export default function PlansPage() {
           price: fetchedPlan.price,
           maxNumberOfRides: fetchedPlan.maxNumberOfRides,
           durationInDays: fetchedPlan.durationInDays,
+          // Legacy plans have no stored type; the server reports them as Monthly.
+          subscriptionType: fetchedPlan.subscriptionType || 'Monthly',
           isActive: fetchedPlan.isActive
         });
         setShowModal(true);
@@ -113,6 +125,7 @@ export default function PlansPage() {
           price: form.price,
           maxNumberOfRides: form.maxNumberOfRides,
           durationInDays: form.durationInDays,
+          subscriptionType: form.subscriptionType,
           isActive: form.isActive
         };
         const response = await subscriptionPlansAPI.update(editing.id, updateData);
@@ -133,6 +146,7 @@ export default function PlansPage() {
           price: form.price,
           maxNumberOfRides: form.maxNumberOfRides,
           durationInDays: form.durationInDays,
+          subscriptionType: form.subscriptionType,
           isActive: form.isActive
         };
         const response = await subscriptionPlansAPI.create(createData);
@@ -255,7 +269,13 @@ export default function PlansPage() {
       <Card>
         <CardHeader>
           <CardTitle>{t('pages.admin.plans.listTitle', 'Plans')}</CardTitle>
-          <CardDescription>{plans.length} {t('pages.admin.plans.listCountLabel', 'plan(s)')}</CardDescription>
+          <CardDescription>
+            {plans.length} {t('pages.admin.plans.listCountLabel', 'plan(s)')} ·{' '}
+            {t('pages.admin.plans.pricingHint', 'These prices apply where no pricing rule matches.')}{' '}
+            <Link href="/dashboard/admin/pricing" className="text-primary underline">
+              {t('pages.admin.plans.pricingLink', 'Pricing rules')}
+            </Link>
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="w-full overflow-x-auto">
@@ -267,6 +287,7 @@ export default function PlansPage() {
                 <TableHead>{t('pages.admin.plans.table.description', 'Description')}</TableHead>
                 <TableHead>{t('pages.admin.plans.table.price', 'Price')}</TableHead>
                 <TableHead>{t('pages.admin.plans.table.durationDays', 'Duration (days)')}</TableHead>
+                <TableHead>{t('pages.admin.plans.table.subscriptionType', 'Billing type')}</TableHead>
                 <TableHead>{t('pages.admin.plans.table.status', 'Status')}</TableHead>
                 <TableHead>{t('pages.admin.plans.table.actions', 'Actions')}</TableHead>
               </TableRow>
@@ -277,8 +298,15 @@ export default function PlansPage() {
                   <TableCell className="font-mono text-xs">{plan.id}</TableCell>
                   <TableCell className="font-medium">{plan.name}</TableCell>
                   <TableCell className="max-w-xs truncate">{plan.description || t('common.na', 'N/A')}</TableCell>
-                  <TableCell>${Number(plan.price || 0).toFixed(2)}</TableCell>
+                  {/* The plan's fallback price. A pricing rule for a grade
+                      group can override it — see /dashboard/admin/pricing. */}
+                  <TableCell>{formatCurrency(lang, plan.price)}</TableCell>
                   <TableCell>{plan.durationInDays}</TableCell>
+                  <TableCell>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                      {t(`pages.admin.plans.subscriptionTypes.${(plan.subscriptionType || 'Monthly').toLowerCase()}`, plan.subscriptionType || 'Monthly')}
+                    </span>
+                  </TableCell>
                   <TableCell>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       plan.isActive 
@@ -395,6 +423,22 @@ export default function PlansPage() {
                   required
                   placeholder={t('pages.admin.plans.form.durationPh', '30')}
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('pages.admin.plans.form.subscriptionType', 'Billing type')} *</label>
+                <p className="text-xs text-gray-500 mb-2">
+                  {t('pages.admin.plans.form.subscriptionTypeHint', 'Monthly plans are rolling and use the duration above. Term and Annual plans can take their dates from an academic term instead.')}
+                </p>
+                <Select
+                  value={form.subscriptionType || 'Monthly'}
+                  onChange={e => setForm({ ...form, subscriptionType: e.target.value as SubscriptionType })}
+                >
+                  {SUBSCRIPTION_TYPES.map(type => (
+                    <option key={type} value={type}>
+                      {t(`pages.admin.plans.subscriptionTypes.${type.toLowerCase()}`, type)}
+                    </option>
+                  ))}
+                </Select>
               </div>
             </div>
           </div>

@@ -100,8 +100,20 @@ export interface Child {
   name: string;
   /** Alias of `name`, kept so existing UI reading child.fullName keeps working. */
   fullName: string;
+  /** Optional contact address; null when never set or cleared. */
+  email?: string | null;
   schoolName: string;
   pickupAreaName: string;
+  /** numericId of a GradeLevel. Null for children added before grades existed. */
+  gradeLevelId?: number | null;
+  /** Resolved server-side for display; null if the grade was since removed. */
+  gradeLevelName?: string | null;
+  /** Current assignment. Guardians cannot change these directly — they raise
+   *  a route change request and an admin applies it. */
+  routeId?: number | null;
+  routeName?: string | null;
+  busId?: number | null;
+  busNumber?: string | null;
   gender?: 'Male' | 'Female' | null;
   dateOfBirth?: string | null;
   status: 'Active' | 'Inactive';
@@ -120,10 +132,18 @@ export interface Child {
 
 export interface CreateChildDTO {
   name: string;
+  /**
+   * Optional contact address. Not a credential — sign-in is phone-only — and
+   * not unique, since siblings legitimately share a parent's address. An empty
+   * string means "no email"; the server unsets rather than storing "".
+   */
+  email?: string | null;
   schoolName: string;
   pickupAreaName: string;
   gender?: 'Male' | 'Female';
   dateOfBirth?: string;
+  /** numericId of a GradeLevel. Optional — a child without a grade is valid. */
+  gradeLevelId?: number;
 }
 
 export type UpdateChildDTO = Partial<CreateChildDTO>;

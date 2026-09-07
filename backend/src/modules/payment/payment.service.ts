@@ -6,10 +6,15 @@ import { User, UserDocument } from '../users/user.schema';
 import { SubscriptionPlan, SubscriptionPlanDocument } from '../subscription-plan/subscription-plan.schema';
 import { StudentSubscription, StudentSubscriptionDocument } from '../student-subscription/student-subscription.schema';
 import { Child, ChildDocument } from '../child/child.schema';
+import { AcademicTerm, AcademicTermDocument } from '../academic-term/academic-term.schema';
 import { NotificationsService } from '../notifications/notifications.service';
 import { createApiResponse, ApiResponse } from '../../common/interfaces/api-response.interface';
 import { AppException } from '../../common/exceptions/app.exception';
 import { ErrorCodes } from '../../common/exceptions/error-codes';
+import { resolveSubscriptionDates } from '../../common/subscription/subscription-dates';
+import { PricingService } from '../pricing/pricing.service';
+import { InstallmentService } from '../installment/installment.service';
+import { InstallmentPlanService } from '../installment/installment-plan.service';
 
 /** Report bucket keys. 'unknown' covers legacy payments saved before paymentChannel existed. */
 export const PAYMENT_CHANNELS = ['instapay', 'vodafone', 'cash', 'visa'] as const;
@@ -31,7 +36,11 @@ export class PaymentService {
     @InjectModel(SubscriptionPlan.name) private planModel: Model<SubscriptionPlanDocument>,
     @InjectModel(StudentSubscription.name) private subModel: Model<StudentSubscriptionDocument>,
     @InjectModel(Child.name) private childModel: Model<ChildDocument>,
+    @InjectModel(AcademicTerm.name) private termModel: Model<AcademicTermDocument>,
     private readonly notificationsService: NotificationsService,
+    private readonly pricingService: PricingService,
+    private readonly installmentService: InstallmentService,
+    private readonly installmentPlanService: InstallmentPlanService,
   ) {}
 
   private getNumericId(doc: any): number {
@@ -156,24 +165,53 @@ export class PaymentService {
       throw new AppException(400, ErrorCodes.VALIDATION_ERROR, 'Select at least one child to subscribe.');
     }
 
-    const ownedChildren = await this.childModel
-      .find({ numericId: { $in: childIds }, guardianId: userId, status: 'Active' })
-      .exec();
-    if (ownedChildren.length !== childIds.length) {
-      throw new AppException(
-        403,
-        ErrorCodes.VALIDATION_ERROR,
-        'One or more selected children are not valid for this account.',
-      );
-    }
+    // The one place a total is derived. Anything the client sent as an amount
+    // is ignored — quote() recomputes from the plan, the matched pricing rule
+    // and each child's grade, and it performs the same guardian-ownership
+    // check this method used to do inline (same filter, same 403), so the
+    // basket is validated and priced in a single pass.
+    const installmentPlanId =
+      dto.installmentPlanId !== undefined && dto.installmentPlanId !== null
+        ? Number(dto.installmentPlanId)
+        : undefined;
 
-    const { childIds: _omit, ...rest } = dto;
+    const quote = await this.pricingService.quote({
+      subscriptionPlanId: plan.numericId,
+      childIds,
+      restrictToGuardianId: userId,
+      installmentPlanId,
+    });
+
+    // Paying by instalments changes only WHAT IS DUE NOW: the guardian pays
+    // the first instalment for each child rather than the full price. The
+    // quote — and therefore the subscription's snapshot — is unchanged, so the
+    // agreed price stays the same however it is paid.
+    //
+    // The figure comes from the same preview the guardian was shown, rather
+    // than being recomputed here, so the amount charged and the amount
+    // displayed cannot drift apart.
+    const amountDueNow = quote.installment?.amountDueNow ?? quote.totals.final;
+
+    const installmentPlanSnapshot = installmentPlanId
+      ? (
+          await this.installmentPlanService.loadForPurchase(installmentPlanId, plan.numericId, new Date())
+        ).toObject()
+      : null;
+
+    const { childIds: _omit, installmentPlanId: _omitPlan, ...rest } = dto;
     await this.paymentModel.create({
       ...rest,
       studentId: childIds[0],
       childIds,
       childCount: childIds.length,
-      amount: (plan.price || 0) * childIds.length,
+      amount: amountDueNow,
+      originalAmount: quote.totals.base,
+      discountAmount: quote.totals.discount,
+      // Frozen here so review() can activate against what was actually paid,
+      // however long the payment sat in the queue.
+      pricingSnapshot: quote.lines,
+      installmentPlanId: installmentPlanSnapshot ? installmentPlanId : undefined,
+      installmentPlanSnapshot: installmentPlanSnapshot ?? undefined,
       status: 'Pending',
     });
     return createApiResponse(true, 'Payment created successfully');
@@ -186,17 +224,70 @@ export class PaymentService {
     return createApiResponse(true, 'Payment deleted');
   }
 
+  /**
+   * Copies one child's priced line onto the subscription. These fields are the
+   * historical record: every read path prefers them over joining the live
+   * plan, so changing a price or renaming a grade later cannot rewrite what a
+   * guardian was charged.
+   *
+   * Returns an empty object for a legacy payment with no snapshot, leaving the
+   * subscription exactly as it would have been written before phase 4.
+   */
+  private buildPricingSnapshot(line: any | null): Record<string, any> {
+    if (!line) return {};
+    return {
+      basePrice: line.basePrice,
+      pricingRuleId: line.pricingRuleId ?? null,
+      pricingRuleName: line.pricingRuleName ?? null,
+      gradeLevelId: line.gradeLevelId ?? null,
+      gradeLevelName: line.gradeLevelName ?? null,
+      gradeGroupId: line.gradeGroupId ?? null,
+      gradeGroupName: line.gradeGroupName ?? null,
+      academicTermId: line.academicTermId ?? null,
+      termName: line.academicTermName ?? null,
+      siblingPosition: line.siblingPosition ?? null,
+      discountRuleId: line.discountRuleId ?? null,
+      discountType: line.discountType ?? null,
+      discountValue: line.discountValue ?? null,
+      discountAmount: line.discountAmount ?? 0,
+      discountReason: line.discountReason ?? null,
+      finalPrice: line.finalPrice,
+    };
+  }
+
   /** Create-or-refresh the active subscription for a single rider (child). */
   private async activateSubscriptionForRider(
     riderId: number,
     payment: PaymentDocument,
     plan: any,
     subscriptionCode: string | null,
-  ): Promise<void> {
-    const durationDays = plan?.durationInDays || 30;
-    const startDate = new Date();
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + durationDays);
+    pricingLine: any | null = null,
+  ): Promise<StudentSubscriptionDocument> {
+    // Dates come from the priced line when there is one: the pricing rule that
+    // matched may have bound the subscription to an academic term, in which
+    // case the term's real calendar dates win over day arithmetic. Falling
+    // back to the resolver with a null term reproduces the previous
+    // `now + durationInDays` behaviour byte for byte, 30-day default included.
+    const snapshotStart = pricingLine?.startDate ? new Date(pricingLine.startDate) : null;
+    const snapshotEnd = pricingLine?.endDate ? new Date(pricingLine.endDate) : null;
+    const usableSnapshotDates =
+      snapshotStart && snapshotEnd && !Number.isNaN(snapshotStart.getTime()) && !Number.isNaN(snapshotEnd.getTime());
+
+    const { startDate, endDate } = usableSnapshotDates
+      ? { startDate: snapshotStart as Date, endDate: snapshotEnd as Date }
+      : resolveSubscriptionDates(plan, null);
+
+    const snapshot = this.buildPricingSnapshot(pricingLine);
+
+    // Under an instalment plan the subscription may deliberately NOT activate
+    // until the schedule is fully paid — a per-plan decision, not a global
+    // rule. Without instalments this is 'Active', exactly as before.
+    const installmentPlan = payment.installmentPlanSnapshot ?? null;
+    const activatesNow = !installmentPlan || installmentPlan.activateOnFirstInstallment !== false;
+    const status = activatesNow ? 'Active' : 'PendingActivation';
+    const installmentFields = installmentPlan
+      ? { installmentPlanId: payment.installmentPlanId, installmentPlanSnapshot: installmentPlan }
+      : {};
 
     const existing = await this.subModel.findOne({
       studentId: riderId,
@@ -205,26 +296,30 @@ export class PaymentService {
     }).exec();
 
     if (!existing) {
-      await this.subModel.create({
+      return await this.subModel.create({
         studentId: riderId,
         subscriptionPlanId: payment.subscriptionPlanId,
         startDate,
         endDate,
-        isActive: true,
-        status: 'Active',
+        isActive: activatesNow,
+        status,
         paymentMethod: payment.paymentMethod,
         paymentReferenceCode: payment.paymentReferenceCode || subscriptionCode || null,
         cancellationStatus: 'None',
+        ...snapshot,
+        ...installmentFields,
       });
     } else {
       // Reusing an existing subscription row: clear any prior cancellation state,
       // otherwise a re-subscribed rider inherits a stale Approved/Rejected flag.
-      await this.subModel.findByIdAndUpdate(existing._id, {
+      return (await this.subModel.findByIdAndUpdate(
+        existing._id,
+        {
         subscriptionPlanId: payment.subscriptionPlanId,
         startDate,
         endDate,
-        isActive: true,
-        status: 'Active',
+        isActive: activatesNow,
+        status,
         paymentMethod: payment.paymentMethod,
         cancellationStatus: 'None',
         cancellationReason: null,
@@ -233,8 +328,71 @@ export class PaymentService {
         cancellationReviewedAt: null,
         cancellationReviewNotes: null,
         cancelledPaymentId: null,
-      });
+        // A re-subscribed rider is re-priced by this payment, so the snapshot
+        // is replaced rather than merged — leaving the old one would report a
+        // price the guardian is no longer paying.
+        ...snapshot,
+        ...installmentFields,
+        },
+        { new: true },
+      ).exec()) as StudentSubscriptionDocument;
     }
+  }
+
+  /**
+   * Materialises this child's schedule and settles the instalment this payment
+   * covers.
+   *
+   * Deliberately ordered to be correct WITHOUT a transaction, because the
+   * production VPS runs a standalone mongod where one is unavailable:
+   *
+   *   1. generate the schedule — idempotent via the unique
+   *      {studentSubscriptionId, index} key, so a retry re-reads rather than
+   *      duplicating;
+   *   2. settle, guarded by a conditional update on the paidAmount just read,
+   *      and skipped entirely if this payment is already recorded against the
+   *      row — so a retry cannot double-credit;
+   *   3. roll the subscription state, which is DERIVED from the rows and so is
+   *      simply recomputed correctly whenever it runs.
+   *
+   * A failure at any step leaves a state the same call can safely repeat.
+   */
+  private async applyInstallmentsForRider(
+    subscription: StudentSubscriptionDocument,
+    payment: PaymentDocument,
+    pricingLine: any | null,
+  ): Promise<void> {
+    const installmentPlan = payment.installmentPlanSnapshot ?? null;
+    if (!installmentPlan) return;
+
+    const total = pricingLine?.finalPrice ?? subscription.finalPrice ?? 0;
+    const purchasedAt = subscription.startDate ?? new Date();
+
+    const rows = await this.installmentService.generateSchedule(subscription, total, installmentPlan, {
+      purchasedAt,
+      // The term the pricing rule bound this subscription to, if any — it is
+      // what TermStartOffset and TermDueDate rules anchor to.
+      term: pricingLine?.academicTermId ? await this.loadTermForLine(pricingLine) : null,
+    });
+
+    const first = rows.find((r) => r.index === Math.min(...rows.map((x) => x.index)));
+    if (first && !(first.paymentIds ?? []).includes(payment.numericId)) {
+      const due = this.installmentService.outstandingOf(first);
+      if (due > 0) {
+        await this.installmentService.settle(first.numericId, due, payment.numericId);
+        await this.paymentModel.findByIdAndUpdate(payment._id, {
+          $addToSet: { installmentIds: first.numericId },
+        });
+      }
+    }
+
+    await this.installmentService.rollSubscriptionState(subscription.numericId);
+  }
+
+  /** The academic term a priced line was bound to, for term-anchored due dates. */
+  private async loadTermForLine(pricingLine: any): Promise<any | null> {
+    if (!pricingLine?.academicTermId) return null;
+    return this.termModel.findOne({ numericId: pricingLine.academicTermId }).exec();
   }
 
   async review(id: number, dto: any, adminId: number): Promise<ApiResponse<boolean>> {
@@ -256,7 +414,18 @@ export class PaymentService {
           : [payment.studentId];
 
       for (const riderId of riderIds) {
-        await this.activateSubscriptionForRider(riderId, payment, plan, dto.subscriptionCode || null);
+        // The line priced for THIS child at purchase time. Null for a payment
+        // raised before snapshots existed, which dates and prices itself from
+        // the live plan exactly as it always did.
+        const line = payment.pricingSnapshot?.find((l: any) => l?.childId === riderId) ?? null;
+        const subscription = await this.activateSubscriptionForRider(
+          riderId,
+          payment,
+          plan,
+          dto.subscriptionCode || null,
+          line,
+        );
+        await this.applyInstallmentsForRider(subscription, payment, line);
       }
 
       // Notify the guardian (resolved from the first child), not the child rows.

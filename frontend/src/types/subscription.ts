@@ -1,5 +1,19 @@
 // Subscription Plan Types based on Swagger Schema
 
+/**
+ * Which billing tier a plan is.
+ *
+ * `Monthly` is rolling: its subscriptions are dated startDate + durationInDays,
+ * and it never binds to an academic term. `Term` and `Annual` may take their
+ * dates from an admin-managed AcademicTerm instead.
+ *
+ * Plans created before this field existed are backfilled to `Monthly`, which
+ * is exactly how they have always behaved.
+ */
+export type SubscriptionType = 'Monthly' | 'Term' | 'Annual';
+
+export const SUBSCRIPTION_TYPES: SubscriptionType[] = ['Monthly', 'Term', 'Annual'];
+
 export interface SubscriptionPlanViewModel {
   id: number;
   name: string | null;
@@ -7,6 +21,7 @@ export interface SubscriptionPlanViewModel {
   price: number;
   maxNumberOfRides: number;
   durationInDays: number;
+  subscriptionType: SubscriptionType;
   isActive: boolean;
 }
 
@@ -16,6 +31,7 @@ export interface CreateSubscriptionPlanDTO {
   price: number; // minimum 0.01
   maxNumberOfRides: number; // 1 - 1000
   durationInDays: number; // 1 - 365
+  subscriptionType?: SubscriptionType; // defaults to Monthly server-side
   isActive: boolean; // required
 }
 
@@ -25,6 +41,7 @@ export interface UpdateSubscriptionPlanDTO {
   price?: number | null; // minimum 0.01
   maxNumberOfRides?: number | null; // 1 - 1000
   durationInDays?: number | null; // 1 - 365
+  subscriptionType?: SubscriptionType;
   isActive?: boolean | null;
 }
 
@@ -89,8 +106,17 @@ export enum PaymentChannel {
 
 export interface CreatePaymentDTO {
   subscriptionPlanId: number;
-  /** Children (rider ids) this payment covers. Total = plan.price * childIds.length. */
+  /**
+   * Children (rider ids) this payment covers. The amount is computed entirely
+   * server-side by the pricing engine — nothing here proposes a price.
+   */
   childIds: number[];
+  /**
+   * Optional. When set, the guardian pays the FIRST instalment of this
+   * schedule now rather than the full price, and the rest of the schedule is
+   * created per child when an admin accepts the payment.
+   */
+  installmentPlanId?: number;
   paymentMethod: PaymentMethod;
   paymentReferenceCode?: string | null; // 3-100 chars, optional
   paymentChannel?: PaymentChannel | null;
@@ -207,7 +233,27 @@ export interface StudentSubscriptionViewModel {
   studentEmail?: string | null;
   subscriptionPlanId: number;
   subscriptionPlanName?: string | null;
+  /**
+   * What this subscription was actually sold for. Read from the snapshot
+   * frozen at purchase, falling back to the plan's live price only for rows
+   * created before snapshots existed.
+   */
   subscriptionPlanPrice: number;
+  /** Frozen pricing breakdown. Null on pre-snapshot rows. */
+  basePrice?: number | null;
+  discountAmount?: number;
+  finalPrice?: number | null;
+  pricingRuleName?: string | null;
+  gradeLevelName?: string | null;
+  gradeGroupName?: string | null;
+  termName?: string | null;
+  siblingPosition?: number | null;
+  /** Instalment state, rolled up server-side from the schedule rows. */
+  installmentPlanId?: number | null;
+  paidAmount?: number | null;
+  remainingAmount?: number | null;
+  nextDueDate?: string | null;
+  paymentState?: 'Unpaid' | 'PartiallyPaid' | 'Paid' | 'Overdue' | string | null;
   durationInDays: number;
   startDate: string;
   endDate: string;

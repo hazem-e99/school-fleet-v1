@@ -51,7 +51,9 @@ export default function ThemeInitializer() {
           } catch {}
         }
 
-        const data = await settingsAPI.get().catch(() => null as unknown);
+        // settingsAPI.get() is already defensive and resolves to null on
+        // failure; the extra catch is kept for any unexpected throw.
+        const data = await settingsAPI.get().catch(() => null);
         if (!data) return;
         if (cancelled) return;
         applyThemeColors(data?.primaryColor || '#4F46E5', data?.secondaryColor || '#0EA5E9');

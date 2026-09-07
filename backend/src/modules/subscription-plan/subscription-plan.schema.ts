@@ -20,6 +20,20 @@ export class SubscriptionPlan {
   @Prop({ required: true })
   durationInDays: number;
 
+  /**
+   * Which billing tier this plan is.
+   *
+   * `Monthly` (the default, and what every pre-existing plan is backfilled to)
+   * stays rolling: its subscriptions are dated `startDate + durationInDays`,
+   * exactly as they always have been.
+   *
+   * `Term` and `Annual` may bind to an AcademicTerm, in which case the
+   * subscription takes its start/end from the term's real calendar dates
+   * instead of day arithmetic. Monthly plans never bind to a term.
+   */
+  @Prop({ default: 'Monthly', enum: ['Monthly', 'Term', 'Annual'], index: true })
+  subscriptionType: string;
+
   @Prop({ default: true })
   isActive: boolean;
 

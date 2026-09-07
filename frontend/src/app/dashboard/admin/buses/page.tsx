@@ -19,7 +19,7 @@ import {
   BusFront,
   Settings
 } from 'lucide-react';
-import { busAPI } from '@/lib/api';
+import { busAPI, routeAPI } from '@/lib/api';
 import { Bus as BusType, BusRequest, BusListParams } from '@/types/bus';
 import { formatDate } from '@/utils/formatDate';
 import { useToast } from '@/components/ui/Toast';
@@ -45,6 +45,10 @@ export default function BusesPage() {
     speed: 0
   });
   const [buses, setBuses] = useState<BusType[]>([]);
+  // Routes for the per-bus assignment picker. Loaded best-effort: the fleet
+  // list must still render if the routes call fails.
+  const [routes, setRoutes] = useState<Array<{ id: number; name: string; isActive: boolean }>>([]);
+  const [assigningBusId, setAssigningBusId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [, setIsAddingBus] = useState(false);
@@ -69,6 +73,36 @@ export default function BusesPage() {
       minCapacity,
       maxCapacity,
     };
+  };
+
+  /**
+   * Assigns (or clears) a bus's route. Separate from the add/edit form because
+   * the backend enforces its own rules here — the route must be active, and a
+   * bus still carrying students cannot be moved. Those come back as a 409 with
+   * an explanatory message, which is shown verbatim.
+   */
+  const handleAssignRoute = async (bus: BusType, value: string) => {
+    const routeId = value === '' ? null : Number(value);
+    setAssigningBusId(bus.id);
+    try {
+      await busAPI.assignRoute(bus.id, routeId);
+      setBuses(prev => prev.map(b => (b.id === bus.id ? { ...b, routeId } : b)));
+      showToast({
+        type: 'success',
+        title: t('pages.admin.buses.route.assignedTitle', 'Route updated'),
+        message: routeId === null
+          ? t('pages.admin.buses.route.cleared', 'Bus removed from its route.')
+          : t('pages.admin.buses.route.assigned', 'Bus assigned to route.'),
+      });
+    } catch (err: unknown) {
+      showToast({
+        type: 'error',
+        title: t('pages.admin.buses.route.assignFailed', 'Could not update route'),
+        message: getApiErrorMessage(err),
+      });
+    } finally {
+      setAssigningBusId(null);
+    }
   };
 
   const validateBusDTO = (data: BusRequest) => {
@@ -142,6 +176,11 @@ export default function BusesPage() {
           maxCapacity: 0,
         };
         
+        routeAPI
+          .getAll({ isActive: true })
+          .then((list) => setRoutes(list as Array<{ id: number; name: string; isActive: boolean }>))
+          .catch(() => setRoutes([]));
+
         console.log('🔍 Fetching buses with initial params:', initialParams);
     const busesResponse = await busAPI.getAll(initialParams);
         
@@ -629,6 +668,24 @@ export default function BusesPage() {
                         <div className="text-gray-500">{t('pages.admin.buses.table.speed', 'Speed')}</div>
                         <div className="font-medium">{bus.speed} {t('pages.admin.buses.table.kmh', 'km/h')}</div>
                       </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-500 mb-1">{t('pages.admin.buses.table.route', 'Route')}</div>
+                      <Select
+                        value={bus.routeId != null ? String(bus.routeId) : ''}
+                        disabled={assigningBusId === bus.id}
+                        onChange={(e) => handleAssignRoute(bus, e.target.value)}
+                      >
+                        <option value="">{t('pages.admin.buses.route.unassigned', 'Not assigned')}</option>
+                        {/* A bus may sit on a route that has since been deactivated;
+                            keep showing it so the value is not silently blanked. */}
+                        {bus.routeId != null && !routes.some(r => r.id === bus.routeId) && (
+                          <option value={String(bus.routeId)}>
+                            {t('pages.admin.buses.route.currentInactive', 'Current route (inactive)')}
+                          </option>
+                        )}
+                        {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                      </Select>
                     </div>
                     <div className="flex items-center justify-end gap-2">
                       <Button size="sm" variant="outline" onClick={() => { setSelectedBus(bus); setShowViewModal(true); }}>

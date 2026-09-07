@@ -35,6 +35,7 @@ export interface ExportStudentsLabels {
   sheetName: string;
   fileNamePrefix: string;
   student: string;
+  email: string;
   phone: string;
   nationalId: string;
   department: string;
@@ -70,6 +71,7 @@ export async function exportStudentsOverview(opts: {
 
   sheet.columns = [
     { header: labels.student, key: 'student', width: 24 },
+    { header: labels.email, key: 'email', width: 26 },
     { header: labels.phone, key: 'phone', width: 16 },
     { header: labels.nationalId, key: 'nationalId', width: 18 },
     { header: labels.department, key: 'department', width: 22 },
@@ -96,6 +98,7 @@ export async function exportStudentsOverview(opts: {
   rows.forEach((r, idx) => {
     const added = sheet.addRow({
       student: r.fullName || '—',
+      email: r.email || '—',
       phone: r.phoneNumber || '—',
       nationalId: r.nationalId || '—',
       department: r.department || '—',

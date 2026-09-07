@@ -8,6 +8,12 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { DbMigrationService } from './common/services/db-migration.service';
 import { SeedDefaultsService } from './common/services/seed-defaults.service';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { AuditModule } from './common/audit/audit.module';
+import { TripRoute, TripRouteSchema } from './modules/routes/route.schema';
+import { GradeLevel, GradeLevelSchema } from './modules/grade-level/grade-level.schema';
+import { GradeGroup, GradeGroupSchema } from './modules/grade-group/grade-group.schema';
+import { SubscriptionPlan, SubscriptionPlanSchema } from './modules/subscription-plan/subscription-plan.schema';
+import { DiscountRule, DiscountRuleSchema } from './modules/discount/discount-rule.schema';
 
 import { AuthenticationModule } from './modules/authentication/authentication.module';
 import { UsersModule } from './modules/users/users.module';
@@ -33,10 +39,18 @@ import { BusTrackingModule } from './modules/bus-tracking/bus-tracking.module';
 import { VotingModule } from './modules/voting/voting.module';
 import { AdminSystemModule } from './modules/admin-system/admin-system.module';
 import { FilesModule } from './modules/files/files.module';
+import { GradeLevelModule } from './modules/grade-level/grade-level.module';
+import { GradeGroupModule } from './modules/grade-group/grade-group.module';
+import { AcademicTermModule } from './modules/academic-term/academic-term.module';
+import { PricingModule } from './modules/pricing/pricing.module';
+import { DiscountModule } from './modules/discount/discount.module';
+import { InstallmentModule } from './modules/installment/installment.module';
+import { RouteChangeRequestModule } from './modules/route-change-request/route-change-request.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    AuditModule,
     ScheduleModule.forRoot(),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -45,6 +59,17 @@ import { FilesModule } from './modules/files/files.module';
       }),
       inject: [ConfigService],
     }),
+    // Models the startup seeder writes through. Registered here rather than
+    // by importing each feature module, because SeedDefaultsService is an
+    // AppModule-level provider and importing five modules back into the root
+    // for a boot-time task would couple them for no runtime benefit.
+    MongooseModule.forFeature([
+      { name: TripRoute.name, schema: TripRouteSchema },
+      { name: GradeLevel.name, schema: GradeLevelSchema },
+      { name: GradeGroup.name, schema: GradeGroupSchema },
+      { name: SubscriptionPlan.name, schema: SubscriptionPlanSchema },
+      { name: DiscountRule.name, schema: DiscountRuleSchema },
+    ]),
     AuthenticationModule,
     UsersModule,
     BusesModule,
@@ -69,6 +94,13 @@ import { FilesModule } from './modules/files/files.module';
     VotingModule,
     AdminSystemModule,
     FilesModule,
+    GradeLevelModule,
+    GradeGroupModule,
+    AcademicTermModule,
+    PricingModule,
+    DiscountModule,
+    InstallmentModule,
+    RouteChangeRequestModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: AllExceptionsFilter },

@@ -22,6 +22,14 @@ export class Setting {
 
   @Prop()
   maintenanceMessage: string;
+
+  /**
+   * The system's default language. Stored so a fresh browser opens in the
+   * language the school actually uses, rather than always defaulting to
+   * English until someone toggles it.
+   */
+  @Prop({ default: 'en', enum: ['en', 'ar'] })
+  language: string;
 }
 
 export const SettingSchema = SchemaFactory.createForClass(Setting);

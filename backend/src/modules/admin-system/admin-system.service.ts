@@ -16,6 +16,8 @@ import { TripRoute, TripRouteDocument } from '../routes/route.schema';
 import { Attendance, AttendanceDocument } from '../attendance/attendance.schema';
 import { VotingSurvey, VotingSurveyDocument, VoteResponse, VoteResponseDocument } from '../voting/voting.schema';
 import { BusLocation, BusLocationDocument } from '../bus-tracking/bus-location.schema';
+import { StudentInstallment, StudentInstallmentDocument } from '../installment/student-installment.schema';
+import { RouteChangeRequest, RouteChangeRequestDocument } from '../route-change-request/route-change-request.schema';
 
 import { PurgeDatabaseDto } from './dto/purge-database.dto';
 import { AppException } from '../../common/exceptions/app.exception';
@@ -50,6 +52,8 @@ export class AdminSystemService {
     @InjectModel(VotingSurvey.name) private readonly votingSurveyModel: Model<VotingSurveyDocument>,
     @InjectModel(VoteResponse.name) private readonly voteResponseModel: Model<VoteResponseDocument>,
     @InjectModel(BusLocation.name) private readonly busLocationModel: Model<BusLocationDocument>,
+    @InjectModel(StudentInstallment.name) private readonly studentInstallmentModel: Model<StudentInstallmentDocument>,
+    @InjectModel(RouteChangeRequest.name) private readonly routeChangeRequestModel: Model<RouteChangeRequestDocument>,
   ) {}
 
   /**
@@ -154,6 +158,10 @@ export class AdminSystemService {
       ['votingSurveys', this.votingSurveyModel],
       ['voteResponses', this.voteResponseModel],
       ['busLocations', this.busLocationModel],
+      // Transactional data, so it is purged. The installmentplans TEMPLATES
+      // are admin reference data and are preserved, like schools.
+      ['studentInstallments', this.studentInstallmentModel],
+      ['routeChangeRequests', this.routeChangeRequestModel],
     ];
 
     for (const [key, model] of businessCollections) {
