@@ -78,7 +78,10 @@ jobs:
   deploy:
     needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Headroom for a COLD deploy — one where package-lock.json changed and both
+    # npm installs run in full. build.sh skips an install whose lockfile is
+    # unchanged, so the common source-only deploy finishes far inside this.
+    timeout-minutes: 50
     environment: production
     steps:
       - name: Deploy over SSH
@@ -88,12 +91,15 @@ jobs:
           username: elrenadtech-ci
           key: ${{ secrets.VPS_SSH_KEY }}
           script_stop: true
-          # deploy.sh runs full npm ci + npm run build for both apps on the
-          # VPS itself (not a fast CI runner) — the frontend's `next build`
-          # alone has taken well over 10 minutes there, so the ssh-action's
-          # default 10m command_timeout is too tight and kills a healthy,
-          # still-running deploy.
-          command_timeout: 25m
+          # deploy.sh builds both apps on the VPS itself (not a fast CI
+          # runner), and that box pulls at roughly 140 kB/s — a full backend
+          # `npm ci` measured 8 minutes, the frontend's more.
+          #
+          # 25m was not enough for a cold deploy and killed one mid-install,
+          # leaving frontend/node_modules half-written. build.sh now skips an
+          # install when package-lock.json is unchanged, so this ceiling is
+          # only reached when dependencies actually change.
+          command_timeout: 45m
           script: |
             set -e
             cd /opt/elrenad-tech

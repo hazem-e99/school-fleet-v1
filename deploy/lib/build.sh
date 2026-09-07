@@ -49,11 +49,43 @@ _reclaim_for_build_user() {
   [ -e "$path" ] && chown -R "$BUILD_USER:$APP_GROUP" "$path"
 }
 
+# `npm ci` deletes node_modules and refetches every package. This VPS pulls at
+# roughly 140 kB/s (apt reports ~141 kB/s during the same run), so a full
+# install costs ~8 minutes for the backend and longer for the frontend — a cost
+# paid on EVERY deploy, even when only source files changed. Two installs plus
+# two builds is what pushed a deploy past the ssh-action command_timeout.
+#
+# So the install is skipped when package-lock.json is byte-identical to the one
+# that produced the current tree.
+#
+# The stamp deliberately lives INSIDE node_modules so it cannot outlive what it
+# describes: `npm ci` wipes the directory (taking the stamp with it), and an
+# interrupted install leaves no stamp, which forces a clean reinstall next run.
+# Skipping therefore only happens when the present tree came from a COMPLETED
+# install of an identical lockfile — determinism is preserved.
+_npm_install_if_lock_changed() {
+  local dir="$1" label="$2"
+  local stamp="$dir/node_modules/.deploy-lockhash"
+  local current
+  current="$(sha256sum "$dir/package-lock.json" | awk '{print $1}')"
+
+  if [ -f "$stamp" ] && [ "$(cat "$stamp" 2>/dev/null)" = "$current" ]; then
+    log_ok "$label dependencies unchanged (lockfile match) — skipping npm ci."
+    return 0
+  fi
+
+  log_info "$label: npm ci (as $BUILD_USER, not root)"
+  # --no-audit/--no-fund drop two network round-trips that cost real minutes on
+  # a link this slow; --prefer-offline reuses the warm npm cache rather than
+  # refetching tarballs it already has.
+  _as_build_user "cd '$dir' && npm ci --no-audit --no-fund --prefer-offline"
+  _as_build_user "printf '%s' '$current' > '$stamp'"
+  log_ok "$label dependencies installed."
+}
+
 build_backend_install() {
   _reclaim_for_build_user "$BACKEND_DIR/node_modules"
-  log_info "backend: npm ci (as $BUILD_USER, not root)"
-  _as_build_user "cd '$BACKEND_DIR' && npm ci"
-  log_ok "Backend dependencies installed."
+  _npm_install_if_lock_changed "$BACKEND_DIR" "Backend"
 }
 
 build_backend_compile() {
@@ -67,9 +99,7 @@ build_backend_compile() {
 
 build_frontend_install() {
   _reclaim_for_build_user "$FRONTEND_DIR/node_modules"
-  log_info "frontend: npm ci (as $BUILD_USER, not root)"
-  _as_build_user "cd '$FRONTEND_DIR' && npm ci"
-  log_ok "Frontend dependencies installed."
+  _npm_install_if_lock_changed "$FRONTEND_DIR" "Frontend"
 }
 
 build_frontend_compile() {
