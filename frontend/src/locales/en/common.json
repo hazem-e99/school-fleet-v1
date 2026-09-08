@@ -33,7 +33,26 @@
     "clear": "Clear",
     "refresh": "Refresh",
     "success": "Success",
-    "error": "Error"
+    "error": "Error",
+    "actionFailed": "Action failed",
+    "actions": "Actions",
+    "activate": "Activate",
+    "active": "Active",
+    "approve": "Approve",
+    "confirmDesc": "Are you sure?",
+    "confirmTitle": "Confirm Action",
+    "current": "Current",
+    "deactivate": "Deactivate",
+    "delete": "Delete",
+    "done": "Done",
+    "inactive": "Inactive",
+    "none": "None",
+    "processing": "Processing...",
+    "reject": "Reject",
+    "retry": "Retry",
+    "saved": "Saved",
+    "saveFailed": "Save failed",
+    "select": "Select..."
   },
   "roles": {
     "student": "Student",
@@ -419,16 +438,26 @@
         "departure": "Departure",
         "arrival": "Arrival",
         "status": "Status",
-        "actions": "Actions"
+        "actions": "Actions",
+        "dateTime": "Date & Time"
       },
       "actions": {
         "view": "View",
         "edit": "Edit",
-        "delete": "Delete"
+        "delete": "Delete",
+        "reschedule": "Reschedule",
+        "rescheduling": "Rescheduling..."
       },
       "empty": {
         "noTrips": "No trips found. Try adjusting filters or create a new trip."
-      }
+      },
+      "form": {
+        "fields": {
+          "conductor": "Conductor",
+          "driver": "Driver"
+        }
+      },
+      "loadFailedTitle": "Failed to load trips"
     },
     "admin": {
       "profile": {
@@ -606,7 +635,9 @@
             "invalidDriver": "Selected driver is invalid",
             "invalidConductor": "Selected conductor is invalid",
             "sameDriverConductor": "Driver and Conductor must be different users"
-          }
+          },
+          "stopArrival": "Arrival",
+          "stopDeparture": "Departure"
         },
         "toasts": {
           "createdTitle": "Trip Created",
@@ -630,7 +661,8 @@
           "price": "Price",
           "durationDays": "Duration (days)",
           "status": "Status",
-          "actions": "Actions"
+          "actions": "Actions",
+          "subscriptionType": "Billing type"
         },
         "status": {
           "active": "Active",
@@ -664,7 +696,9 @@
           "durationHint": "1 - 365 days.",
           "durationPh": "30",
           "saveChanges": "Save Changes",
-          "createPlan": "Create Plan"
+          "createPlan": "Create Plan",
+          "subscriptionType": "Billing type",
+          "subscriptionTypeHint": "Monthly plans are rolling and use the duration above. Term and Annual plans can take their dates from an academic term instead."
         },
         "errors": {
           "loadFailedMsg": "Failed to load plans",
@@ -697,7 +731,9 @@
           "planActivated": "Plan activated successfully",
           "planDeactivated": "Plan deactivated successfully",
           "successTitle": "Success"
-        }
+        },
+        "pricingHint": "These prices apply where no pricing rule matches.",
+        "pricingLink": "Pricing rules"
       },
       "preferredAreas": {
         "loading": "Loading...",
@@ -1018,7 +1054,10 @@
           "actions": "Actions",
           "school": "School",
           "pickupArea": "Pickup Area",
-          "guardian": "Guardian"
+          "guardian": "Guardian",
+          "bus": "Bus",
+          "email": "Email",
+          "route": "Route"
         },
         "paymentChannel": {
           "instapay": "InstaPay",
@@ -1035,6 +1074,26 @@
         },
         "errors": {
           "loadFailed": "Failed to load students"
+        },
+        "assign": "Assign route and bus",
+        "assignFailed": "Could not save assignment",
+        "assignSaved": "Assignment saved",
+        "assignTitle": "Assign route and bus",
+        "busLabel": "Bus",
+        "edit": "Edit details",
+        "editTitle": "Edit child details",
+        "full": "full",
+        "noBus": "No bus",
+        "noRoute": "No route",
+        "pickRouteFirst": "Choose a route first — a bus must belong to it.",
+        "routeLabel": "Route",
+        "view": "View details",
+        "fields": {
+          "email": "Email (optional)",
+          "grade": "Grade",
+          "name": "Name",
+          "pickupArea": "Pickup area",
+          "school": "School"
         }
       },
       "studentSubscriptions": {
@@ -1238,7 +1297,8 @@
           "actions": "Actions",
           "id": "ID",
           "seatsLabel": "seats",
-          "kmh": "km/h"
+          "kmh": "km/h",
+          "route": "Route"
         },
         "status": {
           "Active": "Active",
@@ -1270,6 +1330,14 @@
         "toast": {
           "loadFailedTitle": "Failed to load buses",
           "loadFailedMsg": "Please check your connection and try again."
+        },
+        "route": {
+          "assigned": "Bus assigned to route.",
+          "assignedTitle": "Route updated",
+          "assignFailed": "Could not update route",
+          "cleared": "Bus removed from its route.",
+          "currentInactive": "Current route (inactive)",
+          "unassigned": "Not assigned"
         }
       },
       "users": {
@@ -1513,7 +1581,12 @@
           "departmentDeleted": "School deleted successfully",
           "departmentActivated": "School activated successfully",
           "departmentDeactivated": "School deactivated successfully",
-          "successTitle": "Success"
+          "successTitle": "Success",
+          "schoolActivated": "School activated successfully",
+          "schoolCreated": "School Created",
+          "schoolDeactivated": "School deactivated successfully",
+          "schoolDeleted": "School deleted successfully",
+          "schoolUpdated": "School Updated"
         }
       },
       "guardiansOverview": {
@@ -1527,6 +1600,458 @@
         "registered": "registered",
         "subscribed": "Subscribed",
         "noPlan": "No plan"
+      },
+      "childDetail": {
+        "backToOverview": "Back to children",
+        "notFound": "This child could not be found.",
+        "profile": "Profile",
+        "family": "Guardian and family",
+        "siblings": "Children in this family",
+        "onlyChild": "No siblings registered. A family of one pays full price.",
+        "subscribed": "Subscribed",
+        "notSubscribed": "No plan",
+        "assignment": "Route and bus",
+        "noAssignment": "This child is not assigned to a route or bus yet.",
+        "routeDisabled": "Route disabled",
+        "subscriptions": "Subscriptions and pricing",
+        "noSubscriptions": "This child has never had a subscription.",
+        "cancellation": "Cancellation",
+        "planPrice": "Plan price",
+        "legacyPricing": "This subscription predates pricing snapshots — the figure shown is the plan's current price, not necessarily what was charged.",
+        "installments": "Instalments",
+        "noInstallments": "No instalment schedule — subscriptions were paid in full.",
+        "schedule": "Schedule",
+        "activatesOnFull": "activates on full payment",
+        "instalment": "Instalment",
+        "graceDays": "grace days",
+        "payments": "Payment history",
+        "noPayments": "No payments recorded for this child.",
+        "sharedPayment": "Shared across",
+        "children": "children",
+        "refunded": "Refunded",
+        "routeRequests": "Route change requests",
+        "noRouteRequests": "No route changes have been requested for this child.",
+        "unassigned": "Unassigned",
+        "placedOn": "Placed on",
+        "history": "Assignment history",
+        "noHistory": "No recorded changes. Assignments made before the audit log existed do not appear here.",
+        "routeShort": "Route",
+        "busShort": "Bus",
+        "by": "by",
+        "fields": {
+          "name": "Name",
+          "email": "Email",
+          "grade": "Grade",
+          "school": "School",
+          "pickupArea": "Pickup area",
+          "gender": "Gender",
+          "dateOfBirth": "Date of birth",
+          "registered": "Registered",
+          "guardian": "Guardian",
+          "phone": "Phone",
+          "route": "Route",
+          "bus": "Bus",
+          "capacity": "Bus occupancy",
+          "freeSeats": "Free seats",
+          "basePrice": "Base price",
+          "pricingRule": "Pricing rule",
+          "siblingPosition": "Sibling position",
+          "discount": "Sibling discount",
+          "finalPrice": "Charged",
+          "paid": "Paid",
+          "remaining": "Remaining",
+          "nextDue": "Next due",
+          "date": "Date",
+          "plan": "Plan",
+          "amount": "Amount",
+          "method": "Method",
+          "status": "Status"
+        }
+      },
+      "pricing": {
+        "title": "Pricing rules",
+        "description": "Override a plan's price for a grade group over a date window. Where no rule matches, the plan's own price is charged.",
+        "add": "Add rule",
+        "addTitle": "Add pricing rule",
+        "editTitle": "Edit pricing rule",
+        "empty": "No pricing rules yet. Every plan is currently sold at its own price. Add a rule to charge a different price for a particular grade group or term.",
+        "allGrades": "All grades",
+        "noTerm": "None — use the plan's duration",
+        "openEnded": "open",
+        "columns": {
+          "name": "Rule",
+          "plan": "Plan",
+          "gradeGroup": "Grade group",
+          "term": "Term",
+          "price": "Price",
+          "window": "Effective",
+          "status": "Status"
+        },
+        "fields": {
+          "name": "Rule name",
+          "plan": "Subscription plan",
+          "gradeGroup": "Grade group",
+          "term": "Academic term",
+          "price": "Price",
+          "effectiveFrom": "Effective from",
+          "effectiveTo": "Effective to (optional)"
+        },
+        "hints": {
+          "gradeGroup": "A rule for a specific grade group takes precedence over an all-grades rule.",
+          "term": "The subscription will run for the term's real dates instead of a day count.",
+          "termMonthly": "Terms apply to Term and Annual plans only. Monthly plans stay rolling."
+        },
+        "errors": {
+          "planRequired": "Choose a subscription plan.",
+          "dateOrder": "The effective-to date must be after the effective-from date."
+        },
+        "toasts": {
+          "saved": "Pricing rule saved."
+        },
+        "confirm": {
+          "deleteTitle": "Delete pricing rule",
+          "deleteBody": "Rules that have already priced a subscription cannot be deleted — deactivate them instead.",
+          "activateTitle": "Activate pricing rule",
+          "activateBody": "This rule will start pricing new subscriptions inside its date window.",
+          "deactivateTitle": "Deactivate pricing rule",
+          "deactivateBody": "New subscriptions will fall back to the plan price. Existing subscriptions keep the price they were sold at."
+        }
+      },
+      "discounts": {
+        "title": "Sibling discounts",
+        "description": "Discount the second and later children in a family. Rank is based on enrolment order and is permanent — an expired subscription never costs a younger sibling their discount.",
+        "add": "Add discount",
+        "addTitle": "Add discount",
+        "editTitle": "Edit discount",
+        "empty": "No sibling discounts yet. Every child is currently charged the full price for their plan and grade.",
+        "all": "All",
+        "percentage": "Percentage",
+        "fixed": "Fixed amount",
+        "openEnded": "open",
+        "columns": {
+          "name": "Rule",
+          "value": "Discount",
+          "from": "Applies from child",
+          "cap": "Cap",
+          "plans": "Plans",
+          "groups": "Grade groups",
+          "window": "Effective",
+          "status": "Status"
+        },
+        "fields": {
+          "name": "Rule name",
+          "type": "Discount type",
+          "percent": "Percentage (0-100)",
+          "amount": "Amount",
+          "startingPosition": "Applies from child number",
+          "cap": "Maximum discount (optional)",
+          "plans": "Plans",
+          "groups": "Grade groups",
+          "effectiveFrom": "Effective from",
+          "effectiveTo": "Effective to (optional)"
+        },
+        "hints": {
+          "startingPosition": "The eldest child in a family always pays full price.",
+          "plans": "Leave all unticked to apply to every plan.",
+          "groups": "Leave all unticked to apply to every grade, including children with no grade set."
+        },
+        "errors": {
+          "percentMax": "A percentage discount cannot exceed 100%.",
+          "startingPosition": "The eldest child always pays full price, so the discount must start at position 2 or later.",
+          "dateOrder": "The effective-to date must be after the effective-from date."
+        },
+        "confirm": {
+          "deleteTitle": "Delete discount rule",
+          "deleteBody": "Rules that have already discounted a subscription cannot be deleted — deactivate them instead.",
+          "activateTitle": "Activate discount",
+          "activateBody": "This discount will apply to new subscriptions inside its date window.",
+          "deactivateTitle": "Deactivate discount",
+          "deactivateBody": "New subscriptions will be charged full price. Existing subscriptions keep the discount they were sold with."
+        }
+      },
+      "installments": {
+        "title": "Instalment plans",
+        "description": "Payment schedules a guardian can choose at checkout. Each child gets their own schedule, so a family paying for three children has three.",
+        "add": "Add plan",
+        "addTitle": "Add instalment plan",
+        "editTitle": "Edit instalment plan",
+        "empty": "No instalment plans yet. Guardians currently pay the full price in one go.",
+        "allPlans": "All plans",
+        "onFirst": "First payment",
+        "onFull": "Full payment",
+        "openEnded": "open",
+        "percentage": "Percentage",
+        "fixed": "Fixed amounts",
+        "splitEvenly": "Split evenly",
+        "addRow": "Add instalment",
+        "rowLabel": "Instalment",
+        "percentTotal": "Total",
+        "mustBe100": "must be 100%",
+        "noTermDates": "no dates configured",
+        "columns": {
+          "name": "Plan",
+          "count": "Instalments",
+          "allocation": "Split by",
+          "plans": "Subscription plans",
+          "activation": "Activates on",
+          "window": "Effective",
+          "status": "Status"
+        },
+        "fields": {
+          "name": "Plan name",
+          "allocation": "Split instalments by",
+          "activation": "Activate the subscription on",
+          "plans": "Offered for",
+          "rows": "Instalments",
+          "percent": "Percentage",
+          "amount": "Amount",
+          "dueType": "Due date",
+          "grace": "Grace days",
+          "date": "Date",
+          "offsetDays": "Days",
+          "termDueDateIndex": "Which term payment date",
+          "effectiveFrom": "Effective from",
+          "effectiveTo": "Effective to (optional)"
+        },
+        "due": {
+          "offset": "Days after purchase",
+          "fixed": "A fixed date",
+          "termStart": "Days after term starts",
+          "termDue": "A term payment date"
+        },
+        "hints": {
+          "percentage": "Percentages must total 100%.",
+          "fixed": "The last instalment takes whatever remains, since each child's price differs by grade and discount.",
+          "plans": "Leave all unticked to offer this schedule for every plan.",
+          "termDue": "Position in the term's payment dates, starting at 0.",
+          "noTerms": "No academic terms are configured yet — this will fall back to days after purchase."
+        },
+        "errors": {
+          "noRows": "Add at least one instalment.",
+          "percentTotal": "Instalment percentages must total 100%.",
+          "dateOrder": "The effective-to date must be after the effective-from date."
+        },
+        "confirm": {
+          "deleteTitle": "Delete instalment plan",
+          "deleteBody": "Plans that subscriptions are already paying on cannot be deleted — deactivate them instead.",
+          "activateTitle": "Activate plan",
+          "activateBody": "Guardians will be able to choose this schedule at checkout.",
+          "deactivateTitle": "Deactivate plan",
+          "deactivateBody": "It will no longer be offered at checkout. Schedules already agreed are unaffected."
+        }
+      },
+      "terms": {
+        "title": "Academic Terms",
+        "listTitle": "Academic Terms",
+        "subtitle": "Term dates and payment deadlines. Used by Term and Annual plans — monthly plans stay rolling.",
+        "addButton": "Add Term",
+        "listCountLabel": "term(s)",
+        "empty": "No terms yet. Term and Annual plans fall back to their duration in days until a term is defined.",
+        "table": {
+          "name": "Name",
+          "dates": "Dates",
+          "paymentDue": "Payment due",
+          "instalmentDates": "Instalment dates",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "modal": {
+          "addTitle": "Add Term",
+          "editTitle": "Edit Term"
+        },
+        "form": {
+          "name": "Name",
+          "namePlaceholder": "e.g. Autumn Term 2026/27",
+          "startDate": "Start date",
+          "endDate": "End date",
+          "paymentDueDate": "Default payment due date",
+          "paymentDueDateHint": "Optional. Used when a plan does not define its own instalment dates.",
+          "instalmentDates": "Instalment dates",
+          "instalmentDatesHint": "Optional. Instalment plans can anchor to these, so moving a deadline here moves it for everyone.",
+          "addDueDate": "Add date",
+          "dueDateLabel": "e.g. First instalment",
+          "createItem": "Create Term"
+        },
+        "confirms": {
+          "deleteTitle": "Delete Term",
+          "deleteDesc": "Delete this term? Deactivate it instead once subscriptions have used it.",
+          "activateTitle": "Activate Term",
+          "activateDesc": "Activate this term?",
+          "deactivateTitle": "Deactivate Term",
+          "deactivateDesc": "Deactivate this term? New subscriptions will stop using its dates."
+        },
+        "errors": {
+          "dateOrder": "The end date must be after the start date.",
+          "incompleteDueDate": "Every payment date needs both a label and a date.",
+          "loadDetails": "Failed to load term details",
+          "loadFailedTitle": "Load Failed",
+          "saveFailedMsg": "Failed to save term",
+          "saveFailedTitle": "Save Failed"
+        },
+        "toasts": {
+          "createdTitle": "Term Created",
+          "updatedTitle": "Term Updated",
+          "savedSuccessfully": "has been saved successfully",
+          "activated": "Term activated successfully",
+          "deactivated": "Term deactivated successfully",
+          "deleted": "Term deleted successfully"
+        }
+      },
+      "gradeGroups": {
+        "title": "Grade Groups",
+        "listTitle": "Grade Groups",
+        "subtitle": "Group grades into pricing bands, e.g. \"KG1 to Grade 2\".",
+        "addButton": "Add Group",
+        "listCountLabel": "group(s)",
+        "empty": "No grade groups yet.",
+        "needGrades": "Add some grades first — a group is a set of grades.",
+        "table": {
+          "name": "Name",
+          "grades": "Grades",
+          "gradesCount": "grade(s)",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "modal": {
+          "addTitle": "Add Group",
+          "editTitle": "Edit Group"
+        },
+        "form": {
+          "name": "Name",
+          "namePlaceholder": "e.g. KG1 to Grade 2",
+          "grades": "Grades in this group",
+          "gradesHint": "Pick a range to fill quickly, then fine-tune with the checkboxes.",
+          "from": "From...",
+          "to": "To...",
+          "addRange": "Add range",
+          "selected": "selected",
+          "createItem": "Create Group"
+        },
+        "confirms": {
+          "deleteTitle": "Delete Group",
+          "deleteDesc": "Delete this grade group? Deactivate it instead if it has been used for pricing.",
+          "activateTitle": "Activate Group",
+          "activateDesc": "Activate this group?",
+          "deactivateTitle": "Deactivate Group",
+          "deactivateDesc": "Deactivate this group? Pricing rules using it will stop matching new subscriptions."
+        },
+        "errors": {
+          "noGrades": "Select at least one grade for this group.",
+          "loadDetails": "Failed to load group details",
+          "loadFailedTitle": "Load Failed",
+          "saveFailedMsg": "Failed to save group",
+          "saveFailedTitle": "Save Failed"
+        },
+        "toasts": {
+          "createdTitle": "Group Created",
+          "updatedTitle": "Group Updated",
+          "savedSuccessfully": "has been saved successfully",
+          "activated": "Group activated successfully",
+          "deactivated": "Group deactivated successfully",
+          "deleted": "Group deleted successfully"
+        }
+      },
+      "grades": {
+        "title": "Grades",
+        "listTitle": "Grades",
+        "subtitle": "Manage the grades students can be assigned to. Grades drive grade-based pricing.",
+        "addButton": "Add Grade",
+        "listCountLabel": "grade(s)",
+        "empty": "No grades yet. Add the grades your school uses to enable grade-based pricing.",
+        "table": {
+          "name": "Name",
+          "order": "Order",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "modal": {
+          "addTitle": "Add Grade",
+          "editTitle": "Edit Grade"
+        },
+        "form": {
+          "name": "Name",
+          "namePlaceholder": "e.g. Grade 3",
+          "nameHint": "Up to 60 characters.",
+          "order": "Order",
+          "orderHint": "Lowest first. Used for sorting and for grade ranges such as \"KG1 to Grade 2\".",
+          "createItem": "Create Grade"
+        },
+        "confirms": {
+          "deleteTitle": "Delete Grade",
+          "activateTitle": "Activate Grade",
+          "activateDesc": "Activate this grade? It will appear again when choosing a student's grade.",
+          "deactivateTitle": "Deactivate Grade",
+          "deactivateDesc": "Deactivate this grade? Students already on it keep it, but it will be hidden when choosing a grade."
+        },
+        "errors": {
+          "loadDetails": "Failed to load grade details",
+          "loadFailedTitle": "Load Failed",
+          "saveFailedMsg": "Failed to save grade",
+          "saveFailedTitle": "Save Failed"
+        },
+        "toasts": {
+          "createdTitle": "Grade Created",
+          "updatedTitle": "Grade Updated",
+          "savedSuccessfully": "has been saved successfully",
+          "activated": "Grade activated successfully",
+          "deactivated": "Grade deactivated successfully",
+          "deleted": "Grade deleted successfully"
+        }
+      },
+      "audit": {
+        "title": "Audit log",
+        "allActions": "All actions",
+        "allEntities": "All entities",
+        "entityIdPlaceholder": "e.g. 42",
+        "entries": "entries",
+        "moreFields": "more",
+        "page": "Page",
+        "unknownActor": "Unknown",
+        "columns": {
+          "action": "Action",
+          "actor": "Who",
+          "change": "Change",
+          "entity": "Entity",
+          "when": "When"
+        },
+        "filters": {
+          "action": "Action",
+          "entityId": "Entity ID",
+          "entityType": "Entity"
+        }
+      },
+      "notifications": {
+        "subtitle": "Manage all system notifications and broadcast messages",
+        "title": "Admin Notifications"
+      },
+      "routeRequests": {
+        "title": "Route change requests",
+        "appliedTo": "Placed on",
+        "approveTitle": "Approve route change",
+        "rejectTitle": "Reject route change",
+        "empty": "No requests with this status.",
+        "emptyPending": "No route change requests are waiting for review.",
+        "prefers": "prefers",
+        "unassigned": "Unassigned",
+        "columns": {
+          "child": "Child",
+          "from": "Currently on",
+          "guardian": "Guardian",
+          "reason": "Reason",
+          "status": "Status",
+          "to": "Requested"
+        },
+        "errors": {
+          "busRequired": "Choose a bus on the requested route before approving.",
+          "notesRequired": "Give a reason for rejecting this request."
+        },
+        "fields": {
+          "bus": "Bus on the requested route",
+          "notes": "Notes (optional)",
+          "reasonRequired": "Reason for rejection"
+        },
+        "approveBanner": "The child will be moved to this route and bus immediately, and the guardian will be notified.",
+        "rejectBanner": "The child stays where they are. Your note is sent to the guardian."
       }
     },
     "student": {
@@ -1587,7 +2112,9 @@
           "imageTooLarge": "Image size should not exceed 5MB.",
           "photoSuccess": "Profile picture updated successfully!",
           "photoFailed": "Failed to update profile picture. Please try again."
-        }
+        },
+        "emergencyContactPlaceholder": "Enter emergency contact name",
+        "emergencyPhonePlaceholder": "Enter emergency phone number"
       },
       "subscription": {
         "currentTitle": "Current Subscription",
@@ -1707,9 +2234,12 @@
           "requestAgain": "Request again",
           "successTitle": "Request submitted",
           "successMessage": "An administrator will review your cancellation request.",
-          "errorTitle": "Could not submit request"
+          "errorTitle": "Could not submit request",
+          "reason": "Reason",
+          "submitted": "Cancellation request submitted."
         },
-        "upgradeFrom": "Upgrade from"
+        "upgradeFrom": "Upgrade from",
+        "choosePaymentMethod": "Choose a payment method"
       },
       "bookTrip": {
         "title": "Book Your Trip",
@@ -1787,7 +2317,10 @@
           "bookingConfirmedTitle": "Booking Confirmed!",
           "bookingConfirmedMsg": "Your trip has been successfully booked",
           "bookingFailedTitle": "Booking Failed"
-        }
+        },
+        "additionalInfo": "Additional Information",
+        "notAssigned": "Not assigned",
+        "refresh": "Refresh Data"
       },
       "voting": {
         "title": "Voting & Surveys",
@@ -1816,6 +2349,10 @@
           "submitFailed": "Failed to submit vote",
           "loadFailed": "Failed to load surveys"
         }
+      },
+      "notifications": {
+        "subtitle": "View notifications from supervisors and system",
+        "title": "My Notifications"
       }
     },
     "driver": {
@@ -2207,6 +2744,14 @@
         },
         "errors": {
           "loadFailed": "Failed to load trips"
+        },
+        "notFound": {
+          "message": "The trip you're looking for doesn't exist or may have been removed.",
+          "title": "Trip not found"
+        },
+        "stopLocations": {
+          "stops": "stops",
+          "title": "Stop Locations"
         }
       },
       "redirectingTitle": "Redirecting to Bus Management...",
@@ -2264,7 +2809,8 @@
           "status": "Status",
           "speed": "Speed (km/h)",
           "speedPh": "Enter speed"
-        }
+        },
+        "noBuses": "No buses found"
       },
       "notifications": {
         "title": "Movement Manager Notifications",
@@ -2297,14 +2843,38 @@
         "removeDesc": "This will deactivate the child and cancel any active subscription.",
         "paymentSubmitted": "Payment submitted — pending admin approval.",
         "childrenWord": "child(ren)",
-        "submitPayment": "Submit payment"
+        "submitPayment": "Submit payment",
+        "discount": "Discount",
+        "dueNow": "Due now",
+        "emailOptional": "Email (optional)",
+        "firstOf": "instalment 1 of",
+        "howToPay": "How would you like to pay?",
+        "installments": "instalments",
+        "moveTo": "Move to route",
+        "noRoute": "No route assigned",
+        "payInFull": "Pay in full now",
+        "pricing": "Calculating your total...",
+        "requestPending": "Awaiting approval to move to",
+        "requestReason": "Reason (optional)",
+        "requestRouteChange": "Request route change",
+        "requestSent": "Request sent",
+        "selectGrade": "Select grade (optional)",
+        "withdrawRequest": "Withdraw request"
       },
       "subscriptions": {
         "title": "Children Subscriptions",
         "empty": "No subscriptions yet.",
         "until": "until",
         "requestCancel": "Request cancellation",
-        "cancelPending": "Cancellation pending"
+        "cancelPending": "Cancellation pending",
+        "discountApplied": "Discount",
+        "hideSchedule": "Hide schedule",
+        "installment": "Instalment",
+        "nextDue": "Next due",
+        "noSchedule": "No instalments recorded for this subscription.",
+        "paid": "Paid",
+        "remaining": "Remaining",
+        "showSchedule": "View schedule"
       },
       "profile": {
         "title": "My Profile",
@@ -2317,6 +2887,11 @@
         "active": "Route assigned",
         "needsPlan": "Needs a subscription"
       }
+    }
+  },
+  "driver": {
+    "myTrips": {
+      "refresh": "Refresh"
     }
   }
 }
