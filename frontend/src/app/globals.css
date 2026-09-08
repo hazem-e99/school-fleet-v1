@@ -110,6 +110,26 @@ img, video, canvas, svg {
   max-width: 100%;
 }
 
+/*
+ * Icons are sized by their own utility classes (w-4 h-4), not by their
+ * container. The rule above applies `max-width: 100%` to every svg, which in a
+ * tight flex parent — an icon-only ghost button, a table action cell — resolves
+ * against a container that has no width of its own yet, collapsing the icon to
+ * nothing. The button still renders, so it reads as a blank square.
+ *
+ * flex-shrink-0 stops a flex parent squeezing them, and the explicit width
+ * keeps the intrinsic size when the container cannot supply one.
+ */
+svg {
+  flex-shrink: 0;
+}
+
+button svg,
+a svg,
+[role='button'] svg {
+  max-width: none;
+}
+
 button, input, select, textarea {
   font: inherit;
 }
