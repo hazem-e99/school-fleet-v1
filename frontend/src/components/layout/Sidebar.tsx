@@ -210,7 +210,7 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
         <div className="flex flex-col h-full">
           {/* Header with Logo and Role */}
           <div className={cn(
-            'relative px-6 py-6 bg-gradient-to-r',
+            'relative shrink-0 px-6 py-6 bg-gradient-to-r',
             config.accentColor
           )}>
             <div className="absolute inset-0 bg-black/5 rounded-b-3xl"></div>
@@ -234,7 +234,7 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-4 space-y-2">
+          <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-4 space-y-2">
             {items.map((item: NavigationItem) => {
               const isActive = pathname === item.href;
               const isDisabled = item.disabled;
@@ -317,7 +317,7 @@ export const Sidebar = ({ userRole }: SidebarProps) => {
           </nav>
 
           {/* User Profile Section */}
-          <div className="p-3 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+          <div className="shrink-0 p-3 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-white">
             <div className="flex items-center p-3 rounded-2xl bg-white shadow-lg border border-gray-100">
               <div className={cn(
                 'w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg bg-gradient-to-r',
