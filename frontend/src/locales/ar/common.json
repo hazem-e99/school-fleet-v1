@@ -130,12 +130,29 @@
       "locations": "مواقع",
       "academics": "أكاديمي",
       "all": "الكل",
-      "parents": "الأهل"
+      "parents": "الأهل",
+      "catalog": "الباقات",
+      "gps": "تتبع",
+      "history": "السجل",
+      "lines": "الخطوط",
+      "live": "مباشر",
+      "plans": "الخطط",
+      "review": "مراجعة",
+      "rules": "القواعد",
+      "schedules": "الجداول",
+      "siblings": "الإخوة"
     },
     "my_children": "أبنائي",
     "subscriptions": "الاشتراكات",
     "children": "الأبناء",
-    "guardians": "أولياء الأمور"
+    "guardians": "أولياء الأمور",
+    "audit_log": "سجل التدقيق",
+    "bus_tracking": "تتبع الأتوبيسات",
+    "discounts": "الخصومات",
+    "instalments": "الأقساط",
+    "live_tracking": "التتبع المباشر",
+    "pricing": "التسعير",
+    "route_requests": "طلبات تغيير الخط"
   },
   "pages": {
     "auth": {
@@ -2008,6 +2025,86 @@
         },
         "approveBanner": "سيتم نقل الطفل إلى هذا الخط والأتوبيس فورًا، وسيتم إخطار ولي الأمر.",
         "rejectBanner": "سيبقى الطفل في مكانه الحالي. وستُرسَل ملاحظتك إلى ولي الأمر."
+      },
+      "routes": {
+        "title": "إدارة الخطوط",
+        "subtitle": "إدارة خطوط الأتوبيسات والجداول",
+        "addNew": "إضافة خط جديد",
+        "stats": {
+          "totalRoutes": "إجمالي الخطوط",
+          "totalDistance": "إجمالي المسافة",
+          "activeBuses": "الأتوبيسات النشطة",
+          "totalStops": "إجمالي المحطات"
+        },
+        "filters": {
+          "title": "البحث والتصفية",
+          "subtitle": "ابحث عن خطوط محددة أو صفِّ حسب المعايير",
+          "apply": "تطبيق التصفية",
+          "searchPlaceholder": "ابحث في الخطوط...",
+          "startPlaceholder": "نقطة البداية",
+          "endPlaceholder": "نقطة النهاية",
+          "minMinutes": "أقل مدة بالدقائق",
+          "maxMinutes": "أقصى مدة بالدقائق",
+          "allDistances": "كل المسافات",
+          "short": "قصير (≤ ١٠ كم)",
+          "medium": "متوسط (١١-٢٥ كم)",
+          "long": "طويل (> ٢٥ كم)"
+        },
+        "list": {
+          "subtitle": "إدارة إعدادات الخطوط وإسناداتها"
+        },
+        "table": {
+          "route": "الخط",
+          "distance": "المسافة",
+          "duration": "المدة",
+          "stops": "المحطات",
+          "actions": "إجراءات"
+        },
+        "form": {
+          "routeName": "اسم الخط",
+          "routeNamePlaceholder": "أدخل اسم الخط",
+          "addStop": "+ إضافة محطة",
+          "stopName": "اسم المحطة",
+          "stopPlaceholder": "مثال: البوابة الرئيسية",
+          "startPoint": "نقطة البداية",
+          "startPlaceholder": "أدخل نقطة البداية",
+          "endPoint": "نقطة النهاية",
+          "endPlaceholder": "أدخل نقطة النهاية",
+          "distanceKm": "المسافة (كم)",
+          "distancePlaceholder": "أدخل المسافة",
+          "durationMinutes": "المدة التقديرية (بالدقائق)",
+          "durationMin": "المدة التقديرية (دقيقة)",
+          "durationPlaceholder": "أدخل المدة"
+        },
+        "modal": {
+          "addTitle": "إضافة خط جديد",
+          "editTitle": "تعديل الخط",
+          "detailsTitle": "تفاصيل الخط",
+          "addSubmit": "إضافة الخط",
+          "updateSubmit": "تحديث الخط"
+        },
+        "details": {
+          "startPoint": "نقطة البداية:",
+          "endPoint": "نقطة النهاية:",
+          "distance": "المسافة:",
+          "duration": "المدة:",
+          "stops": "المحطات:",
+          "trips": "الرحلات:",
+          "created": "تاريخ الإنشاء:",
+          "updated": "آخر تحديث:"
+        },
+        "buses": {
+          "title": "الأتوبيسات على هذا الخط:",
+          "empty": "لا توجد أتوبيسات مُسندة بعد.",
+          "full": "ممتلئ"
+        },
+        "students": {
+          "empty": "لا يوجد طلاب مُسندون لهذا الخط بعد."
+        },
+        "pagination": {
+          "previous": "السابق",
+          "next": "التالي"
+        }
       }
     },
     "trips": {

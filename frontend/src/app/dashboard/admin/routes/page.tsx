@@ -21,6 +21,7 @@ import {
   Navigation,
   Bus
 } from 'lucide-react';
+import { useI18n } from '@/contexts/LanguageContext';
 import { routeAPI } from '@/lib/api';
 import { getApiErrorMessage } from '@/lib/apiError';
 import { TripRoute as RouteType } from '@/types/tripRoute';
@@ -66,6 +67,7 @@ interface Notification {
 }
 
 export default function RoutesPage() {
+  const { t } = useI18n();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [distanceFilter, setDistanceFilter] = useState<string>('all');
@@ -370,12 +372,12 @@ export default function RoutesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Route Management</h1>
-          <p className="text-gray-600">Manage bus routes and schedules</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('pages.admin.routes.title', 'Route Management')}</h1>
+          <p className="text-gray-600">{t('pages.admin.routes.subtitle', 'Manage bus routes and schedules')}</p>
         </div>
         <Button onClick={() => setShowAddModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
-          Add New Route
+          {t('pages.admin.routes.addNew', 'Add New Route')}
         </Button>
       </div>
 
@@ -384,26 +386,26 @@ export default function RoutesPage() {
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-blue-600">{routeStats.total}</div>
-            <p className="text-xs text-gray-500">Total Routes</p>
+            <p className="text-xs text-gray-500">{t('pages.admin.routes.stats.totalRoutes', 'Total Routes')}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-green-600">{routeStats.totalDistance} km</div>
-            <p className="text-xs text-gray-500">Total Distance</p>
+            <p className="text-xs text-gray-500">{t('pages.admin.routes.stats.totalDistance', 'Total Distance')}</p>
           </CardContent>
         </Card>
         {/* Removed Avg Duration card per request */}
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-orange-600">{routeStats.activeBuses}</div>
-            <p className="text-xs text-gray-500">Active Buses</p>
+            <p className="text-xs text-gray-500">{t('pages.admin.routes.stats.activeBuses', 'Active Buses')}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-2xl font-bold text-indigo-600">{routeStats.totalStops}</div>
-            <p className="text-xs text-gray-500">Total Stops</p>
+            <p className="text-xs text-gray-500">{t('pages.admin.routes.stats.totalStops', 'Total Stops')}</p>
           </CardContent>
         </Card>
       </div>
@@ -411,15 +413,15 @@ export default function RoutesPage() {
       {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Search & Filters</CardTitle>
-          <CardDescription>Find specific routes or filter by criteria</CardDescription>
+          <CardTitle>{t('pages.admin.routes.filters.title', 'Search & Filters')}</CardTitle>
+          <CardDescription>{t('pages.admin.routes.filters.subtitle', 'Find specific routes or filter by criteria')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search routes..."
+                placeholder={t('pages.admin.routes.filters.searchPlaceholder', 'Search routes...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -427,21 +429,21 @@ export default function RoutesPage() {
             </div>
             <Select
               options={[
-                { value: 'all', label: 'All Distances' },
-                { value: 'short', label: 'Short (≤10 km)' },
-                { value: 'medium', label: 'Medium (11-25 km)' },
-                { value: 'long', label: 'Long (>25 km)' }
+                { value: 'all', label: t('pages.admin.routes.filters.allDistances', 'All Distances') },
+                { value: 'short', label: t('pages.admin.routes.filters.short', 'Short (≤10 km)') },
+                { value: 'medium', label: t('pages.admin.routes.filters.medium', 'Medium (11-25 km)') },
+                { value: 'long', label: t('pages.admin.routes.filters.long', 'Long (>25 km)') }
               ]}
               value={distanceFilter}
               onChange={(e) => setDistanceFilter(e.target.value)}
             />
             <Input
-              placeholder="Start location"
+              placeholder={t('pages.admin.routes.filters.startPlaceholder', 'Start location')}
               value={startLocationFilter}
               onChange={(e) => setStartLocationFilter(e.target.value)}
             />
             <Input
-              placeholder="End location"
+              placeholder={t('pages.admin.routes.filters.endPlaceholder', 'End location')}
               value={endLocationFilter}
               onChange={(e) => setEndLocationFilter(e.target.value)}
             />
@@ -449,14 +451,14 @@ export default function RoutesPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
             <Input
               type="number"
-              placeholder="Min estimated minutes"
+              placeholder={t('pages.admin.routes.filters.minMinutes', 'Min estimated minutes')}
               value={minEstimatedMinutes}
               onChange={(e) => setMinEstimatedMinutes(e.target.value)}
               min="0"
             />
             <Input
               type="number"
-              placeholder="Max estimated minutes"
+              placeholder={t('pages.admin.routes.filters.maxMinutes', 'Max estimated minutes')}
               value={maxEstimatedMinutes}
               onChange={(e) => setMaxEstimatedMinutes(e.target.value)}
               min="0"
@@ -465,7 +467,7 @@ export default function RoutesPage() {
             <div className="hidden md:block" />
             <Button variant="outline" className="w-full" onClick={handleApplyFilters}>
               <Filter className="w-4 h-4 mr-2" />
-              Apply Filters
+              {t('pages.admin.routes.filters.apply', 'Apply Filters')}
             </Button>
           </div>
         </CardContent>
@@ -475,7 +477,7 @@ export default function RoutesPage() {
       <Card>
         <CardHeader>
           <CardTitle>Routes ({filteredRoutes.length})</CardTitle>
-          <CardDescription>Manage route configurations and assignments</CardDescription>
+          <CardDescription>{t('pages.admin.routes.list.subtitle', 'Manage route configurations and assignments')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -586,19 +588,19 @@ export default function RoutesPage() {
       <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        title="Add New Route"
+        title={t('pages.admin.routes.addNew', 'Add New Route')}
         size="lg"
       >
         <form onSubmit={handleAddRoute} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Route Name
+                {t('pages.admin.routes.form.routeName', 'Route Name')}
               </label>
               <Input
                 value={newRoute.name}
                 onChange={(e) => setNewRoute({ ...newRoute, name: e.target.value })}
-                placeholder="Enter route name"
+                placeholder={t('pages.admin.routes.form.routeNamePlaceholder', 'Enter route name')}
                 required
               />
             </div>
@@ -609,13 +611,13 @@ export default function RoutesPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label className="block text-sm font-medium text-gray-700">Stops</label>
-              <Button type="button" variant="outline" onClick={addStop}>+ Add Stop</Button>
+              <Button type="button" variant="outline" onClick={addStop}>{t('pages.admin.routes.form.addStop', '+ Add Stop')}</Button>
             </div>
             {(newRoute.stops || []).map((stop, index) => (
               <div key={index} className="grid grid-cols-2 gap-4 items-end">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Stop Name</label>
-                  <Input value={stop.stopName} onChange={(e) => updateStop(index, 'stopName', e.target.value)} placeholder="e.g., Main Gate" required />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('pages.admin.routes.form.stopName', 'Stop Name')}</label>
+                  <Input value={stop.stopName} onChange={(e) => updateStop(index, 'stopName', e.target.value)} placeholder={t('pages.admin.routes.form.stopPlaceholder', 'e.g., Main Gate')} required />
                 </div>
                 <div className="flex items-end gap-2">
                   <div className="flex-1"></div>
@@ -628,23 +630,23 @@ export default function RoutesPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Start Point
+                {t('pages.admin.routes.form.startPoint', 'Start Point')}
               </label>
               <Input
                 value={newRoute.startPoint}
                 onChange={(e) => setNewRoute({ ...newRoute, startPoint: e.target.value })}
-                placeholder="Enter start point"
+                placeholder={t('pages.admin.routes.form.startPlaceholder', 'Enter start point')}
                 required
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                End Point
+                {t('pages.admin.routes.form.endPoint', 'End Point')}
               </label>
               <Input
                 value={newRoute.endPoint}
                 onChange={(e) => setNewRoute({ ...newRoute, endPoint: e.target.value })}
-                placeholder="Enter end point"
+                placeholder={t('pages.admin.routes.form.endPlaceholder', 'Enter end point')}
                 required
               />
             </div>
@@ -653,13 +655,13 @@ export default function RoutesPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Distance (km)
+                {t('pages.admin.routes.form.distanceKm', 'Distance (km)')}
               </label>
               <Input
                 type="number"
                 value={newRoute.distance}
                 onChange={(e) => setNewRoute({ ...newRoute, distance: Number(e.target.value) })}
-                placeholder="Enter distance"
+                placeholder={t('pages.admin.routes.form.distancePlaceholder', 'Enter distance')}
                 min="0"
                 step="0.1"
                 required
@@ -667,7 +669,7 @@ export default function RoutesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Estimated Duration (minutes)
+                {t('pages.admin.routes.form.durationMinutes', 'Estimated Duration (minutes)')}
               </label>
               <Input
                 type="number"
@@ -692,7 +694,7 @@ export default function RoutesPage() {
               Cancel
             </Button>
             <Button type="submit">
-              Add Route
+              {t('pages.admin.routes.modal.addSubmit', 'Add Route')}
             </Button>
           </div>
         </form>
@@ -702,7 +704,7 @@ export default function RoutesPage() {
       <Modal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
-        title="Edit Route"
+        title={t('pages.admin.routes.modal.editTitle', 'Edit Route')}
         size="lg"
       >
         {selectedRoute && (
@@ -710,12 +712,12 @@ export default function RoutesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Route Name
+                  {t('pages.admin.routes.form.routeName', 'Route Name')}
                 </label>
                 <Input
                   value={selectedRoute.name}
                   onChange={(e) => setSelectedRoute({ ...selectedRoute, name: e.target.value })}
-                  placeholder="Enter route name"
+                  placeholder={t('pages.admin.routes.form.routeNamePlaceholder', 'Enter route name')}
                   required
                 />
               </div>
@@ -725,23 +727,23 @@ export default function RoutesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Point
+                  {t('pages.admin.routes.form.startPoint', 'Start Point')}
                 </label>
                 <Input
                   value={selectedRoute.startLocation ?? ''}
                   onChange={(e) => setSelectedRoute({ ...selectedRoute, startLocation: e.target.value })}
-                  placeholder="Enter start point"
+                  placeholder={t('pages.admin.routes.form.startPlaceholder', 'Enter start point')}
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  End Point
+                  {t('pages.admin.routes.form.endPoint', 'End Point')}
                 </label>
                 <Input
                   value={selectedRoute.endLocation ?? ''}
                   onChange={(e) => setSelectedRoute({ ...selectedRoute, endLocation: e.target.value })}
-                  placeholder="Enter end point"
+                  placeholder={t('pages.admin.routes.form.endPlaceholder', 'Enter end point')}
                   required
                 />
               </div>
@@ -750,13 +752,13 @@ export default function RoutesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Distance (km)
+                  {t('pages.admin.routes.form.distanceKm', 'Distance (km)')}
                 </label>
                 <Input
                   type="number"
                   value={selectedRoute.distance ?? ''}
                   onChange={(e) => setSelectedRoute({ ...selectedRoute, distance: Number(e.target.value) })}
-                  placeholder="Enter distance"
+                  placeholder={t('pages.admin.routes.form.distancePlaceholder', 'Enter distance')}
                   min="0"
                   step="0.1"
                   required
@@ -764,13 +766,13 @@ export default function RoutesPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Estimated Duration (min)
+                  {t('pages.admin.routes.form.durationMin', 'Estimated Duration (min)')}
                 </label>
                 <Input
                   type="number"
                   value={selectedRoute.estimatedTime ?? ''}
                   onChange={(e) => setSelectedRoute({ ...selectedRoute, estimatedTime: e.target.value })}
-                  placeholder="Enter duration"
+                  placeholder={t('pages.admin.routes.form.durationPlaceholder', 'Enter duration')}
                   min="0"
                   required
                 />
@@ -786,20 +788,20 @@ export default function RoutesPage() {
                   variant="outline"
                   onClick={() => setSelectedRoute({ ...selectedRoute, stops: [ ...((selectedRoute as RouteWithStops)?.stops || []), { stopName: '', stopTime: '' } ] } as RouteWithStops)}
                 >
-                  + Add Stop
+                  {t('pages.admin.routes.form.addStop', '+ Add Stop')}
                 </Button>
               </div>
                               {((selectedRoute as RouteWithStops)?.stops || []).map((stop: Stop, index: number) => (
                 <div key={index} className="grid grid-cols-2 gap-4 items-end">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Stop Name</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('pages.admin.routes.form.stopName', 'Stop Name')}</label>
                     <Input
                       value={stop.stopName || ''}
                                              onChange={(e) => setSelectedRoute({
                          ...selectedRoute,
                                                   stops: ((selectedRoute as RouteWithStops)?.stops || []).map((s: Stop, i: number) => i === index ? { ...s, stopName: e.target.value } : s)
                        } as RouteWithStops)}
-                      placeholder="e.g., Main Gate"
+                      placeholder={t('pages.admin.routes.form.stopPlaceholder', 'e.g., Main Gate')}
                       required
                     />
                   </div>
@@ -829,7 +831,7 @@ export default function RoutesPage() {
                 Cancel
               </Button>
               <Button type="submit">
-                Update Route
+                {t('pages.admin.routes.modal.updateSubmit', 'Update Route')}
               </Button>
             </div>
           </form>
@@ -840,7 +842,7 @@ export default function RoutesPage() {
       <Modal
         isOpen={showViewModal}
         onClose={() => setShowViewModal(false)}
-        title="Route Details"
+        title={t('pages.admin.routes.modal.detailsTitle', 'Route Details')}
         size="md"
       >
         {selectedRoute && (
@@ -857,47 +859,47 @@ export default function RoutesPage() {
             
             <div className="grid grid-cols-2 gap-4 text-sm">
                              <div>
-                 <span className="text-gray-500">Start Point:</span>
+                 <span className="text-gray-500">{t('pages.admin.routes.details.startPoint', 'Start Point:')}</span>
                  <p className="font-medium">{selectedRoute.startLocation || '—'}</p>
                </div>
                <div>
-                 <span className="text-gray-500">End Point:</span>
+                 <span className="text-gray-500">{t('pages.admin.routes.details.endPoint', 'End Point:')}</span>
                  <p className="font-medium">{selectedRoute.endLocation || '—'}</p>
                </div>
               <div>
-                <span className="text-gray-500">Distance:</span>
+                <span className="text-gray-500">{t('pages.admin.routes.details.distance', 'Distance:')}</span>
                 <p className="font-medium">{selectedRoute.distance ? `${selectedRoute.distance} km` : '—'}</p>
               </div>
                              <div>
-                 <span className="text-gray-500">Duration:</span>
+                 <span className="text-gray-500">{t('pages.admin.routes.details.duration', 'Duration:')}</span>
                  <p className="font-medium">
                    {selectedRoute.estimatedTime ? `${selectedRoute.estimatedTime} min` : '-'}
                  </p>
                </div>
               
                              <div>
-                 <span className="text-gray-500">Stops:</span>
+                 <span className="text-gray-500">{t('pages.admin.routes.details.stops', 'Stops:')}</span>
                  <p className="font-medium">
                    {selectedRoute?.stopLocationsCount || ((selectedRoute as RouteWithStops).stops?.length || 0)} stops
                  </p>
                </div>
 
               <div>
-                <span className="text-gray-500">Trips:</span>
+                <span className="text-gray-500">{t('pages.admin.routes.details.trips', 'Trips:')}</span>
                 <p className="font-medium">
                   {selectedRoute?.tripsCount || 0} trips
                 </p>
               </div>
 
               <div>
-                <span className="text-gray-500">Created:</span>
+                <span className="text-gray-500">{t('pages.admin.routes.details.created', 'Created:')}</span>
                 <p className="font-medium">
                   {selectedRoute?.createdAt ? formatDate(selectedRoute.createdAt) : '-'}
                 </p>
               </div>
 
               <div>
-                <span className="text-gray-500">Updated:</span>
+                <span className="text-gray-500">{t('pages.admin.routes.details.updated', 'Updated:')}</span>
                 <p className="font-medium">
                   {selectedRoute?.updatedAt ? formatDate(selectedRoute.updatedAt) : '-'}
                 </p>
@@ -906,7 +908,7 @@ export default function RoutesPage() {
 
             {(selectedRoute as RouteWithStops).stops && (selectedRoute as RouteWithStops).stops.length > 0 && (
               <div>
-                <span className="text-gray-500 text-sm">Stops:</span>
+                <span className="text-gray-500 text-sm">{t('pages.admin.routes.details.stops', 'Stops:')}</span>
                 <div className="mt-2 space-y-1">
                   {(selectedRoute as RouteWithStops).stops.map((stop: Stop, index) => (
                     <div key={index} className="flex items-center gap-2 text-sm">
@@ -920,11 +922,11 @@ export default function RoutesPage() {
 
             {/* Buses serving this route, with live occupancy against capacity. */}
             <div className="border-t pt-4">
-              <span className="text-gray-500 text-sm">Buses on this route:</span>
+              <span className="text-gray-500 text-sm">{t('pages.admin.routes.buses.title', 'Buses on this route:')}</span>
               {routeDetailsLoading && routeBuses.length === 0 ? (
                 <p className="text-sm text-gray-500 mt-2">Loading…</p>
               ) : routeBuses.length === 0 ? (
-                <p className="text-sm text-gray-500 mt-2">No buses assigned yet.</p>
+                <p className="text-sm text-gray-500 mt-2">{t('pages.admin.routes.buses.empty', 'No buses assigned yet.')}</p>
               ) : (
                 <div className="mt-2 space-y-2">
                   {routeBuses.map(bus => (
@@ -933,7 +935,7 @@ export default function RoutesPage() {
                       <span className="text-gray-600">
                         {bus.assignedStudents}/{bus.capacity} seats
                         {bus.availableSeats === 0 && (
-                          <span className="ms-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">Full</span>
+                          <span className="ms-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">{t('pages.admin.routes.buses.full', 'Full')}</span>
                         )}
                       </span>
                     </div>
@@ -956,7 +958,7 @@ export default function RoutesPage() {
                       disabled={routeStudentsPage <= 1 || routeDetailsLoading}
                       onClick={() => selectedRoute && loadRouteDetails(selectedRoute.id, routeStudentsPage - 1)}
                     >
-                      Previous
+                      {t('pages.admin.routes.pagination.previous', 'Previous')}
                     </Button>
                     <span className="text-xs text-gray-500">
                       {routeStudentsPage} / {Math.ceil(routeStudentsTotal / ROUTE_STUDENTS_PAGE_SIZE)}
@@ -970,7 +972,7 @@ export default function RoutesPage() {
                       }
                       onClick={() => selectedRoute && loadRouteDetails(selectedRoute.id, routeStudentsPage + 1)}
                     >
-                      Next
+                      {t('pages.admin.routes.pagination.next', 'Next')}
                     </Button>
                   </div>
                 )}
@@ -979,7 +981,7 @@ export default function RoutesPage() {
               {routeDetailsLoading && routeStudents.length === 0 ? (
                 <p className="text-sm text-gray-500 mt-2">Loading…</p>
               ) : routeStudents.length === 0 ? (
-                <p className="text-sm text-gray-500 mt-2">No students assigned to this route yet.</p>
+                <p className="text-sm text-gray-500 mt-2">{t('pages.admin.routes.students.empty', 'No students assigned to this route yet.')}</p>
               ) : (
                 <div className="mt-2 space-y-1">
                   {routeStudents.map(student => (

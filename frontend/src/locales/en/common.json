@@ -130,12 +130,29 @@
       "locations": "Locations",
       "academics": "Academics",
       "all": "All",
-      "parents": "Parents"
+      "parents": "Parents",
+      "catalog": "Catalog",
+      "gps": "GPS",
+      "history": "History",
+      "lines": "Lines",
+      "live": "Live",
+      "plans": "Plans",
+      "review": "Review",
+      "rules": "Rules",
+      "schedules": "Schedules",
+      "siblings": "Siblings"
     },
     "my_children": "My Children",
     "subscriptions": "Subscriptions",
     "children": "Children",
-    "guardians": "Guardians"
+    "guardians": "Guardians",
+    "audit_log": "Audit Log",
+    "bus_tracking": "Bus Tracking",
+    "discounts": "Discounts",
+    "instalments": "Instalments",
+    "live_tracking": "Live Tracking",
+    "pricing": "Pricing",
+    "route_requests": "Route Requests"
   },
   "pages": {
     "auth": {
@@ -2052,6 +2069,86 @@
         },
         "approveBanner": "The child will be moved to this route and bus immediately, and the guardian will be notified.",
         "rejectBanner": "The child stays where they are. Your note is sent to the guardian."
+      },
+      "routes": {
+        "title": "Route Management",
+        "subtitle": "Manage bus routes and schedules",
+        "addNew": "Add New Route",
+        "stats": {
+          "totalRoutes": "Total Routes",
+          "totalDistance": "Total Distance",
+          "activeBuses": "Active Buses",
+          "totalStops": "Total Stops"
+        },
+        "filters": {
+          "title": "Search & Filters",
+          "subtitle": "Find specific routes or filter by criteria",
+          "apply": "Apply Filters",
+          "searchPlaceholder": "Search routes...",
+          "startPlaceholder": "Start location",
+          "endPlaceholder": "End location",
+          "minMinutes": "Min estimated minutes",
+          "maxMinutes": "Max estimated minutes",
+          "allDistances": "All Distances",
+          "short": "Short (≤10 km)",
+          "medium": "Medium (11-25 km)",
+          "long": "Long (>25 km)"
+        },
+        "list": {
+          "subtitle": "Manage route configurations and assignments"
+        },
+        "table": {
+          "route": "Route",
+          "distance": "Distance",
+          "duration": "Duration",
+          "stops": "Stops",
+          "actions": "Actions"
+        },
+        "form": {
+          "routeName": "Route Name",
+          "routeNamePlaceholder": "Enter route name",
+          "addStop": "+ Add Stop",
+          "stopName": "Stop Name",
+          "stopPlaceholder": "e.g., Main Gate",
+          "startPoint": "Start Point",
+          "startPlaceholder": "Enter start point",
+          "endPoint": "End Point",
+          "endPlaceholder": "Enter end point",
+          "distanceKm": "Distance (km)",
+          "distancePlaceholder": "Enter distance",
+          "durationMinutes": "Estimated Duration (minutes)",
+          "durationMin": "Estimated Duration (min)",
+          "durationPlaceholder": "Enter duration"
+        },
+        "modal": {
+          "addTitle": "Add New Route",
+          "editTitle": "Edit Route",
+          "detailsTitle": "Route Details",
+          "addSubmit": "Add Route",
+          "updateSubmit": "Update Route"
+        },
+        "details": {
+          "startPoint": "Start Point:",
+          "endPoint": "End Point:",
+          "distance": "Distance:",
+          "duration": "Duration:",
+          "stops": "Stops:",
+          "trips": "Trips:",
+          "created": "Created:",
+          "updated": "Updated:"
+        },
+        "buses": {
+          "title": "Buses on this route:",
+          "empty": "No buses assigned yet.",
+          "full": "Full"
+        },
+        "students": {
+          "empty": "No students assigned to this route yet."
+        },
+        "pagination": {
+          "previous": "Previous",
+          "next": "Next"
+        }
       }
     },
     "student": {
