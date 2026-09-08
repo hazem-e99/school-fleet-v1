@@ -24,8 +24,25 @@ export class SchoolService {
     };
   }
 
+  /**
+   * Resolves a school by the id the UI shows.
+   *
+   * `toViewModel` derives that id from `_id`, but rows created outside
+   * Mongoose's pre('save') hook (a seed script, insertMany, an upsert) have no
+   * stored `numericId` — so a plain lookup on the field missed them and the
+   * admin page reported "School not found" for a row it had just listed.
+   *
+   * The stored field is still tried first, since it is indexed. Only when that
+   * misses does this fall back to matching the derived id, which costs a scan
+   * of what is a short admin-managed list. DbMigrationService backfills the
+   * missing values on boot, after which the fallback stops being reached.
+   */
   private async findByNumericId(id: number): Promise<SchoolDocument | null> {
-    return this.schoolModel.findOne({ numericId: id }).exec();
+    const byField = await this.schoolModel.findOne({ numericId: id }).exec();
+    if (byField) return byField;
+
+    const legacy = await this.schoolModel.find({ numericId: { $exists: false } }).exec();
+    return legacy.find((doc) => this.getNumericId(doc) === id) ?? null;
   }
 
   async getAll(): Promise<ApiResponse<any[]>> {

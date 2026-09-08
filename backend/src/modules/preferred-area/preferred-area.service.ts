@@ -24,8 +24,18 @@ export class PreferredAreaService {
     };
   }
 
+  /**
+   * Same fallback as SchoolService.findByNumericId: rows stored without a
+   * `numericId` (seed script, insertMany, upsert) are still reachable by the
+   * id the UI derives from `_id`, so editing one no longer 404s on a row the
+   * table just listed. DbMigrationService backfills them on boot.
+   */
   private async findByNumericId(id: number): Promise<PreferredAreaDocument | null> {
-    return this.areaModel.findOne({ numericId: id }).exec();
+    const byField = await this.areaModel.findOne({ numericId: id }).exec();
+    if (byField) return byField;
+
+    const legacy = await this.areaModel.find({ numericId: { $exists: false } }).exec();
+    return legacy.find((doc) => this.getNumericId(doc) === id) ?? null;
   }
 
   async getAll(): Promise<ApiResponse<any[]>> {

@@ -35,6 +35,15 @@ export class DbMigrationService implements OnApplicationBootstrap {
         // outside Mongoose (seed scripts use the raw driver) never receive a
         // numericId and become unreachable by every findOne({ numericId })
         // lookup in the app.
+        // Admin-managed reference lists. These were missing from this list,
+        // so any row created outside Mongoose's pre('save') hook — a seed
+        // script, insertMany, or an upsert — was stored with no numericId.
+        // The UI computes the id it displays from _id, but every lookup reads
+        // the stored field, so editing, deactivating or deleting such a row
+        // failed with "not found" even though the row was visible in the table.
+        'schools',
+        'preferredareas',
+        'yearsofstudy',
         'gradelevels',
         'gradegroups',
         'academicterms',
